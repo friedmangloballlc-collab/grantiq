@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
     case "checkout.session.completed": {
       const session = event.data.object as any;
       const orgId = session.metadata?.org_id;
-      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-      const priceId = subscription.items.data[0]?.price.id;
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string) as any;
+      const priceId = subscription.items?.data?.[0]?.price?.id;
       const tierInfo = priceId ? getTierForPriceId(priceId) : undefined;
 
       if (orgId && tierInfo) {
@@ -51,7 +51,9 @@ export async function POST(req: NextRequest) {
           stripe_subscription_id: session.subscription as string,
           tier: tierInfo.tier,
           status: "active",
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_end: subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null,
         }, { onConflict: "org_id" });
       }
       break;
