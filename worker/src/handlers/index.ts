@@ -3,19 +3,34 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Job } from "../queue.js";
 import { handleCrawlSource } from "./crawl-source.js";
 import { handleGenerateEmbedding } from "./generate-embedding.js";
+import { handleMatchGrants } from "./match-grants.js";
+import { handleScoreReadiness } from "./score-readiness.js";
+import { handleGenerateRoadmap } from "./generate-roadmap.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function handleJob(job: Job, supabase: SupabaseClient): Promise<void> {
   switch (job.jobType) {
     case "match_grants":
-      console.log(`[handler] match_grants for org ${job.payload.org_id} — TODO: Plan 3`);
+      await handleMatchGrants({
+        org_id: job.payload.org_id as string,
+        user_id: job.payload.user_id as string,
+        tier: (job.payload.tier as string) ?? "free",
+      });
       break;
     case "generate_roadmap":
-      console.log(`[handler] generate_roadmap for org ${job.payload.org_id} — TODO: Plan 3`);
+      await handleGenerateRoadmap({
+        org_id: job.payload.org_id as string,
+        user_id: job.payload.user_id as string,
+        tier: (job.payload.tier as string) ?? "free",
+      });
       break;
     case "score_readiness":
-      console.log(`[handler] score_readiness for org ${job.payload.org_id} — TODO: Plan 3`);
+      await handleScoreReadiness({
+        org_id: job.payload.org_id as string,
+        user_id: job.payload.user_id as string,
+        tier: (job.payload.tier as string) ?? "free",
+      });
       break;
     case "crawl_source":
       await handleCrawlSource(job, supabase);
