@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 import { parseJob } from "./queue.js";
 import { handleJob } from "./handlers/index.js";
+import { scheduleDueCrawls, seedCrawlSources } from "./scheduler.js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,8 +46,10 @@ async function pollAndProcess() {
 
 async function main() {
   console.log(`[${WORKER_ID}] Starting GrantIQ worker...`);
+  await seedCrawlSources(supabase);
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    await scheduleDueCrawls(supabase);
     await pollAndProcess();
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }
