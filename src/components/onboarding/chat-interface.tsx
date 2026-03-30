@@ -57,6 +57,13 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
       if (data.profileUpdate) {
         onProfileUpdate(data.profileUpdate, data.completedFields ?? 0);
       }
+
+      if (data.onboardingComplete) {
+        // Wait a moment then redirect to dashboard
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 3000);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,

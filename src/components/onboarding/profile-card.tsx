@@ -5,13 +5,22 @@ import { Check, Circle } from "lucide-react";
 
 export interface ProfileData {
   entityType?: string;
+  industry?: string;
+  fundingUse?: string;
+  businessStage?: string;
   mission?: string;
   state?: string;
+  city?: string;
   annualBudget?: string;
+  employeeCount?: string;
   populationServed?: string;
+  programAreas?: string;
   grantHistory?: string;
+  ownershipDemographics?: string;
   samGov?: boolean;
   has501c3?: boolean;
+  hasEin?: boolean;
+  documentsMissing?: string;
 }
 
 export function ProfileCard({
@@ -21,29 +30,26 @@ export function ProfileCard({
   data: ProfileData;
   completedFields: number;
 }) {
-  const totalFields = 8;
+  const totalFields = 12;
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
     { label: "Organization Type", value: data.entityType },
+    { label: "Industry", value: data.industry },
+    { label: "Funding Purpose", value: data.fundingUse },
+    { label: "Business Stage", value: data.businessStage },
+    { label: "Location", value: data.city && data.state ? `${data.city}, ${data.state}` : data.state },
+    { label: "Employees", value: data.employeeCount },
+    { label: "Annual Revenue", value: data.annualBudget },
     { label: "Mission", value: data.mission },
-    { label: "Location", value: data.state },
-    { label: "Annual Budget", value: data.annualBudget },
-    { label: "Population Served", value: data.populationServed },
+    { label: "Ownership", value: data.ownershipDemographics },
     { label: "Grant History", value: data.grantHistory },
+    { label: "Documents Ready", value: data.documentsMissing === "none" ? "All ready" : data.documentsMissing ? `Missing: ${data.documentsMissing}` : undefined },
     {
-      label: "SAM.gov Status",
-      value:
-        data.samGov != null
-          ? data.samGov
-            ? "Registered"
-            : "Not registered"
-          : undefined,
-    },
-    {
-      label: "501(c)(3) Status",
-      value:
-        data.has501c3 != null ? (data.has501c3 ? "Yes" : "No") : undefined,
+      label: "501(c)(3) / SAM.gov",
+      value: data.has501c3 != null || data.samGov != null
+        ? [data.has501c3 ? "501(c)(3)" : null, data.samGov ? "SAM.gov" : null].filter(Boolean).join(", ") || "Not yet"
+        : undefined,
     },
   ];
 
