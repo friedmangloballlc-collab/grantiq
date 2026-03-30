@@ -85,7 +85,7 @@ export default function LandingPage() {
               </ul>
               <Button
                 className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white"
-                render={<Link href="/signup">Start Your Nonprofit</Link>}
+                render={<Link href="/signup/nonprofit">Start Your Nonprofit</Link>}
               />
             </div>
 

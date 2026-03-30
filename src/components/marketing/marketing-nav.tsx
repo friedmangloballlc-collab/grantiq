@@ -15,7 +15,7 @@ export function MarketingNav() {
           <Link href="/leaderboard" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Leaderboard</Link>
           <Link href="/tools/funding-gap" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Free Tools</Link>
           <Link href="/grant-directory" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Grant Directory</Link>
-          <Link href="/#start-nonprofit" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Start a Nonprofit</Link>
+          <Link href="/signup/nonprofit" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Start a Nonprofit</Link>
           <Link href="/#get-certified" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Get Grant Certified</Link>
         </div>
         <div className="flex items-center gap-3">
