@@ -5,10 +5,11 @@ import { CheckSquare, Square, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ProfileData } from "./profile-card";
+import { FileUpload } from "./file-upload";
 
 // ─── Step Definitions ────────────────────────────────────────────────────────
 
-type StepType = "single_select" | "multi_select" | "text" | "textarea";
+type StepType = "single_select" | "multi_select" | "text" | "textarea" | "file_upload";
 
 interface StepOption {
   label: string;
@@ -169,6 +170,19 @@ const ONBOARDING_STEPS: Step[] = [
     ],
   },
   {
+    id: "document_upload",
+    question: "Upload your documents",
+    subtitle:
+      "Drag and drop files or click to browse. You can skip this and upload later from Settings.",
+    type: "file_upload" as StepType,
+    showIf: (answers) => {
+      const docs = answers.documents;
+      if (!docs) return false;
+      if (typeof docs === "string") return docs !== "none";
+      return docs.length > 0 && !docs.includes("none");
+    },
+  },
+  {
     id: "interested_nonprofit",
     question: "Are you interested in starting a nonprofit?",
     subtitle: "We can connect you with resources for nonprofit formation",
@@ -232,6 +246,9 @@ function answerToProfileUpdate(
       return { mission: value as string };
     case "documents":
       return { documents: (value as string[]).join(", ") };
+    case "document_upload":
+      // value is the uploaded doc count as a string
+      return {};
     case "interested_nonprofit":
       return { interested_nonprofit: value as string };
     default:
@@ -508,6 +525,18 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
                 Continue <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
+          )}
+
+          {/* File upload */}
+          {currentStep.type === "file_upload" && (
+            <FileUpload
+              onComplete={(uploadedCount) => {
+                void advance(String(uploadedCount));
+              }}
+              onSkip={() => {
+                void advance("0");
+              }}
+            />
           )}
         </div>
       )}
