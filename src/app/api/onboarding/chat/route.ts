@@ -19,12 +19,17 @@ Your goal is to collect the following information through natural conversation:
 
 Ask ONE question at a time. Be warm, encouraging, and brief. After each answer, acknowledge it and ask the next question.
 
-When you have enough info to update their profile, include a JSON block in your response like:
-{"profileUpdate": {"entity_type": "nonprofit_501c3", "mission_statement": "...", "state": "GA", "city": "Atlanta"}, "completedFields": 4}
+When you have enough info to update their profile, put a JSON block on its OWN LINE at the very END of your response, wrapped in triple backticks like:
 
-Only include fields the user has actually provided. The completedFields count should reflect total fields collected so far.
+\`\`\`json
+{"profileUpdate": {"entity_type": "nonprofit_501c3"}, "completedFields": 1}
+\`\`\`
 
-After collecting all key info (at least 6 fields), congratulate them and say they can now go to their dashboard to see grant matches. Include {"onboardingComplete": true} in your response.
+Only include fields the user has actually provided. The completedFields count should reflect total fields collected so far across the whole conversation.
+
+After collecting all key info (at least 6 fields), congratulate them and add "onboardingComplete": true to the JSON.
+
+IMPORTANT: Your conversational text MUST come BEFORE the JSON block. Never mix JSON into your sentences.
 
 Keep responses under 3 sentences. Be conversational, not formal.`;
 
@@ -75,7 +80,9 @@ export async function POST(req: NextRequest) {
     let completedFields = 0;
     let onboardingComplete = false;
 
-    const jsonMatch = responseText.match(/\{[\s\S]*?"profileUpdate"[\s\S]*?\}/);
+    // Match JSON in code fences or bare JSON with profileUpdate
+    const fencedMatch = responseText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+    const jsonMatch = fencedMatch ? [fencedMatch[1]] : responseText.match(/(\{[^{}]*"profileUpdate"[^{}]*\{[^{}]*\}[^{}]*\})/);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -125,7 +132,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Clean the response text — remove JSON blocks for display
-    const cleanResponse = responseText.replace(/\{[\s\S]*?"profileUpdate"[\s\S]*?\}/g, "").trim();
+    const cleanResponse = responseText
+      .replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, "")
+      .replace(/\{[^{}]*"profileUpdate"[^{}]*\{[^{}]*\}[^{}]*\}/g, "")
+      .replace(/,\s*"completedFields":\s*\d+\s*\}/g, "")
+      .trim();
 
     return NextResponse.json({
       response: cleanResponse || responseText,
