@@ -6,24 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
+export default function UpdatePasswordPage() {
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       setError(error.message);
@@ -41,29 +49,29 @@ export default function LoginPage() {
             <Sparkles className="h-6 w-6" style={{ color: "var(--color-brand-teal)" }} />
             <span className="text-xl font-bold">GrantIQ</span>
           </div>
-          <CardTitle>Welcome back</CardTitle>
+          <CardTitle>Set a new password</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleUpdate} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">New password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
+                placeholder="At least 8 characters"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirm">Confirm new password</Label>
+              <Input
+                id="confirm"
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Repeat your new password"
                 required
               />
             </div>
@@ -74,24 +82,9 @@ export default function LoginPage() {
               style={{ backgroundColor: "var(--color-brand-teal)" }}
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Updating..." : "Update password"}
             </Button>
-            <p className="text-sm text-center" style={{ color: "var(--color-warm-500)" }}>
-              <Link
-                href="/reset-password"
-                className="font-medium"
-                style={{ color: "var(--color-brand-teal)" }}
-              >
-                Forgot password?
-              </Link>
-            </p>
           </form>
-          <p className="text-sm text-center mt-4" style={{ color: "var(--color-warm-500)" }}>
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-medium" style={{ color: "var(--color-brand-teal)" }}>
-              Sign up free
-            </Link>
-          </p>
         </CardContent>
       </Card>
     </div>

@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { MatchScoreRing } from "./match-score-ring";
 import { DeadlineCountdown } from "@/components/shared/deadline-countdown";
 import { WhyMatches } from "./why-matches";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useOrg } from "@/hooks/use-org";
 
 interface MatchCardProps {
   id: string;
@@ -35,6 +36,32 @@ const TYPE_COLORS: Record<string, string> = {
 
 export function MatchCard(props: MatchCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const { orgId } = useOrg();
+
+  const handleSaveToPipeline = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/pipeline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ org_id: orgId, grant_source_id: props.id }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to save");
+      }
+      setSaved(true);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const typeColor =
     TYPE_COLORS[props.sourceType.toLowerCase()] ??
     "bg-warm-100 text-warm-700 dark:bg-warm-800 dark:text-warm-300";
@@ -97,9 +124,27 @@ export function MatchCard(props: MatchCardProps) {
           />
         )}
 
+        {saveError && (
+          <p className="mt-2 text-xs text-red-500">{saveError}</p>
+        )}
+
         <div className="flex gap-2 mt-3">
-          <Button size="sm" variant="outline" className="flex-1">
-            Save to Pipeline
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1"
+            onClick={handleSaveToPipeline}
+            disabled={saving || saved}
+          >
+            {saved ? (
+              <span className="flex items-center gap-1">
+                <CheckCircle className="h-3 w-3 text-green-500" /> Saved
+              </span>
+            ) : saving ? (
+              "Saving..."
+            ) : (
+              "Save to Pipeline"
+            )}
           </Button>
           <Button
             size="sm"

@@ -2,7 +2,6 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { ReadinessGauge } from "@/components/grants/readiness-gauge";
 import { ActionPaths } from "@/components/shared/action-paths";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
@@ -10,7 +9,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
-import Link from "next/link";
+import { GrantActionButtons } from "@/components/grants/grant-action-buttons";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -191,17 +190,7 @@ export default async function GrantDetailPage({ params }: Props) {
       </Accordion>
 
       {/* Sticky bottom actions */}
-      <div className="flex gap-3 sticky bottom-4 bg-white dark:bg-warm-900 p-4 rounded-xl border border-warm-200 dark:border-warm-800 shadow-lg">
-        <Button variant="outline" className="flex-1">
-          Save to Pipeline
-        </Button>
-        <Button
-          className="flex-1 bg-brand-teal hover:bg-brand-teal-dark text-white"
-          render={
-            <Link href={`/grants/${id}/write`}>Start Application</Link>
-          }
-        />
-      </div>
+      <GrantActionButtons grantId={id} />
     </div>
   );
 }
