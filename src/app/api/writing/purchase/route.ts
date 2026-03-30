@@ -6,7 +6,9 @@ import { z } from "zod";
 import Stripe from "stripe";
 import { getWritingPrice, canPurchaseWriting } from "@/lib/ai/writing/pricing";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!);
+}
 
 const PurchaseSchema = z.object({
   org_id: z.string().uuid(),
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   let customerId = subscription?.stripe_customer_id;
   if (!customerId) {
-    const customer = await stripe.customers.create({
+    const customer = await getStripe().customers.create({
       email: user.email,
       metadata: { org_id, user_id: user.id },
     });
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Create payment intent
-  const paymentIntent = await stripe.paymentIntents.create({
+  const paymentIntent = await getStripe().paymentIntents.create({
     amount: priceCents,
     currency: "usd",
     customer: customerId,
