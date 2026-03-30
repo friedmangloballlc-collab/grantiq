@@ -9,7 +9,7 @@ import { FileUpload } from "./file-upload";
 
 // ─── Step Definitions ────────────────────────────────────────────────────────
 
-type StepType = "single_select" | "multi_select" | "text" | "textarea" | "file_upload";
+type StepType = "single_select" | "multi_select" | "text" | "textarea" | "file_upload" | "searchable_select";
 
 interface StepOption {
   label: string;
@@ -46,20 +46,133 @@ const ONBOARDING_STEPS: Step[] = [
   {
     id: "industry",
     question: "What industry are you in?",
-    type: "single_select",
+    subtitle: "Type to search or scroll to browse",
+    type: "searchable_select" as StepType,
     options: [
-      { label: "Technology & Software", value: "technology" },
-      { label: "Healthcare & Wellness", value: "healthcare" },
-      { label: "Education & Training", value: "education" },
-      { label: "Retail & E-commerce", value: "retail" },
-      { label: "Food & Beverage", value: "food_beverage" },
-      { label: "Professional Services", value: "professional_services" },
-      { label: "Manufacturing", value: "manufacturing" },
-      { label: "Construction & Trades", value: "construction" },
-      { label: "Creative & Arts", value: "creative_arts" },
-      { label: "Non-Profit / Social Enterprise", value: "nonprofit_social" },
-      { label: "Agriculture & Farming", value: "agriculture" },
-      { label: "Energy & Environment", value: "energy" },
+      { label: "Airlines/Aviation", value: "airlines_aviation" },
+      { label: "Alternative Dispute Resolution", value: "alternative_dispute_resolution" },
+      { label: "Alternative Medicine", value: "alternative_medicine" },
+      { label: "Animation", value: "animation" },
+      { label: "Apparel & Fashion", value: "apparel_fashion" },
+      { label: "Architecture & Planning", value: "architecture_planning" },
+      { label: "Arts And Crafts", value: "arts_crafts" },
+      { label: "Automotive", value: "automotive" },
+      { label: "Aviation & Aerospace", value: "aviation_aerospace" },
+      { label: "Banking", value: "banking" },
+      { label: "Biotechnology", value: "biotechnology" },
+      { label: "Broadcast Media", value: "broadcast_media" },
+      { label: "Building Materials", value: "building_materials" },
+      { label: "Business Supplies And Equipment", value: "business_supplies" },
+      { label: "Chemicals", value: "chemicals" },
+      { label: "Civic & Social Organization", value: "civic_social" },
+      { label: "Civil Engineering", value: "civil_engineering" },
+      { label: "Commercial Real Estate", value: "commercial_real_estate" },
+      { label: "Computer & Network Security", value: "computer_security" },
+      { label: "Computer Games", value: "computer_games" },
+      { label: "Computer Hardware", value: "computer_hardware" },
+      { label: "Computer Networking", value: "computer_networking" },
+      { label: "Computer Software", value: "computer_software" },
+      { label: "Construction", value: "construction" },
+      { label: "Consumer Electronics", value: "consumer_electronics" },
+      { label: "Consumer Goods", value: "consumer_goods" },
+      { label: "Consumer Services", value: "consumer_services" },
+      { label: "Cosmetics", value: "cosmetics" },
+      { label: "Dairy", value: "dairy" },
+      { label: "Defense & Space", value: "defense_space" },
+      { label: "Design", value: "design" },
+      { label: "E-Learning", value: "elearning" },
+      { label: "Education Management", value: "education_management" },
+      { label: "Electrical/Electronic Manufacturing", value: "electrical_manufacturing" },
+      { label: "Entertainment", value: "entertainment" },
+      { label: "Environmental Services", value: "environmental_services" },
+      { label: "Facilities Services", value: "facilities_services" },
+      { label: "Farming", value: "farming" },
+      { label: "Financial Services", value: "financial_services" },
+      { label: "Fine Art", value: "fine_art" },
+      { label: "Fishery", value: "fishery" },
+      { label: "Food & Beverages", value: "food_beverages" },
+      { label: "Food Production", value: "food_production" },
+      { label: "Furniture", value: "furniture" },
+      { label: "Glass, Ceramics & Concrete", value: "glass_ceramics" },
+      { label: "Government Administration", value: "government_admin" },
+      { label: "Graphic Design", value: "graphic_design" },
+      { label: "Health, Wellness And Fitness", value: "health_wellness" },
+      { label: "Higher Education", value: "higher_education" },
+      { label: "Hospital & Health Care", value: "hospital_healthcare" },
+      { label: "Hospitality", value: "hospitality" },
+      { label: "Human Resources", value: "human_resources" },
+      { label: "Import And Export", value: "import_export" },
+      { label: "Individual & Family Services", value: "family_services" },
+      { label: "Industrial Automation", value: "industrial_automation" },
+      { label: "Information Services", value: "information_services" },
+      { label: "Information Technology And Services", value: "it_services" },
+      { label: "Insurance", value: "insurance" },
+      { label: "International Affairs", value: "international_affairs" },
+      { label: "International Trade And Development", value: "international_trade" },
+      { label: "Internet", value: "internet" },
+      { label: "Law Enforcement", value: "law_enforcement" },
+      { label: "Legal Services", value: "legal_services" },
+      { label: "Leisure, Travel & Tourism", value: "leisure_travel" },
+      { label: "Libraries", value: "libraries" },
+      { label: "Logistics And Supply Chain", value: "logistics" },
+      { label: "Luxury Goods & Jewelry", value: "luxury_goods" },
+      { label: "Machinery", value: "machinery" },
+      { label: "Maritime", value: "maritime" },
+      { label: "Mechanical Or Industrial Engineering", value: "mechanical_engineering" },
+      { label: "Media Production", value: "media_production" },
+      { label: "Medical Devices", value: "medical_devices" },
+      { label: "Medical Practice", value: "medical_practice" },
+      { label: "Mental Health Care", value: "mental_health" },
+      { label: "Mining & Metals", value: "mining_metals" },
+      { label: "Motion Pictures And Film", value: "film" },
+      { label: "Museums And Institutions", value: "museums" },
+      { label: "Music", value: "music" },
+      { label: "Nanotechnology", value: "nanotechnology" },
+      { label: "Newspapers", value: "newspapers" },
+      { label: "Non-Profit Organization Management", value: "nonprofit_management" },
+      { label: "Oil & Energy", value: "oil_energy" },
+      { label: "Online Media", value: "online_media" },
+      { label: "Package/Freight Delivery", value: "freight_delivery" },
+      { label: "Packaging And Containers", value: "packaging" },
+      { label: "Paper & Forest Products", value: "paper_forest" },
+      { label: "Performing Arts", value: "performing_arts" },
+      { label: "Pharmaceuticals", value: "pharmaceuticals" },
+      { label: "Philanthropy", value: "philanthropy" },
+      { label: "Photography", value: "photography" },
+      { label: "Plastics", value: "plastics" },
+      { label: "Primary/Secondary Education", value: "k12_education" },
+      { label: "Printing", value: "printing" },
+      { label: "Professional Training & Coaching", value: "professional_training" },
+      { label: "Program Development", value: "program_development" },
+      { label: "Public Policy", value: "public_policy" },
+      { label: "Public Safety", value: "public_safety" },
+      { label: "Publishing", value: "publishing" },
+      { label: "Railroad Manufacture", value: "railroad" },
+      { label: "Ranching", value: "ranching" },
+      { label: "Real Estate", value: "real_estate" },
+      { label: "Recreational Facilities And Services", value: "recreation" },
+      { label: "Religious Institutions", value: "religious" },
+      { label: "Renewables & Environment", value: "renewables" },
+      { label: "Research", value: "research" },
+      { label: "Restaurants", value: "restaurants" },
+      { label: "Retail", value: "retail" },
+      { label: "Security And Investigations", value: "security" },
+      { label: "Semiconductors", value: "semiconductors" },
+      { label: "Shipbuilding", value: "shipbuilding" },
+      { label: "Sporting Goods", value: "sporting_goods" },
+      { label: "Sports", value: "sports" },
+      { label: "Supermarkets", value: "supermarkets" },
+      { label: "Telecommunications", value: "telecommunications" },
+      { label: "Textiles", value: "textiles" },
+      { label: "Think Tanks", value: "think_tanks" },
+      { label: "Translation And Localization", value: "translation" },
+      { label: "Transportation/Trucking/Railroad", value: "transportation" },
+      { label: "Utilities", value: "utilities" },
+      { label: "Veterinary", value: "veterinary" },
+      { label: "Warehousing", value: "warehousing" },
+      { label: "Wholesale", value: "wholesale" },
+      { label: "Wine And Spirits", value: "wine_spirits" },
+      { label: "Wireless", value: "wireless" },
       { label: "Other", value: "other" },
     ],
   },
@@ -271,6 +384,7 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [encIndex, setEncIndex] = useState(0);
+  const [industrySearch, setIndustrySearch] = useState("");
 
   const visibleSteps = getVisibleSteps(answers);
   const currentStep = visibleSteps[currentStepIndex];
@@ -280,6 +394,7 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
   useEffect(() => {
     setTextInput("");
     setMultiSelected([]);
+    setIndustrySearch("");
   }, [currentStepIndex]);
 
   const saveToServer = async (stepId: string, value: string | string[]) => {
@@ -526,6 +641,59 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
               </Button>
             </div>
           )}
+
+          {/* Searchable select */}
+          {currentStep.type === "searchable_select" && currentStep.options && (() => {
+            const allOptions = currentStep.options;
+            const filtered = industrySearch.trim()
+              ? allOptions.filter((o) =>
+                  o.label.toLowerCase().includes(industrySearch.trim().toLowerCase())
+                )
+              : allOptions;
+            return (
+              <div className="space-y-2">
+                <input
+                  value={industrySearch}
+                  onChange={(e) => setIndustrySearch(e.target.value)}
+                  placeholder="Search industries..."
+                  disabled={saving}
+                  autoFocus
+                  className="w-full rounded-lg border border-warm-200 dark:border-warm-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal disabled:opacity-50"
+                />
+                <p className="text-xs text-warm-400">
+                  Showing {filtered.length} of {allOptions.length} industries
+                </p>
+                <div
+                  className="overflow-y-auto rounded-lg border border-warm-200 dark:border-warm-700"
+                  style={{ maxHeight: "300px" }}
+                >
+                  {filtered.length === 0 ? (
+                    <p className="px-4 py-3 text-sm text-warm-400">No industries match your search.</p>
+                  ) : (
+                    filtered.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          if (saving) return;
+                          setTimeout(() => void advance(opt.value), 500);
+                        }}
+                        disabled={saving}
+                        className={cn(
+                          "w-full text-left px-4 py-2.5 text-sm font-medium transition-colors duration-100",
+                          "text-warm-800 dark:text-warm-200",
+                          "hover:bg-brand-teal/10 hover:text-brand-teal",
+                          "border-b border-warm-100 dark:border-warm-700 last:border-b-0",
+                          "disabled:opacity-50 disabled:cursor-not-allowed"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* File upload */}
           {currentStep.type === "file_upload" && (
