@@ -3,6 +3,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { TodaysFocus } from "@/components/dashboard/todays-focus";
 import { StatsOverview } from "@/components/dashboard/stats-overview";
 import { WhatsChanged } from "@/components/dashboard/whats-changed";
+import { ServiceTracker, type ServiceEngagement } from "@/components/dashboard/service-tracker";
+import { AZQualification } from "@/components/dashboard/az-qualification";
+import { calculateAZScore } from "@/lib/qualification/az-score";
+import type { AZScoreResult } from "@/lib/qualification/az-score";
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient();
@@ -14,6 +18,8 @@ export default async function DashboardPage() {
   let stats = { totalMatches: 0, activePipeline: 0, totalPipelineValue: 0, winRate: 0 };
   let focusItems: Parameters<typeof TodaysFocus>[0]["items"] = [];
   let changeItems: Parameters<typeof WhatsChanged>[0]["items"] = [];
+  let activeEngagement: ServiceEngagement | null = null;
+  let azScore: AZScoreResult | null = null;
 
   if (user) {
     const db = createAdminClient();
@@ -214,6 +220,35 @@ export default async function DashboardPage() {
           };
         });
       }
+
+      // ── Active Service Engagement ──────────────────────────────────────────
+      const { data: engagement } = await db
+        .from("service_engagements")
+        .select("id, package_name, service_type, status, current_step, step_statuses, assigned_advisor, started_at")
+        .eq("org_id", orgId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (engagement) {
+        activeEngagement = engagement as ServiceEngagement;
+      }
+
+      // ── A-Z Qualification Score ────────────────────────────────────────────
+      const [azOrgResult, azProfileResult, azCapabilitiesResult, azSubscriptionResult] = await Promise.all([
+        db.from("organizations").select("annual_budget, entity_type, employee_count").eq("id", orgId).single(),
+        db.from("org_profiles").select("business_stage, grant_history_level, program_areas, documents_ready, mission_statement").eq("org_id", orgId).single(),
+        db.from("org_capabilities").select("has_sam_registration").eq("org_id", orgId).single(),
+        db.from("subscriptions").select("tier").eq("org_id", orgId).eq("status", "active").limit(1).single(),
+      ]);
+
+      azScore = calculateAZScore(
+        azOrgResult.data ?? null,
+        azProfileResult.data ?? null,
+        azCapabilitiesResult.data ?? null,
+        azSubscriptionResult.data ?? null
+      );
     }
   }
 
@@ -225,6 +260,8 @@ export default async function DashboardPage() {
       </div>
       <TodaysFocus items={focusItems} />
       <StatsOverview {...stats} />
+      {activeEngagement && <ServiceTracker engagement={activeEngagement} />}
+      {azScore && <AZQualification result={azScore} />}
       <WhatsChanged items={changeItems} />
     </div>
   );
