@@ -132,7 +132,7 @@ export default async function WritingDashboardPage() {
         .order("created_at", { ascending: false })
         .limit(50);
 
-      drafts = (data ?? []) as GrantDraft[];
+      drafts = (data ?? []) as unknown as GrantDraft[];
     }
   }
 
@@ -148,13 +148,8 @@ export default async function WritingDashboardPage() {
         </div>
         <Button
           className="bg-[var(--color-brand-teal)] text-white hover:bg-[var(--color-brand-teal)]/90"
-          asChild
-        >
-          <Link href="/matches">
-            <Plus className="h-4 w-4" />
-            New Application
-          </Link>
-        </Button>
+          render={<Link href="/matches"><Plus className="h-4 w-4" /> New Application</Link>}
+        />
       </div>
 
       {/* Empty state */}
@@ -166,9 +161,7 @@ export default async function WritingDashboardPage() {
             Start an application from any of your grant matches to generate an
             AI-powered draft.
           </p>
-          <Button className="mt-5" asChild>
-            <Link href="/matches">Browse Grant Matches</Link>
-          </Button>
+          <Button className="mt-5" render={<Link href="/matches">Browse Grant Matches</Link>} />
         </div>
       )}
 
