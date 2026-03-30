@@ -10,19 +10,22 @@ export default async function AppLayout({
 }) {
   const supabase = await createServerSupabaseClient();
 
-  // Verify session — redirect to login if unauthenticated
+  // Verify user — redirect to login if unauthenticated
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/login");
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
 
-  // Fetch the user's org membership (first active membership)
-  const { data: membership } = await supabase
+  // Fetch the user's org membership using admin client to bypass RLS
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const admin = createAdminClient();
+
+  const { data: membership } = await admin
     .from("org_members")
     .select("org_id, role, organizations(id, name)")
     .eq("user_id", userId)
@@ -47,7 +50,7 @@ export default async function AppLayout({
   const role = membership.role as OrgContext["role"];
 
   // Fetch subscription tier
-  const { data: subscription } = await supabase
+  const { data: subscription } = await admin
     .from("subscriptions")
     .select("tier")
     .eq("org_id", orgId)
