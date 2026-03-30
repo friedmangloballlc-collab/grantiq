@@ -420,6 +420,7 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
   const [encouragement, setEncouragement] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const [encIndex, setEncIndex] = useState(0);
   const [industrySearch, setIndustrySearch] = useState("");
 
@@ -507,6 +508,32 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
 
   // ── Done screen ──────────────────────────────────────────────────────────
   if (done) {
+    const handleGoToDashboard = async () => {
+      setCompleting(true);
+      try {
+        await fetch("/api/onboarding/complete", { method: "POST" });
+      } catch {
+        // Non-blocking — proceed to dashboard even if this fails
+      }
+      // Brief pause so the user sees the "Finding your grants" state
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      window.location.href = "/dashboard";
+    };
+
+    if (completing) {
+      return (
+        <div className="flex flex-col items-center justify-center flex-1 gap-6 text-center py-12">
+          <div className="w-12 h-12 rounded-full border-4 border-brand-teal border-t-transparent animate-spin" />
+          <h3 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
+            Finding your grants...
+          </h3>
+          <p className="text-warm-500 max-w-sm">
+            Our AI is matching your profile to thousands of grant opportunities.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center flex-1 gap-6 text-center py-12">
         <div className="text-5xl">🎉</div>
@@ -519,9 +546,7 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
         </p>
         <Button
           className="bg-brand-teal hover:bg-brand-teal-dark text-white px-8 py-3 text-base"
-          onClick={() => {
-            window.location.href = "/dashboard";
-          }}
+          onClick={() => void handleGoToDashboard()}
         >
           Go to Dashboard
         </Button>

@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { GoalProgress } from "@/components/roadmap/goal-progress";
 import { DiversityScore } from "@/components/roadmap/diversity-score";
 import { RoadmapTimeline } from "@/components/roadmap/roadmap-timeline";
@@ -6,9 +7,58 @@ import { EmptyState } from "@/components/shared/empty-state";
 
 export default async function RoadmapPage() {
   const supabase = await createServerSupabaseClient();
-  const { data: roadmaps } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="p-6 max-w-6xl">
+        <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-6">
+          Funding Roadmap
+        </h1>
+        <EmptyState
+          title="Not signed in"
+          description="Please sign in to view your funding roadmap."
+          actionLabel="Sign In"
+          actionHref="/login"
+        />
+      </div>
+    );
+  }
+
+  const db = createAdminClient();
+
+  const { data: membership } = await db
+    .from("org_members")
+    .select("org_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .limit(1)
+    .single();
+
+  const orgId = membership?.org_id;
+
+  if (!orgId) {
+    return (
+      <div className="p-6 max-w-6xl">
+        <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-6">
+          Funding Roadmap
+        </h1>
+        <EmptyState
+          title="No organization found"
+          description="Complete your profile setup to generate your funding roadmap."
+          actionLabel="Complete Profile"
+          actionHref="/onboarding"
+        />
+      </div>
+    );
+  }
+
+  const { data: roadmaps } = await db
     .from("funding_roadmaps")
     .select("*")
+    .eq("org_id", orgId)
     .order("year")
     .order("quarter");
 

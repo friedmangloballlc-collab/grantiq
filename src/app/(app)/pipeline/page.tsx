@@ -1,13 +1,59 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { KanbanBoard, type PipelineItem } from "@/components/pipeline/kanban-board";
 import { PipelineSummary } from "@/components/pipeline/pipeline-summary";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export default async function PipelinePage() {
   const supabase = await createServerSupabaseClient();
-  const { data: items } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="p-6 max-w-6xl">
+        <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-6">Pipeline</h1>
+        <EmptyState
+          title="Not signed in"
+          description="Please sign in to view your pipeline."
+          actionLabel="Sign In"
+          actionHref="/login"
+        />
+      </div>
+    );
+  }
+
+  const db = createAdminClient();
+
+  const { data: membership } = await db
+    .from("org_members")
+    .select("org_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .limit(1)
+    .single();
+
+  const orgId = membership?.org_id;
+
+  if (!orgId) {
+    return (
+      <div className="p-6 max-w-6xl">
+        <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-6">Pipeline</h1>
+        <EmptyState
+          title="No organization found"
+          description="Complete your profile setup to start tracking your pipeline."
+          actionLabel="Complete Profile"
+          actionHref="/onboarding"
+        />
+      </div>
+    );
+  }
+
+  const { data: items } = await db
     .from("grant_pipeline")
     .select("*, grant_sources(name, funder_name, amount_max, deadline)")
+    .eq("org_id", orgId)
     .order("created_at", { ascending: false });
 
   if (!items?.length) {
