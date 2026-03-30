@@ -9,35 +9,57 @@ import { ParsedGrantSchema, type ParsedGrant } from "./grant-schema";
 export const COLUMN_ALIASES: Record<string, string[]> = {
   name: [
     "program name", "grant name", "source name", "foundation name",
-    "company name", "program", "grant", "funder", "organization", "source", "name",
+    "company name", "program", "programs", "grant", "funder", "organization",
+    "source", "name", "mechanism", "initiative", "opportunity", "title",
+    "grant program", "program title", "opportunity title", "fund name",
+    "resource", "grant title", "competition", "challenge", "accelerator",
+    "prize", "award name", "loan program", "platform", "fellowship",
+    "crowdfunding platform", "initiative name",
   ],
   funder_name: [
-    "agency", "funder", "foundation name", "company name",
-    "organization", "source", "grantor", "name",
+    "agency", "funder", "foundation", "foundation name", "company", "company name",
+    "organization", "source", "grantor", "name", "department", "sponsor",
+    "funder name", "funding agency", "granting agency", "funding source", "institution",
   ],
-  url: ["url", "website", "link", "web", "apply url", "application url"],
+  url: [
+    "url", "website", "link", "web", "apply url", "application url",
+    "program url", "application link", "apply link", "program link",
+    "info", "more info",
+  ],
   description: [
     "description", "focus", "focus areas", "focus area", "purpose",
-    "notes", "details", "summary", "about",
+    "notes", "details", "summary", "about", "key topics", "what it funds",
+    "program focus", "mission", "scope", "program overview",
   ],
   // award_range is the raw text field; amount_min/max are derived from it
   award_range: [
     "award range", "award amount", "grant amount", "funding",
     "award", "range", "award size", "typical award", "amount",
+    "max award", "phase i award", "phase ii award", "annual giving",
+    "annual grants", "annual budget", "funding level", "budget",
+    "prize amount", "prize", "total prizes", "funding/benefits",
+    "benefits", "loan amount", "credit limit",
   ],
-  deadline: ["deadline", "due date", "application deadline", "close date", "due"],
+  deadline: [
+    "deadline", "due date", "application deadline", "close date", "due",
+    "deadlines", "timeline", "submission deadline", "closing date",
+    "application due",
+  ],
   eligibility: [
     "eligibility", "eligible", "who can apply",
-    "applicant types", "eligible applicants",
+    "applicant types", "eligible applicants", "eligible entities",
+    "eligible organizations", "who is eligible", "applicant eligibility",
+    "match required", "accepts unsolicited?", "for-profit?",
   ],
-  category: ["category", "type", "sector", "focus area", "subject", "program area"],
+  category: ["category", "type", "sector", "focus area", "subject", "program area", "industry focus", "industry", "vertical"],
   cfda_number: [
     "cfda/aln number", "cfda number", "aln number", "cfda", "aln",
     "assistance listing", "cfda/aln",
   ],
   state: [
     "state", "geographic", "geography", "geographic focus",
-    "geographic preference", "location", "region",
+    "geographic preference", "location", "region", "service area",
+    "coverage", "coverage area", "target area", "assets",
   ],
   application_process: ["application process", "how to apply", "apply"],
 };
@@ -107,7 +129,14 @@ export function extractRowData(
     resolveColumn(row, "name", undefined) ||
     name;
 
-  const urlVal = resolveColumn(row, "url", undefined);
+  // Ensure URL is either a proper http(s) URL or null
+  const rawUrl = resolveColumn(row, "url", undefined);
+  const urlVal =
+    rawUrl && /^https?:\/\//i.test(rawUrl)
+      ? rawUrl
+      : rawUrl && rawUrl.includes(".")
+      ? `https://${rawUrl}`
+      : null;
   const desc = resolveColumn(row, "description", undefined);
   const amountRaw = resolveColumn(row, "award_range", undefined) ?? "";
   const deadlineRaw = resolveColumn(row, "deadline", undefined) ?? "";
@@ -157,9 +186,175 @@ export function extractRowData(
 }
 
 // ---------------------------------------------------------------------------
+// KNOWN_HEADER_KEYWORDS — the set of lowercase tokens used to score whether
+// a row looks like a column-header row vs a section label or data row.
+// ---------------------------------------------------------------------------
+const KNOWN_HEADER_KEYWORDS = new Set([
+  "program", "programs", "agency", "foundation", "company", "grant", "funder",
+  "name", "title", "award", "amount", "eligibility", "website", "url", "deadline",
+  "focus", "description", "mechanism", "organization", "department", "sponsor",
+  "budget", "location", "region", "state", "category", "cfda", "type",
+  "phase", "annual", "giving", "grants", "assets", "topics", "funds",
+  "application", "apply", "accepts", "profit", "match", "duration",
+  "competition", "challenge", "accelerator", "prize", "platform", "fellowship",
+  "industry", "sector", "vertical", "loan", "crowdfunding", "employer",
+]);
+
+// A header cell is SHORT (≤ 40 chars) and is either an exact keyword match
+// or a multi-word phrase where every token is common label vocabulary.
+// We do NOT use substring matching on long values to avoid false positives.
+function isHeaderCell(cell: string): boolean {
+  const s = cell.trim();
+  if (s.length === 0 || s.length > 60) return false;
+
+  const lower = s.toLowerCase();
+
+  // Exact match
+  if (KNOWN_HEADER_KEYWORDS.has(lower)) return true;
+
+  // Multi-word header: every word is short and alphanumeric (no slashes, parens etc.)
+  // AND at least one word is a keyword
+  const words = lower.split(/[\s_]+/).filter(Boolean);
+  if (words.length > 5) return false; // Too many words → probably data
+  const hasKeyword = words.some((w) => KNOWN_HEADER_KEYWORDS.has(w));
+  const allSimple = words.every((w) => /^[a-z0-9?/]+$/.test(w));
+  if (hasKeyword && allSimple) return true;
+
+  // Common multi-word header patterns (exact phrases)
+  const MULTI_WORD_HEADERS = [
+    "award range", "award amount", "grant amount", "prize amount",
+    "due date", "close date", "focus area", "focus areas", "key topics",
+    "industry focus", "program area", "primary sector sheet", "secondary sector",
+    "annual budget", "annual giving", "annual grants", "max award",
+    "phase i award", "phase ii award", "for-profit?", "for-profit eligible?",
+    "accepts unsolicited?", "match required", "equity taken",
+    "funding/benefits", "what it funds", "program focus",
+  ];
+  if (MULTI_WORD_HEADERS.includes(lower)) return true;
+
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// isHeaderRow — returns a score (0-N) indicating how likely this row is a
+// column-header row.  A score ≥ 2 is treated as a header.
+// ---------------------------------------------------------------------------
+function headerScore(row: any[]): number {
+  const nonEmpty = row.filter((c) => String(c).trim().length > 0);
+  if (nonEmpty.length < 2) return 0;
+  return nonEmpty.filter((cell) => isHeaderCell(String(cell))).length;
+}
+
+// ---------------------------------------------------------------------------
+// findHeaderRow — scan the first 15 rows of a worksheet and return the index
+// of the row that best looks like a column header.  Falls back to 0.
+// ---------------------------------------------------------------------------
+export function findHeaderRow(ws: XLSX.WorkSheet): number {
+  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" }) as string[][];
+  let bestRow = 0;
+  let bestScore = -1;
+  for (let i = 0; i < Math.min(15, data.length); i++) {
+    const score = headerScore(data[i] ?? []);
+    if (score > bestScore) {
+      bestScore = score;
+      bestRow = i;
+    }
+  }
+  return bestRow;
+}
+
+// ---------------------------------------------------------------------------
+// looksLikeDataCell — returns true if the cell value looks like actual data
+// (dollar amounts, URLs, multi-word descriptions with digits) rather than a
+// column label.
+// ---------------------------------------------------------------------------
+function looksLikeDataCell(cell: string): boolean {
+  const s = cell.trim();
+  if (/\$[\d,]/.test(s)) return true;        // dollar amount
+  if (/https?:\/\//i.test(s)) return true;   // explicit URL
+  if (/\.\w{2,4}$/.test(s) && !s.includes(" ")) return true; // domain-like
+  if (/\d/.test(s) && s.length > 6) return true; // contains digits + long
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// isLikelyHeaderRow — a row is a header when:
+//   • it scores ≥ 2 on keyword matching, AND
+//   • none of its cells look like actual data values
+// ---------------------------------------------------------------------------
+function isLikelyHeaderRow(row: any[]): boolean {
+  const nonEmpty = row
+    .map((c) => String(c ?? "").trim())
+    .filter((c) => c.length > 0);
+
+  if (nonEmpty.length < 2) return false;
+  if (headerScore(row) < 2) return false;
+
+  // If any cell looks like a real data value, treat the row as data
+  if (nonEmpty.some(looksLikeDataCell)) return false;
+
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// extractSections — walk every row of the sheet and split it into sections.
+// A new section starts whenever we encounter a row that looks like a header.
+// Each section is { headers: string[], rows: any[][] }.
+// ---------------------------------------------------------------------------
+interface SheetSection {
+  headers: string[];
+  rows: any[][];
+}
+
+function extractSections(rawRows: any[][]): SheetSection[] {
+  const sections: SheetSection[] = [];
+  let currentHeaders: string[] | null = null;
+  let currentRows: any[][] = [];
+
+  // Rows we always skip (nav links, tips, sheet titles)
+  const SKIP_PREFIXES = ["◄", "tip:", "press ctrl", "industries covered"];
+
+  const isSkipRow = (row: any[]): boolean => {
+    const first = String(row[0] ?? "").trim().toLowerCase();
+    return SKIP_PREFIXES.some((p) => first.startsWith(p));
+  };
+
+  const isEmptyRow = (row: any[]): boolean =>
+    row.every((c) => String(c).trim().length === 0);
+
+  for (let i = 0; i < rawRows.length; i++) {
+    const row = rawRows[i];
+
+    if (isEmptyRow(row)) continue;
+    if (isSkipRow(row)) continue;
+
+    if (isLikelyHeaderRow(row)) {
+      // Start a new section
+      if (currentHeaders && currentRows.length > 0) {
+        sections.push({ headers: currentHeaders, rows: currentRows });
+      }
+      currentHeaders = row.map((h: any) => normalizeColumnName(String(h ?? "")));
+      currentRows = [];
+    } else if (currentHeaders) {
+      const nonEmpty = row.filter((c: any) => String(c).trim().length > 0);
+      if (nonEmpty.length >= 1) {
+        currentRows.push(row);
+      }
+    }
+    // Rows before first header (section labels, sheet titles) — skip
+  }
+
+  // Flush last section
+  if (currentHeaders && currentRows.length > 0) {
+    sections.push({ headers: currentHeaders, rows: currentRows });
+  }
+
+  return sections;
+}
+
+// ---------------------------------------------------------------------------
 // parseGrantsXlsx — parse an entire XLSX file.
-// Each sheet row is first converted to a normalised Record<string, string>
-// keyed by lowercase column header, then passed to extractRowData.
+// Handles multi-section sheets where each section has its own header row.
 // ---------------------------------------------------------------------------
 export interface ParseGrantsResult {
   grants: ParsedGrant[];
@@ -189,44 +384,35 @@ export function parseGrantsXlsx(filePath: string): ParseGrantsResult {
 
     if (rawRows.length < 2) continue;
 
-    // Find the header row (first row with 3+ non-empty cells, within first 5)
-    let headerIdx = 0;
-    for (let i = 0; i < Math.min(5, rawRows.length); i++) {
-      const nonEmpty = rawRows[i].filter((c: any) => c && String(c).trim()).length;
-      if (nonEmpty >= 3) {
-        headerIdx = i;
-        break;
-      }
-    }
-
-    const headers: string[] = rawRows[headerIdx].map((h: any) =>
-      normalizeColumnName(String(h ?? "")),
-    );
-
     bySheet[sheetName] = { parsed: 0, skipped: 0 };
 
-    for (let rowIdx = headerIdx + 1; rowIdx < rawRows.length; rowIdx++) {
-      const rawRow = rawRows[rowIdx];
-      totalRows++;
+    // Split the sheet into multiple header+data sections
+    const sections = extractSections(rawRows);
 
-      // Build normalised row object
-      const row: Record<string, string> = {};
-      headers.forEach((header, colIdx) => {
-        if (header) {
-          const val = rawRow[colIdx];
-          row[header] = val !== null && val !== undefined ? String(val).trim() : "";
+    for (const section of sections) {
+      const { headers, rows } = section;
+
+      for (const rawRow of rows) {
+        totalRows++;
+
+        // Build normalised row object
+        const row: Record<string, string> = {};
+        headers.forEach((header, colIdx) => {
+          if (header) {
+            const val = rawRow[colIdx];
+            row[header] = val !== null && val !== undefined ? String(val).trim() : "";
+          }
+        });
+
+        const grant = extractRowData(row, sheetName);
+        if (grant) {
+          grants.push(grant);
+          bySheet[sheetName].parsed++;
+        } else {
+          const hasContent = Object.values(row).some((v) => v.length > 0);
+          if (hasContent) errorCount++;
+          bySheet[sheetName].skipped++;
         }
-      });
-
-      const grant = extractRowData(row, sheetName);
-      if (grant) {
-        grants.push(grant);
-        bySheet[sheetName].parsed++;
-      } else {
-        // Check if the row was truly empty vs a parse failure
-        const hasContent = Object.values(row).some((v) => v.length > 0);
-        if (hasContent) errorCount++;
-        bySheet[sheetName].skipped++;
       }
     }
   }
