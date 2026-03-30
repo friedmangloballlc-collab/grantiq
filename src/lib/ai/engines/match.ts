@@ -1,7 +1,8 @@
 import { aiCall } from "@/lib/ai/call";
 import { MODELS } from "@/lib/ai/client";
 import {
-  MatchBatchOutputSchema,
+  MatchBatchLLMOutputSchema,
+  enrichLLMOutput,
   type MatchBatchOutput,
 } from "@/lib/ai/schemas/match";
 import { MATCH_ENGINE_SYSTEM_PROMPT } from "@/lib/ai/prompts/match-system";
@@ -128,8 +129,9 @@ export async function scoreGrantBatch(
     });
 
     const raw = JSON.parse(response.content);
-    const validated = MatchBatchOutputSchema.parse(raw);
-    allScoredGrants.push(...validated.scored_grants);
+    const validated = MatchBatchLLMOutputSchema.parse(raw);
+    const enriched = enrichLLMOutput(validated);
+    allScoredGrants.push(...enriched.scored_grants);
   }
 
   return { scored_grants: allScoredGrants };

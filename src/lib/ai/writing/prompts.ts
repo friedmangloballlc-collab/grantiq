@@ -106,6 +106,11 @@ Based on all the above, provide 5-8 specific, actionable writing recommendations
 
 ### Alignment Score
 Score 1-100 based on mission overlap, geographic fit, organizational fit, and historical patterns.
+- 80-100: Exceptional alignment. This funder is practically designed for this org.
+- 60-79: Strong alignment. Good fit with minor gaps.
+- 40-59: Moderate alignment. Worth pursuing but requires strategic framing.
+- 20-39: Weak alignment. Significant mismatches. Only pursue if no better options.
+- 1-19: Poor alignment. Do not recommend pursuing.
 
 ## Rules
 
@@ -396,8 +401,10 @@ Score this application on 6 dimensions, each rated 1-10:
 
 ## Overall Score Calculation
 
-Overall = (need_score * 15 + goals_score * 20 + methods_score * 25 + eval_score * 15 + budget_score * 10 + capacity_score * 15)
-- This weighting reflects typical federal review criteria. Max = 100.
+Overall = (need_score * 1.5 + goals_score * 2.0 + methods_score * 2.5 + eval_score * 1.5 + budget_score * 1.0 + capacity_score * 1.5)
+- This weighting reflects typical federal review criteria.
+- Each dimension is 1-10, so the theoretical max is 100 (if all dimensions score 10).
+- A realistic strong application scores 70-85. Exceptional is 85+.
 
 ## Grade Assignment
 - A: 85-100

@@ -123,9 +123,11 @@ Return ONLY valid JSON (no markdown, no code fences):
 }
 
 IMPORTANT RULES:
-- Every recommended grant MUST have appeared in the matched grants input. Do not invent grants.
-- Be conservative on capacity. It's better to recommend 6 high-probability grants than 15 long-shots.
+- Every recommended grant MUST have appeared in the matched grants input. Do not invent grants. Do not fabricate funder names, amounts, or deadlines.
+- If fewer than 4 matched grants are available after readiness filtering, state this explicitly in sequencing_rationale and recommend the user run a new grant discovery search. Do not pad quarters with invented opportunities. It is acceptable for a quarter to have 0 grants.
+- Be conservative on capacity. It is better to recommend 6 high-probability grants than 15 long-shots.
 - Make the roadmap feel achievable and encouraging. Start with wins.
 - Include at least one "quick win" in Q1 — a smaller, easier grant to build momentum.
-- If no grants pass readiness gating, the roadmap should focus on readiness improvement with 0-1 easy applications.
-- Prerequisites must be specific and time-bounded: "Register for SAM.gov (4 weeks)" not "Get registered".`;
+- If no grants pass readiness gating, the roadmap should focus entirely on readiness improvement actions with 0-1 easy applications.
+- Prerequisites must be specific and time-bounded: "Register for SAM.gov (4 weeks)" not "Get registered".
+- Use the CURRENT DATE provided to set realistic quarter boundaries. Do not use hardcoded years.`;

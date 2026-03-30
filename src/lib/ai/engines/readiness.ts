@@ -1,6 +1,6 @@
 import { aiCall } from "@/lib/ai/call";
 import { MODELS } from "@/lib/ai/client";
-import { ReadinessOutputSchema, type ReadinessOutput } from "@/lib/ai/schemas/readiness";
+import { ReadinessLLMOutputSchema, enrichReadinessOutput, type ReadinessOutput } from "@/lib/ai/schemas/readiness";
 import { READINESS_ENGINE_SYSTEM_PROMPT } from "@/lib/ai/prompts/readiness-system";
 
 interface OrgReadinessInput {
@@ -99,7 +99,8 @@ export async function assessReadiness(
 
   try {
     const raw = JSON.parse(response.content);
-    return ReadinessOutputSchema.parse(raw);
+    const validated = ReadinessLLMOutputSchema.parse(raw);
+    return enrichReadinessOutput(validated);
   } catch (err) {
     console.error("Readiness Engine response parsing failed:", err);
     console.error("Raw response:", response.content.slice(0, 500));

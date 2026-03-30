@@ -6,7 +6,7 @@ const CRITERIA_LABELS: Record<string, string> = {
   capacity_fit: "Capacity Fit",
   geographic_match: "Geographic Match",
   budget_fit: "Budget Fit",
-  competition_level: "Competition Level",
+  competitive_advantage: "Competitive Advantage",
   funder_history_fit: "Funder History",
 };
 
@@ -20,7 +20,8 @@ export function WhyMatches({
   return (
     <div className="mt-3 space-y-2 text-sm border-t border-warm-200 dark:border-warm-800 pt-3">
       {Object.entries(scoreBreakdown).map(([key, score]) => {
-        const status = score >= 75 ? "green" : score >= 50 ? "yellow" : "gray";
+        // Scores are 1-10 integers from the match engine
+        const status = score >= 7 ? "green" : score >= 5 ? "yellow" : "gray";
         const Icon =
           status === "green" ? Check : status === "yellow" ? AlertTriangle : Minus;
         const color =
@@ -33,7 +34,7 @@ export function WhyMatches({
           <div key={key} className="flex items-center gap-2">
             <Icon className={cn("h-4 w-4 shrink-0", color)} />
             <span className="text-warm-600 dark:text-warm-400">
-              {CRITERIA_LABELS[key] || key}: {score}%
+              {CRITERIA_LABELS[key] || key}: {score}/10
             </span>
           </div>
         );
