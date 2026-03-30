@@ -99,6 +99,7 @@ export async function handleMatchGrants(
         years_operating: capabilities.years_operating ?? 0,
         prior_federal_grants: capabilities.prior_federal_grants ?? 0,
         prior_foundation_grants: capabilities.prior_foundation_grants ?? 0,
+        industry: orgProfile.industry ?? null,
       },
       filteredCandidates.map((c) => ({
         id: c.id,

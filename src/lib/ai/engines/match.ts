@@ -6,6 +6,7 @@ import {
   type MatchBatchOutput,
 } from "@/lib/ai/schemas/match";
 import { MATCH_ENGINE_SYSTEM_PROMPT } from "@/lib/ai/prompts/match-system";
+import { buildIndustryContext } from "@/lib/industry/pain-points";
 
 export interface OrgProfile {
   name: string;
@@ -24,6 +25,8 @@ export interface OrgProfile {
   years_operating: number;
   prior_federal_grants: number;
   prior_foundation_grants: number;
+  /** Industry key from onboarding (e.g. "computer_software", "hospital_healthcare") */
+  industry?: string | null;
 }
 
 export interface GrantForScoring {
@@ -49,6 +52,8 @@ export function buildMatchUserMessage(
   org: OrgProfile,
   grants: GrantForScoring[]
 ): string {
+  const industryContext = buildIndustryContext(org.industry);
+
   const orgSection = [
     "## ORGANIZATION PROFILE",
     `Name: ${org.name}`,
@@ -68,6 +73,7 @@ export function buildMatchUserMessage(
     `- 501(c)(3) Status: ${org.has_501c3 ? "Yes" : "No"}`,
     `- SAM.gov Registration: ${org.has_sam_registration ? "Active" : "Not registered"}`,
     `- Financial Audit: ${org.has_audit ? "Has recent audit" : "No audit on file"}`,
+    ...(industryContext ? ["", industryContext] : []),
   ].join("\n");
 
   const grantsSection = grants

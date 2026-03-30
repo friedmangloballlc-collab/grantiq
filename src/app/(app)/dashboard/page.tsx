@@ -5,6 +5,7 @@ import { StatsOverview } from "@/components/dashboard/stats-overview";
 import { WhatsChanged } from "@/components/dashboard/whats-changed";
 import { ServiceTracker, type ServiceEngagement } from "@/components/dashboard/service-tracker";
 import { AZQualification } from "@/components/dashboard/az-qualification";
+import { IndustryInsights } from "@/components/dashboard/industry-insights";
 import { calculateAZScore } from "@/lib/qualification/az-score";
 import type { AZScoreResult } from "@/lib/qualification/az-score";
 
@@ -20,6 +21,7 @@ export default async function DashboardPage() {
   let changeItems: Parameters<typeof WhatsChanged>[0]["items"] = [];
   let activeEngagement: ServiceEngagement | null = null;
   let azScore: AZScoreResult | null = null;
+  let industryKey: string | null = null;
 
   if (user) {
     const db = createAdminClient();
@@ -112,13 +114,14 @@ export default async function DashboardPage() {
           };
         });
 
-      // Missing documents from onboarding
+      // Missing documents from onboarding + industry
       const { data: orgProfile } = await db
         .from("org_profiles")
-        .select("documents_ready")
+        .select("documents_ready, industry")
         .eq("org_id", orgId)
         .single();
 
+      industryKey = (orgProfile as { industry?: string | null } | null)?.industry ?? null;
       const docsReady = orgProfile?.documents_ready ?? "";
       const missingDocItems =
         docsReady === "none" || docsReady === ""
@@ -262,6 +265,7 @@ export default async function DashboardPage() {
       <StatsOverview {...stats} />
       {activeEngagement && <ServiceTracker engagement={activeEngagement} />}
       {azScore && <AZQualification result={azScore} />}
+      <IndustryInsights industryKey={industryKey} />
       <WhatsChanged items={changeItems} />
     </div>
   );
