@@ -4,26 +4,40 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle2,
   Circle,
   ChevronRight,
   ChevronLeft,
-  Info,
+  Plus,
+  Trash2,
+  Upload,
+  CheckSquare,
+  Square,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 type StepType =
+  | "form"
+  | "textarea"
   | "single_select"
   | "multi_select"
-  | "text"
-  | "textarea"
   | "checklist"
-  | "form"
-  | "info";
+  | "file_upload"
+  | "package_select"
+  | "review";
+
+interface Phase {
+  id: number;
+  title: string;
+  stepIds: string[];
+}
 
 interface SelectOption {
   value: string;
@@ -32,928 +46,1554 @@ interface SelectOption {
   badge?: string;
 }
 
-interface FormField {
-  id: string;
+interface PackageOption {
+  value: string;
   label: string;
-  placeholder?: string;
-  type?: string;
-  hint?: string;
-}
-
-interface ChecklistItem {
-  id: string;
-  label: string;
-  description?: string;
-}
-
-interface Step {
-  id: string;
-  phase: number;
-  title: string;
-  description: string;
-  type: StepType;
-  tip?: string;
-  options?: SelectOption[];
-  fields?: FormField[];
-  items?: ChecklistItem[];
-  textLabel?: string;
-  textPlaceholder?: string;
-}
-
-interface Phase {
-  id: number;
-  title: string;
-  steps: number[];
+  price: number;
+  priceDisplay: string;
+  features: string[];
+  highlight?: boolean;
 }
 
 // ---------------------------------------------------------------------------
-// Data
+// Phases
 // ---------------------------------------------------------------------------
 
 const PHASES: Phase[] = [
-  { id: 1, title: "Determine Nonprofit Type", steps: [1, 2] },
-  { id: 2, title: "Pre-Formation Checklist", steps: [3, 4, 5, 6, 7, 8] },
-  { id: 3, title: "State Filing Steps", steps: [9, 10, 11, 12, 13, 14] },
-  { id: 4, title: "Federal Tax-Exempt Status", steps: [15, 16, 17] },
-  { id: 5, title: "Post-Formation Setup", steps: [18, 19] },
+  { id: 1, title: "About You",            stepIds: ["contact", "mission", "org_details"] },
+  { id: 2, title: "Leadership",           stepIds: ["board", "officers"] },
+  { id: 3, title: "Financials & Programs",stepIds: ["financials", "programs", "populations"] },
+  { id: 4, title: "Current Status",       stepIds: ["existing_docs", "doc_upload"] },
+  { id: 5, title: "Service Selection",    stepIds: ["package", "review"] },
 ];
 
-const STEPS: Step[] = [
-  // Phase 1
+const STEP_ORDER = PHASES.flatMap((p) => p.stepIds);
+
+const PHASE_FOR_STEP: Record<string, number> = {};
+PHASES.forEach((p) => p.stepIds.forEach((s) => (PHASE_FOR_STEP[s] = p.id)));
+
+// ---------------------------------------------------------------------------
+// US States
+// ---------------------------------------------------------------------------
+
+const US_STATES = [
+  "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut",
+  "Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa",
+  "Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan",
+  "Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire",
+  "New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio",
+  "Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota",
+  "Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia",
+  "Wisconsin","Wyoming","District of Columbia",
+];
+
+// ---------------------------------------------------------------------------
+// Mission purpose options
+// ---------------------------------------------------------------------------
+
+const MISSION_OPTIONS: SelectOption[] = [
   {
-    id: "mission_type",
-    phase: 1,
-    title: "What is your primary mission?",
-    description:
-      "Select the option that best describes what your organization will primarily do. This determines your nonprofit classification.",
-    type: "single_select",
-    tip: "Most charitable organizations qualify as 501(c)(3). Choose the category that best fits your primary purpose — you can always consult an attorney to confirm.",
-    options: [
-      {
-        value: "501c3",
-        label: "Charitable, educational, religious, or scientific",
-        description:
-          "Classic nonprofits serving the public good — schools, churches, food banks, research orgs.",
-        badge: "501(c)(3)",
-      },
-      {
-        value: "501c4",
-        label: "Heavy lobbying and political advocacy",
-        description:
-          "Organizations focused on social welfare with significant lobbying activity.",
-        badge: "501(c)(4)",
-      },
-      {
-        value: "501c6",
-        label: "Promoting a specific industry or profession",
-        description:
-          "Trade associations, chambers of commerce, and professional organizations.",
-        badge: "501(c)(6)",
-      },
-      {
-        value: "501c7",
-        label: "Social or recreational activities for members",
-        description: "Social clubs, hobby groups, and recreational organizations.",
-        badge: "501(c)(7)",
-      },
-      {
-        value: "501c19",
-        label: "Serving veterans and their families",
-        description:
-          "Posts and organizations serving current and former members of the armed forces.",
-        badge: "501(c)(19)",
-      },
-      {
-        value: "501c3_c4",
-        label: "Both charity AND advocacy",
-        description:
-          "Dual-entity structure — a 501(c)(3) for charitable work and a 501(c)(4) affiliate for advocacy.",
-        badge: "501(c)(3) + (c)(4)",
-      },
+    value: "501c3",
+    label: "Charitable, educational, or scientific work",
+    description: "Schools, food banks, research orgs, faith-based programs serving the public.",
+    badge: "501(c)(3)",
+  },
+  {
+    value: "501c4",
+    label: "Advocacy and political action",
+    description: "Social welfare organizations with significant lobbying or advocacy activity.",
+    badge: "501(c)(4)",
+  },
+  {
+    value: "501c6",
+    label: "Professional or industry association",
+    description: "Trade associations, chambers of commerce, professional organizations.",
+    badge: "501(c)(6)",
+  },
+  {
+    value: "501c7",
+    label: "Social or recreational club",
+    description: "Social clubs, hobby groups, and member-benefit recreational organizations.",
+    badge: "501(c)(7)",
+  },
+  {
+    value: "501c19",
+    label: "Veterans services",
+    description: "Organizations serving current and former members of the armed forces.",
+    badge: "501(c)(19)",
+  },
+  {
+    value: "unsure",
+    label: "I'm not sure — help me decide",
+    description: "Our team will assess your mission and recommend the right structure.",
+    badge: "We'll advise",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Populations options
+// ---------------------------------------------------------------------------
+
+const POPULATION_OPTIONS: SelectOption[] = [
+  { value: "children_youth",   label: "Children / Youth" },
+  { value: "adults",           label: "Adults" },
+  { value: "seniors",          label: "Seniors" },
+  { value: "families",         label: "Families" },
+  { value: "veterans",         label: "Veterans" },
+  { value: "homeless",         label: "Homeless / Housing Insecure" },
+  { value: "disabled",         label: "People with Disabilities" },
+  { value: "immigrants",       label: "Immigrants / Refugees" },
+  { value: "low_income",       label: "Low-Income Individuals" },
+  { value: "lgbtq",            label: "LGBTQ+" },
+  { value: "minorities",       label: "Racial / Ethnic Minorities" },
+  { value: "general_public",   label: "General Public" },
+  { value: "animals",          label: "Animals" },
+  { value: "environment",      label: "Environment" },
+  { value: "other",            label: "Other" },
+];
+
+// ---------------------------------------------------------------------------
+// Existing docs options
+// ---------------------------------------------------------------------------
+
+const EXISTING_DOC_OPTIONS: SelectOption[] = [
+  { value: "articles",      label: "Articles of Incorporation (already filed)" },
+  { value: "ein",           label: "EIN (already obtained)" },
+  { value: "bylaws",        label: "Bylaws (already drafted)" },
+  { value: "coi_policy",   label: "Conflict of Interest Policy" },
+  { value: "bank_account",  label: "Bank Account (nonprofit)" },
+  { value: "sam_gov",       label: "SAM.gov Registration" },
+  { value: "grants_gov",    label: "Grants.gov Account" },
+  { value: "website",       label: "Website" },
+  { value: "none",          label: "None of these — starting from scratch" },
+];
+
+// ---------------------------------------------------------------------------
+// Revenue source options
+// ---------------------------------------------------------------------------
+
+const REVENUE_OPTIONS: SelectOption[] = [
+  { value: "donations",     label: "Donations" },
+  { value: "grants",        label: "Grants" },
+  { value: "membership",    label: "Membership Dues" },
+  { value: "program_fees",  label: "Program Fees" },
+  { value: "events",        label: "Events" },
+  { value: "other",         label: "Other" },
+];
+
+// ---------------------------------------------------------------------------
+// Packages
+// ---------------------------------------------------------------------------
+
+const PACKAGES: PackageOption[] = [
+  {
+    value: "formation",
+    label: "Nonprofit Formation",
+    price: 499,
+    priceDisplay: "$499",
+    features: [
+      "State incorporation + Articles of Incorporation",
+      "EIN application",
+      "Bylaws drafting",
+      "Conflict of Interest Policy",
+      "Organizational meeting minutes template",
     ],
   },
   {
-    id: "type_confirmation",
-    phase: 1,
-    title: "Your Nonprofit Classification",
-    description:
-      "Based on your mission, here is the recommended classification with key details.",
-    type: "info",
-    tip: "Review the pros and cons carefully. The 501(c)(3) classification provides the most grant-funding opportunities but comes with restrictions on political activity.",
-  },
-  // Phase 2
-  {
-    id: "np_mission",
-    phase: 2,
-    title: "Write Your Mission Statement",
-    description:
-      "A strong mission statement is 1–3 sentences that clearly describe who you serve, what you do, and why it matters.",
-    type: "textarea",
-    textLabel: "Mission Statement",
-    textPlaceholder:
-      "e.g., \"Hope Community Foundation empowers underserved youth in Atlanta through after-school education, mentorship, and workforce development programs — because every child deserves a path to opportunity.\"",
-    tip: "Keep it clear, specific, and inspiring. Avoid jargon. Your IRS application will ask for this.",
-  },
-  {
-    id: "np_legal_name",
-    phase: 2,
-    title: "Choose Your Legal Name",
-    description:
-      "This is the official name that will appear on your articles of incorporation and all legal documents.",
-    type: "text",
-    textLabel: "Proposed Legal Name",
-    textPlaceholder: "e.g., Hope Community Foundation, Inc.",
-    tip: "Most states require a designator: Inc., Corp., Corporation, or Incorporated. Check your state's requirements. Search your state database to confirm availability before filing.",
-  },
-  {
-    id: "np_state",
-    phase: 2,
-    title: "State of Incorporation",
-    description:
-      "Choose the state where you will file your articles of incorporation. Most organizations incorporate in the state where they primarily operate.",
-    type: "single_select",
-    tip: "While Delaware and Nevada are popular for for-profits, nonprofits generally should incorporate in their home state to avoid additional registration and fees.",
-    options: [
-      "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut",
-      "Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa",
-      "Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan",
-      "Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire",
-      "New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio",
-      "Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota",
-      "Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia",
-      "Wisconsin","Wyoming","District of Columbia",
-    ].map((s) => ({ value: s.toLowerCase().replace(/\s/g, "_"), label: s })),
-  },
-  {
-    id: "np_board",
-    phase: 2,
-    title: "Board of Directors",
-    description:
-      "Most states require a minimum of 3 board members. Your board provides governance and oversight of the organization.",
-    type: "form",
-    tip: "Board members should be independent (not family members of staff), committed to the mission, and ideally bring diverse skills — legal, financial, community, and programmatic.",
-    fields: [
-      { id: "np_board_count", label: "Number of Board Members", placeholder: "3", type: "number", hint: "Minimum 3 recommended" },
-      { id: "np_board_1", label: "Board Member 1 (Name)", placeholder: "Full name" },
-      { id: "np_board_2", label: "Board Member 2 (Name)", placeholder: "Full name" },
-      { id: "np_board_3", label: "Board Member 3 (Name)", placeholder: "Full name" },
+    value: "formation_501c3",
+    label: "Formation + 501(c)(3)",
+    price: 1499,
+    priceDisplay: "$1,499",
+    highlight: true,
+    features: [
+      "Everything in Formation package",
+      "IRS Form 1023 or 1023-EZ preparation",
+      "Financial projections preparation",
+      "Narrative description writing",
+      "IRS submission and tracking",
     ],
   },
   {
-    id: "np_officers",
-    phase: 2,
-    title: "Officers",
-    description:
-      "Officers handle day-to-day operations. The three required officers are President (or Executive Director), Secretary, and Treasurer.",
-    type: "form",
-    tip: "Officers can also serve as board members. The same person generally cannot hold two officer positions simultaneously. Treasurer and Secretary are often separate individuals.",
-    fields: [
-      { id: "np_officer_president", label: "President / Executive Director", placeholder: "Full name" },
-      { id: "np_officer_secretary", label: "Secretary", placeholder: "Full name" },
-      { id: "np_officer_treasurer", label: "Treasurer", placeholder: "Full name" },
-    ],
-  },
-  {
-    id: "np_fiscal_year",
-    phase: 2,
-    title: "Fiscal Year",
-    description:
-      "Your fiscal year determines your accounting period and when annual reports are due.",
-    type: "single_select",
-    tip: "Calendar year (Jan–Dec) is the most common and simplest. If your programs run on a grant cycle or academic year, a custom fiscal year may make more sense.",
-    options: [
-      { value: "calendar", label: "Calendar Year", description: "January 1 – December 31" },
-      { value: "july_june", label: "July – June", description: "July 1 – June 30 (common for education)" },
-      { value: "oct_sep", label: "October – September", description: "October 1 – September 30 (federal fiscal year)" },
-      { value: "custom", label: "Custom", description: "I'll define my own fiscal year end date" },
-    ],
-  },
-  // Phase 3
-  {
-    id: "np_name_search",
-    phase: 3,
-    title: "Name Availability Search",
-    description:
-      "Before filing, confirm your proposed name is available in your state's business entity database.",
-    type: "checklist",
-    tip: "Search your state's Secretary of State website. Also check trademark databases (USPTO.gov) and domain availability for your future website.",
-    items: [
-      { id: "searched_state", label: "Searched state Secretary of State database", description: "Visit sos.[yourstate].gov and search business entities" },
-      { id: "no_conflict", label: "No conflicting names found", description: "Name is available or sufficiently distinct" },
-      { id: "searched_trademark", label: "Checked USPTO trademark database", description: "Visit tmsearch.uspto.gov" },
-      { id: "checked_domain", label: "Checked domain name availability", description: "Your .org domain is available" },
-      { id: "reserved_name", label: "Reserved the name (optional)", description: "Many states allow name reservations for 30–120 days" },
-    ],
-  },
-  {
-    id: "np_articles",
-    phase: 3,
-    title: "Articles of Incorporation — Required Clauses",
-    description:
-      "Your Articles of Incorporation must include specific language for IRS approval. Check each clause you have included.",
-    type: "checklist",
-    tip: "The IRS requires specific dissolution and purpose language. Using boilerplate language from your state's nonprofit template is a safe starting point.",
-    items: [
-      { id: "clause_name", label: "Legal name of the corporation", description: "Exact name with required state designator" },
-      { id: "clause_purpose", label: "IRS-compliant purpose clause", description: "\"...organized and operated exclusively for charitable, educational...\" purposes" },
-      { id: "clause_dissolution", label: "Dissolution clause", description: "Assets go to another 501(c)(3) upon dissolution — required for IRS approval" },
-      { id: "clause_inurement", label: "Private inurement prohibition", description: "No part of net earnings inures to any private individual" },
-      { id: "clause_political", label: "Political activity restriction", description: "No substantial part of activities is carrying on propaganda or political campaigning" },
-      { id: "clause_agent", label: "Registered agent name and address", description: "In-state registered agent for legal notices" },
-      { id: "clause_directors", label: "Initial board of directors", description: "Names and addresses of at least 3 initial directors" },
-    ],
-  },
-  {
-    id: "np_state_filing",
-    phase: 3,
-    title: "File with the State",
-    description:
-      "Submit your Articles of Incorporation to your state's Secretary of State office. Track your filing status below.",
-    type: "form",
-    tip: "Filing fees vary by state ($20–$125 for most nonprofits). Processing time is typically 1–4 weeks. Expedited filing is available in most states for an additional fee.",
-    fields: [
-      { id: "np_filing_status", label: "Filing Status", placeholder: "e.g., Submitted, Pending, Approved" },
-      { id: "np_filing_date", label: "Date Filed", placeholder: "MM/DD/YYYY", type: "date" },
-      { id: "np_filing_confirmation", label: "Confirmation / Document Number", placeholder: "e.g., 20240101-1234567" },
-      { id: "np_filing_fee", label: "Filing Fee Paid ($)", placeholder: "e.g., 50", type: "number" },
-    ],
-  },
-  {
-    id: "np_ein",
-    phase: 3,
-    title: "Obtain Your EIN",
-    description:
-      "An Employer Identification Number (EIN) is required before applying for tax-exempt status, opening a bank account, or hiring employees.",
-    type: "form",
-    tip: "Apply online at IRS.gov/EIN — it's free and takes about 15 minutes. You'll receive your EIN immediately upon completion. Print and save your confirmation letter (CP 575).",
-    fields: [
-      { id: "np_ein_applied", label: "EIN Application Status", placeholder: "e.g., Applied, Received" },
-      { id: "np_ein_number", label: "EIN (once received)", placeholder: "XX-XXXXXXX", hint: "Format: 12-3456789" },
-      { id: "np_ein_date", label: "Date Received", placeholder: "MM/DD/YYYY", type: "date" },
-    ],
-  },
-  {
-    id: "np_bylaws",
-    phase: 3,
-    title: "Draft Your Bylaws",
-    description:
-      "Bylaws are your organization's internal operating rules. Check each article you have included in your bylaws.",
-    type: "checklist",
-    tip: "Bylaws should be approved at your organizational meeting. Keep them in your corporate records book along with your articles and IRS determination letter.",
-    items: [
-      { id: "bylaw_name", label: "Article 1: Name and Purpose", description: "Legal name and mission of the organization" },
-      { id: "bylaw_membership", label: "Article 2: Membership (if any)", description: "Whether organization has formal members and their rights" },
-      { id: "bylaw_board", label: "Article 3: Board of Directors", description: "Size, terms, election, removal, and vacancies" },
-      { id: "bylaw_meetings", label: "Article 4: Meetings", description: "Annual meeting, special meetings, quorum requirements, voting" },
-      { id: "bylaw_officers", label: "Article 5: Officers", description: "Titles, duties, terms, and removal of officers" },
-      { id: "bylaw_committees", label: "Article 6: Committees", description: "Standing and ad hoc committees, their authority" },
-      { id: "bylaw_finances", label: "Article 7: Finances", description: "Fiscal year, bank accounts, signatures, audits" },
-      { id: "bylaw_conflict", label: "Article 8: Conflict of Interest", description: "Disclosure requirements and recusal procedures" },
-      { id: "bylaw_indemnification", label: "Article 9: Indemnification", description: "Protection for directors, officers, and employees" },
-      { id: "bylaw_records", label: "Article 10: Corporate Records", description: "Minute books, registers, and inspection rights" },
-      { id: "bylaw_amendment", label: "Article 11: Amendment Procedures", description: "How bylaws can be changed and vote required" },
-    ],
-  },
-  {
-    id: "np_org_meeting",
-    phase: 3,
-    title: "Hold Your Organizational Meeting",
-    description:
-      "The organizational meeting formally establishes the nonprofit. Check each agenda item as it is completed.",
-    type: "checklist",
-    tip: "Record detailed minutes of this meeting — they are a required document for your IRS application. Have all board members sign an attendance sheet.",
-    items: [
-      { id: "meet_call", label: "Call to order and roll call", description: "Record date, time, location, and who attended" },
-      { id: "meet_articles", label: "Accept Articles of Incorporation", description: "Board votes to accept the filed articles" },
-      { id: "meet_bylaws", label: "Adopt bylaws", description: "Board votes to adopt the organization's bylaws" },
-      { id: "meet_officers", label: "Elect officers", description: "Board elects President, Secretary, and Treasurer" },
-      { id: "meet_ein", label: "Ratify EIN application", description: "Board ratifies obtaining the Employer Identification Number" },
-      { id: "meet_bank", label: "Authorize bank account", description: "Board authorizes opening a bank account and names authorized signers" },
-      { id: "meet_fiscal", label: "Establish fiscal year", description: "Board confirms the organization's fiscal year end date" },
-      { id: "meet_coi", label: "Adopt conflict of interest policy", description: "Board adopts and signs conflict of interest disclosures" },
-      { id: "meet_compensation", label: "Set initial compensation policy", description: "Board establishes how officer/employee compensation will be set" },
-      { id: "meet_registered", label: "Designate registered agent", description: "Confirm the registered agent for service of process" },
-      { id: "meet_1023", label: "Authorize IRS application", description: "Board authorizes filing Form 1023 or 1023-EZ" },
-      { id: "meet_minutes", label: "Approve and sign meeting minutes", description: "Secretary prepares and board approves the minutes" },
-    ],
-  },
-  // Phase 4
-  {
-    id: "np_form_type",
-    phase: 4,
-    title: "Determine Which IRS Form to File",
-    description:
-      "Answer these eligibility questions to determine whether you qualify for the simplified Form 1023-EZ.",
-    type: "checklist",
-    tip: "Form 1023-EZ costs $275 and is processed faster (typically 2–4 weeks). Form 1023 costs $600 and can take 3–6 months. If you qualify for EZ, use it.",
-    items: [
-      { id: "ez_revenue", label: "Annual gross receipts are (or projected to be) $50,000 or less for first 3 years", description: "If yes, you may qualify for 1023-EZ" },
-      { id: "ez_assets", label: "Total assets are less than $250,000", description: "If yes, you may qualify for 1023-EZ" },
-      { id: "ez_us", label: "Organization is formed in the United States", description: "Required for 1023-EZ" },
-      { id: "ez_not_hospital", label: "Not a hospital, school, or supporting organization", description: "These types must use Form 1023" },
-      { id: "ez_not_church", label: "Not a church or church-related organization", description: "Churches may file 1023 or can self-declare" },
-    ],
-  },
-  {
-    id: "np_gather_docs",
-    phase: 4,
-    title: "Gather Required Documents",
-    description:
-      "Collect all documents needed for your IRS application before you begin. Check each item as you obtain it.",
-    type: "checklist",
-    tip: "Having all documents ready before starting the IRS application saves significant time. The application can take 3–12 hours to complete depending on the form.",
-    items: [
-      { id: "doc_articles", label: "Signed, filed Articles of Incorporation", description: "State-stamped copy with filing date" },
-      { id: "doc_bylaws", label: "Adopted bylaws", description: "Board-approved copy with adoption date" },
-      { id: "doc_coi", label: "Conflict of interest policy", description: "Signed by all board members" },
-      { id: "doc_ein", label: "EIN confirmation letter (CP 575)", description: "Or SS-4 confirmation from IRS" },
-      { id: "doc_minutes", label: "Organizational meeting minutes", description: "Signed and dated copy" },
-      { id: "doc_officers", label: "Officers and directors list", description: "Names, addresses, titles, and hours per week" },
-      { id: "doc_narrative", label: "Program narrative (activities description)", description: "Detailed description of each program/activity" },
-      { id: "doc_financials", label: "Financial statements or projections", description: "3 years of actual or projected income/expenses" },
-      { id: "doc_1023", label: "Completed Form 1023 or 1023-EZ", description: "Available on IRS.gov" },
-    ],
-  },
-  {
-    id: "np_irs_submit",
-    phase: 4,
-    title: "Submit to the IRS & Track Status",
-    description:
-      "File your application through Pay.gov and track the status of your determination letter.",
-    type: "form",
-    tip: "After submission, you can check status at IRS.gov/charities using your EIN. Response times vary: 1023-EZ typically 2–4 weeks; Form 1023 can take 3–6+ months.",
-    fields: [
-      { id: "np_irs_form", label: "Form Filed", placeholder: "1023-EZ or 1023" },
-      { id: "np_irs_submit_date", label: "Date Submitted", placeholder: "MM/DD/YYYY", type: "date" },
-      { id: "np_irs_confirmation", label: "Pay.gov Confirmation Number", placeholder: "e.g., 26-1234567890" },
-      { id: "np_irs_determination", label: "Determination Letter Received", placeholder: "Yes / No / Pending" },
-      { id: "np_irs_determination_date", label: "Date of Determination Letter", placeholder: "MM/DD/YYYY", type: "date" },
-    ],
-  },
-  // Phase 5
-  {
-    id: "np_state_registrations",
-    phase: 5,
-    title: "State & Local Registrations",
-    description:
-      "After receiving your federal determination letter, complete these additional state and local registrations.",
-    type: "checklist",
-    tip: "Most states require nonprofits to register before soliciting charitable contributions. Failure to register can result in fines and penalties.",
-    items: [
-      { id: "state_tax_exempt", label: "Apply for state income tax exemption", description: "Most states automatically grant this after IRS approval; some require a separate application" },
-      { id: "state_sales_tax", label: "Apply for sales tax exemption", description: "Required in most states to purchase goods tax-free" },
-      { id: "state_charitable", label: "Register for charitable solicitation", description: "Required in ~40 states before fundraising — visit CharitiesSearch.sos.[yourstate].gov" },
-      { id: "local_business", label: "Obtain local business license (if required)", description: "Check your city/county requirements" },
-      { id: "foreign_registration", label: "Register in other states where you operate", description: "Required if you have employees, offices, or solicit donations in other states" },
-    ],
-  },
-  {
-    id: "np_operations",
-    phase: 5,
-    title: "Set Up Operations",
-    description:
-      "Complete these operational setup tasks to launch your nonprofit and begin applying for grants.",
-    type: "checklist",
-    tip: "Completing SAM.gov registration (free) is essential for federal grants. It takes 7–10 days to activate. Register early so you're ready when opportunities arise.",
-    items: [
-      { id: "ops_bank", label: "Open nonprofit bank account", description: "Use your EIN and articles of incorporation — most banks require both" },
-      { id: "ops_accounting", label: "Set up accounting software", description: "QuickBooks Nonprofit or Sage Intacct are common choices" },
-      { id: "ops_sam", label: "Register on SAM.gov", description: "Required for ALL federal grants and contracts — free registration, 7–10 days to activate" },
-      { id: "ops_grants_gov", label: "Create Grants.gov account", description: "Required to apply for federal grants" },
-      { id: "ops_guidestar", label: "Claim/create Candid (GuideStar) profile", description: "Increases credibility with foundation funders" },
-      { id: "ops_website", label: "Launch organizational website", description: "Include mission, programs, board, and donation page" },
-      { id: "ops_insurance", label: "Obtain Directors & Officers (D&O) insurance", description: "Protects board members from personal liability" },
-      { id: "ops_bylaws_review", label: "Annual review of bylaws scheduled", description: "Calendar a yearly governance review" },
-      { id: "ops_990", label: "Prepare for Form 990 filing", description: "Due annually — consult a CPA familiar with nonprofits" },
-      { id: "ops_grantiq", label: "Complete GrantIQ profile for grant matching", description: "Enable AI-powered grant discovery based on your new nonprofit profile" },
+    value: "grant_ready",
+    label: "Full Grant-Ready Package",
+    price: 2999,
+    priceDisplay: "$2,999",
+    features: [
+      "Everything in Formation + 501(c)(3)",
+      "SAM.gov registration",
+      "Grants.gov registration",
+      "Grant readiness assessment",
+      "First 3 grant matches via GrantIQ",
+      "30-day advisory support",
     ],
   },
 ];
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Board member type
 // ---------------------------------------------------------------------------
 
-function getPhaseForStep(stepNum: number): Phase {
-  return PHASES.find((p) => p.steps.includes(stepNum)) ?? PHASES[0];
+interface BoardMember {
+  name: string;
+  email: string;
+  phone: string;
+  relationship: string;
 }
 
-function getPhaseProgress(phase: Phase, completedSteps: Set<number>): number {
-  const done = phase.steps.filter((s) => completedSteps.has(s)).length;
-  return Math.round((done / phase.steps.length) * 100);
+const EMPTY_BOARD_MEMBER = (): BoardMember => ({ name: "", email: "", phone: "", relationship: "" });
+
+// ---------------------------------------------------------------------------
+// Form data
+// ---------------------------------------------------------------------------
+
+interface FormData {
+  // Step 1: Contact
+  np_full_name: string;
+  np_email: string;
+  np_phone: string;
+  np_contact_method: string;
+
+  // Step 2: Mission
+  np_mission_statement: string;
+  np_primary_purpose: string;
+
+  // Step 3: Org details
+  np_org_name: string;
+  np_state: string;
+  np_city: string;
+  np_launch_date: string;
+  np_fiscal_year: string;
+
+  // Step 4: Board
+  np_board_members: BoardMember[];
+
+  // Step 5: Officers
+  np_president: string;
+  np_secretary: string;
+  np_treasurer: string;
+
+  // Step 6: Financials
+  np_year1_revenue: string;
+  np_year1_expenses: string;
+  np_revenue_sources: string[];
+  np_compensate_officers: string;
+
+  // Step 7: Programs
+  np_programs_description: string;
+
+  // Step 8: Populations
+  np_populations: string[];
+
+  // Step 9: Existing docs
+  np_existing_docs: string[];
+
+  // Step 10: Files (names only for display)
+  np_uploaded_files: string[];
+
+  // Step 11: Package
+  np_package: string;
 }
 
-// ---------------------------------------------------------------------------
-// Classification info lookup
-// ---------------------------------------------------------------------------
-
-const TYPE_INFO: Record<string, { title: string; pros: string[]; cons: string[] }> = {
-  "501c3": {
-    title: "501(c)(3) — Charitable Organization",
-    pros: [
-      "Donations are tax-deductible to donors",
-      "Eligible for the widest range of grants (federal, foundation, corporate)",
-      "Exempt from federal income tax",
-      "Reduced postal rates and other discounts",
-    ],
-    cons: [
-      "Cannot engage in substantial lobbying",
-      "Cannot participate in political campaigns",
-      "Annual Form 990 required (public disclosure)",
-      "Private inurement strictly prohibited",
-    ],
-  },
-  "501c4": {
-    title: "501(c)(4) — Social Welfare Organization",
-    pros: [
-      "Can engage in substantial lobbying",
-      "Exempt from federal income tax",
-      "More political activity permitted than 501(c)(3)",
-    ],
-    cons: [
-      "Donations are NOT tax-deductible to donors",
-      "Very limited grant funding available",
-      "Subject to DISCLOSE Act disclosure rules",
-    ],
-  },
-  "501c6": {
-    title: "501(c)(6) — Trade or Professional Association",
-    pros: [
-      "Can advocate for members' business interests",
-      "Can engage in significant lobbying",
-      "Dues from members can be the primary revenue",
-    ],
-    cons: [
-      "Donations are NOT generally tax-deductible",
-      "Limited grant eligibility",
-      "Must serve collective business interests, not the public",
-    ],
-  },
-  "501c7": {
-    title: "501(c)(7) — Social or Recreational Club",
-    pros: [
-      "Tax-exempt on income related to exempt function",
-      "Membership dues not subject to income tax",
-    ],
-    cons: [
-      "Must serve members, not the public",
-      "Very limited grant eligibility",
-      "At least 65% of income must be from members",
-    ],
-  },
-  "501c19": {
-    title: "501(c)(19) — Veterans Organization",
-    pros: [
-      "Tax-exempt status for veterans service",
-      "Donations may be tax-deductible",
-      "Special grant opportunities through VA and veteran funders",
-    ],
-    cons: [
-      "75% of members must be war veterans",
-      "Specific eligibility requirements",
-    ],
-  },
-  "501c3_c4": {
-    title: "Dual Structure: 501(c)(3) + 501(c)(4)",
-    pros: [
-      "Charitable wing gets tax-deductible donations and grant access",
-      "Advocacy wing can lobby without restriction",
-      "Maximizes both fundraising and political effectiveness",
-    ],
-    cons: [
-      "Requires two separate legal entities",
-      "More complex governance and accounting",
-      "Shared-cost allocations must be carefully documented",
-      "Higher administrative burden",
-    ],
-  },
+const INITIAL_FORM: FormData = {
+  np_full_name: "",
+  np_email: "",
+  np_phone: "",
+  np_contact_method: "",
+  np_mission_statement: "",
+  np_primary_purpose: "",
+  np_org_name: "",
+  np_state: "",
+  np_city: "",
+  np_launch_date: "",
+  np_fiscal_year: "",
+  np_board_members: [EMPTY_BOARD_MEMBER(), EMPTY_BOARD_MEMBER(), EMPTY_BOARD_MEMBER()],
+  np_president: "",
+  np_secretary: "",
+  np_treasurer: "",
+  np_year1_revenue: "",
+  np_year1_expenses: "",
+  np_revenue_sources: [],
+  np_compensate_officers: "",
+  np_programs_description: "",
+  np_populations: [],
+  np_existing_docs: [],
+  np_uploaded_files: [],
+  np_package: "",
 };
 
 // ---------------------------------------------------------------------------
-// Sub-components
+// Save helper
 // ---------------------------------------------------------------------------
 
-function TipBox({ tip }: { tip: string }) {
-  return (
-    <div className="flex gap-3 bg-brand-teal/5 border border-brand-teal/20 rounded-lg p-4 mt-4">
-      <Info className="h-4 w-4 text-brand-teal mt-0.5 shrink-0" />
-      <p className="text-sm text-warm-600">{tip}</p>
-    </div>
-  );
+async function saveField(field: string, value: unknown) {
+  try {
+    await fetch("/api/onboarding/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ field, value }),
+    });
+  } catch {
+    // Non-blocking — don't surface DB errors to user
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Main Component
+// Component
 // ---------------------------------------------------------------------------
 
-interface FormationWizardProps {
-  initialData?: Record<string, unknown>;
-}
+export function FormationWizard() {
+  const [currentStepId, setCurrentStepId] = useState<string>("contact");
+  const [form, setForm] = useState<FormData>(INITIAL_FORM);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [fileError, setFileError] = useState("");
 
-export function FormationWizard({ initialData = {} }: FormationWizardProps) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
-  const [answers, setAnswers] = useState<Record<string, unknown>>(initialData);
-  const [checklistState, setChecklistState] = useState<Record<string, boolean>>({});
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState("");
-
-  const step = STEPS[currentStep - 1];
-  const currentPhase = getPhaseForStep(currentStep);
-  const totalSteps = STEPS.length;
-
-  // Persist a field to the backend
-  const saveField = useCallback(async (field: string, value: unknown) => {
-    try {
-      await fetch("/api/onboarding/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ field, value }),
-      });
-    } catch {
-      // Non-blocking — UI should not fail on save errors
-    }
+  // Pre-fill email from auth
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email) {
+        setForm((prev) => ({ ...prev, np_email: data.user!.email! }));
+      }
+    });
   }, []);
 
-  // Mark step complete, save progress, advance
-  const handleComplete = async () => {
-    setSaving(true);
-    setCompletedSteps((prev) => new Set([...prev, currentStep]));
+  const currentPhase = PHASE_FOR_STEP[currentStepId];
+  const currentStepIndex = STEP_ORDER.indexOf(currentStepId);
+  const totalSteps = STEP_ORDER.length;
+  const progressPct = Math.round(((currentStepIndex) / (totalSteps - 1)) * 100);
 
-    // Save step-level answer
-    if (step.type === "single_select" && answers[step.id]) {
-      await saveField(`np_${step.id}`, answers[step.id]);
-    } else if (step.type === "textarea" || step.type === "text") {
-      if (answers[step.id]) {
-        await saveField(step.id as string, answers[step.id]);
-      }
-    } else if (step.type === "form" && step.fields) {
-      for (const f of step.fields) {
-        if (answers[f.id]) {
-          await saveField(f.id, answers[f.id]);
-        }
-      }
-    } else if (step.type === "checklist" && step.items) {
-      const completed = step.items.filter((item) => checklistState[item.id]).map((i) => i.id);
-      await saveField(`np_checklist_${step.id}`, completed.join(","));
+  const canGoBack = currentStepIndex > 0;
+  const canGoForward = currentStepIndex < totalSteps - 1;
+
+  const goNext = useCallback(() => {
+    if (canGoForward) setCurrentStepId(STEP_ORDER[currentStepIndex + 1]);
+  }, [canGoForward, currentStepIndex]);
+
+  const goBack = useCallback(() => {
+    if (canGoBack) setCurrentStepId(STEP_ORDER[currentStepIndex - 1]);
+  }, [canGoBack, currentStepIndex]);
+
+  function setField<K extends keyof FormData>(key: K, value: FormData[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function toggleMulti(field: "np_revenue_sources" | "np_populations" | "np_existing_docs", value: string) {
+    setForm((prev) => {
+      const current = prev[field] as string[];
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [field]: next };
+    });
+  }
+
+  function updateBoardMember(index: number, key: keyof BoardMember, value: string) {
+    setForm((prev) => {
+      const members = [...prev.np_board_members];
+      members[index] = { ...members[index], [key]: value };
+      return { ...prev, np_board_members: members };
+    });
+  }
+
+  function addBoardMember() {
+    if (form.np_board_members.length < 5) {
+      setForm((prev) => ({
+        ...prev,
+        np_board_members: [...prev.np_board_members, EMPTY_BOARD_MEMBER()],
+      }));
     }
+  }
 
-    // Save step number
-    await saveField("np_formation_step", currentStep + 1);
-
-    setSaving(false);
-    setSaveMsg("Saved!");
-    setTimeout(() => setSaveMsg(""), 2000);
-
-    if (currentStep < totalSteps) {
-      setCurrentStep((s) => s + 1);
+  function removeBoardMember(index: number) {
+    if (form.np_board_members.length > 3) {
+      setForm((prev) => ({
+        ...prev,
+        np_board_members: prev.np_board_members.filter((_, i) => i !== index),
+      }));
     }
-  };
+  }
 
-  const handleBack = () => {
-    if (currentStep > 1) setCurrentStep((s) => s - 1);
-  };
+  function handleFileDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragActive(false);
+    const files = Array.from(e.dataTransfer.files);
+    const names = files.map((f) => f.name);
+    setForm((prev) => ({ ...prev, np_uploaded_files: [...prev.np_uploaded_files, ...names] }));
+  }
 
-  // Determine classification from mission_type answer
-  const classificationKey = (answers["mission_type"] as string) ?? "501c3";
-  const classInfo = TYPE_INFO[classificationKey] ?? TYPE_INFO["501c3"];
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    const names = files.map((f) => f.name);
+    setForm((prev) => ({ ...prev, np_uploaded_files: [...prev.np_uploaded_files, ...names] }));
+  }
 
-  // Overall progress
-  const overallPct = Math.round((completedSteps.size / totalSteps) * 100);
+  function removeFile(index: number) {
+    setForm((prev) => ({
+      ...prev,
+      np_uploaded_files: prev.np_uploaded_files.filter((_, i) => i !== index),
+    }));
+  }
+
+  async function handleSubmit() {
+    setSubmitting(true);
+    // Save all fields
+    const saveAll = Object.entries(form).map(([key, val]) => saveField(key, val));
+    await Promise.allSettled(saveAll);
+    setSubmitting(false);
+    setSubmitted(true);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Submitted screen
+  // ---------------------------------------------------------------------------
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="w-20 h-20 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-10 h-10 text-teal-600" />
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-2xl font-bold text-foreground">Application Submitted!</h1>
+            <p className="text-muted-foreground leading-relaxed">
+              Our nonprofit formation team will review your information and contact you
+              within <span className="font-semibold text-foreground">24 hours</span> to begin
+              the process.
+            </p>
+            {form.np_email && (
+              <p className="text-sm text-muted-foreground">
+                Confirmation will be sent to <span className="font-medium">{form.np_email}</span>
+              </p>
+            )}
+          </div>
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-left space-y-2">
+            <p className="text-sm font-semibold text-foreground">What happens next:</p>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• A formation specialist reviews your intake</li>
+              <li>• We reach out to confirm scope and answer questions</li>
+              <li>• You receive a service agreement and invoice</li>
+              <li>• Work begins within 1-2 business days of payment</li>
+            </ul>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Powered by{" "}
+            <span className="font-semibold text-teal-600">GrantIQ</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Layout
+  // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex min-h-screen bg-warm-50">
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-72 shrink-0 border-r border-warm-200 bg-white">
-        <div className="p-6 border-b border-warm-100">
-          <p className="text-xs font-semibold text-warm-400 uppercase tracking-wide">Overall Progress</p>
-          <div className="mt-2 h-2 bg-warm-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-brand-teal rounded-full transition-all duration-500"
-              style={{ width: `${overallPct}%` }}
-            />
-          </div>
-          <p className="text-sm text-warm-500 mt-1">{overallPct}% complete</p>
+      <aside className="lg:w-64 lg:shrink-0 border-b lg:border-b-0 lg:border-r border-border bg-muted/20 p-6">
+        <div className="mb-6 hidden lg:block">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+            Nonprofit Formation
+          </p>
+          <p className="text-sm font-bold text-teal-600">GrantIQ</p>
         </div>
-
-        <nav className="flex-1 overflow-y-auto p-4 space-y-4">
+        <nav className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
           {PHASES.map((phase) => {
-            const isActive = phase.id === currentPhase.id;
-            const phaseStepsDone = phase.steps.filter((s) => completedSteps.has(s)).length;
-            const phaseDone = phaseStepsDone === phase.steps.length;
-
+            const isActive = phase.id === currentPhase;
+            const isComplete = phase.id < currentPhase;
             return (
-              <div key={phase.id}>
-                <div
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActive
-                      ? "bg-brand-teal/10 text-brand-teal"
-                      : phaseDone
-                      ? "text-warm-400"
-                      : "text-warm-500"
-                  }`}
-                >
-                  {phaseDone ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+              <button
+                key={phase.id}
+                onClick={() => {
+                  // Allow navigating to complete phases
+                  if (isComplete) setCurrentStepId(phase.stepIds[0]);
+                }}
+                className={[
+                  "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors text-left",
+                  isActive
+                    ? "bg-teal-600 text-white"
+                    : isComplete
+                    ? "text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 cursor-pointer"
+                    : "text-muted-foreground cursor-default",
+                ].join(" ")}
+              >
+                <span className="shrink-0">
+                  {isComplete ? (
+                    <CheckCircle2 className="w-4 h-4" />
                   ) : (
-                    <span
-                      className={`w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold shrink-0 ${
-                        isActive ? "bg-brand-teal text-white" : "bg-warm-200 text-warm-500"
-                      }`}
-                    >
-                      {phase.id}
-                    </span>
+                    <Circle className="w-4 h-4" />
                   )}
-                  Phase {phase.id}: {phase.title}
-                </div>
-
-                {isActive && (
-                  <div className="ml-7 mt-1 space-y-1">
-                    {phase.steps.map((stepNum) => {
-                      const s = STEPS[stepNum - 1];
-                      const isCurrent = stepNum === currentStep;
-                      const isDone = completedSteps.has(stepNum);
-                      return (
-                        <button
-                          key={stepNum}
-                          onClick={() => setCurrentStep(stepNum)}
-                          className={`w-full text-left flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-colors ${
-                            isCurrent
-                              ? "bg-brand-teal/10 text-brand-teal font-medium"
-                              : isDone
-                              ? "text-warm-400"
-                              : "text-warm-500 hover:text-warm-700"
-                          }`}
-                        >
-                          {isDone ? (
-                            <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
-                          ) : (
-                            <Circle className={`h-3 w-3 shrink-0 ${isCurrent ? "text-brand-teal" : "text-warm-300"}`} />
-                          )}
-                          {s.title}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                </span>
+                <span>
+                  <span className="text-xs opacity-70">Phase {phase.id}</span>
+                  <br />
+                  {phase.title}
+                </span>
+              </button>
             );
           })}
         </nav>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-6 py-10">
-          {/* Phase badge */}
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-xs font-semibold text-brand-teal bg-brand-teal/10 px-2.5 py-1 rounded-full">
-              Phase {currentPhase.id}: {currentPhase.title}
+      <main className="flex-1 flex flex-col max-h-screen overflow-y-auto">
+        {/* Progress bar */}
+        <div className="px-6 pt-6 pb-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>
+              Step {currentStepIndex + 1} of {totalSteps}
             </span>
-            <span className="text-xs text-warm-400">
-              Step {currentStep} of {totalSteps}
-            </span>
+            <span>{progressPct}% complete</span>
           </div>
+          <Progress value={progressPct} className="h-1.5" />
+        </div>
 
-          {/* Step header */}
-          <h1 className="text-2xl font-bold text-warm-900 mb-2">{step.title}</h1>
-          <p className="text-warm-500 mb-6">{step.description}</p>
-
-          {/* Step content */}
-          <div className="bg-white rounded-xl border border-warm-200 p-6 shadow-sm">
-            {/* SINGLE SELECT */}
-            {step.type === "single_select" && step.options && (
-              <div className="space-y-3">
-                {step.options.map((opt) => {
-                  const selected = answers[step.id] === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => setAnswers((prev) => ({ ...prev, [step.id]: opt.value }))}
-                      className={`w-full text-left border rounded-lg p-4 transition-all ${
-                        selected
-                          ? "border-brand-teal bg-brand-teal/5 ring-1 ring-brand-teal"
-                          : "border-warm-200 hover:border-brand-teal/50"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-medium text-warm-900 text-sm">{opt.label}</p>
-                          {opt.description && (
-                            <p className="text-xs text-warm-500 mt-1">{opt.description}</p>
-                          )}
-                        </div>
-                        {opt.badge && (
-                          <span className="shrink-0 text-xs font-bold text-brand-teal bg-brand-teal/10 px-2 py-0.5 rounded">
-                            {opt.badge}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* INFO (type confirmation) */}
-            {step.type === "info" && (
-              <div>
-                <h2 className="text-lg font-bold text-warm-900 mb-1">{classInfo.title}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-2">Advantages</p>
-                    <ul className="space-y-2">
-                      {classInfo.pros.map((pro) => (
-                        <li key={pro} className="flex items-start gap-2 text-sm text-warm-700">
-                          <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                          {pro}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-red-500 uppercase tracking-wide mb-2">Limitations</p>
-                    <ul className="space-y-2">
-                      {classInfo.cons.map((con) => (
-                        <li key={con} className="flex items-start gap-2 text-sm text-warm-700">
-                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                          {con}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <p className="text-sm text-warm-500 mt-5">
-                  This classification was determined based on your selection in the previous step. If this doesn&apos;t look right, go back and change your mission type.
-                </p>
-              </div>
-            )}
-
-            {/* TEXTAREA */}
-            {(step.type === "textarea" || step.type === "text") && (
-              <div>
-                <Label className="text-sm font-medium text-warm-700 mb-1.5 block">
-                  {step.textLabel}
-                </Label>
-                {step.type === "textarea" ? (
-                  <textarea
-                    rows={5}
-                    value={(answers[step.id] as string) ?? ""}
-                    onChange={(e) =>
-                      setAnswers((prev) => ({ ...prev, [step.id]: e.target.value }))
-                    }
-                    placeholder={step.textPlaceholder}
-                    className="w-full border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-900 focus:outline-none focus:ring-2 focus:ring-brand-teal/40 resize-y min-h-[120px]"
-                  />
-                ) : (
-                  <Input
-                    value={(answers[step.id] as string) ?? ""}
-                    onChange={(e) =>
-                      setAnswers((prev) => ({ ...prev, [step.id]: e.target.value }))
-                    }
-                    placeholder={step.textPlaceholder}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* FORM (multiple fields) */}
-            {step.type === "form" && step.fields && (
-              <div className="space-y-4">
-                {step.fields.map((field) => (
-                  <div key={field.id}>
-                    <Label className="text-sm font-medium text-warm-700 mb-1 block">
-                      {field.label}
-                    </Label>
-                    <Input
-                      type={field.type ?? "text"}
-                      value={(answers[field.id] as string) ?? ""}
-                      onChange={(e) =>
-                        setAnswers((prev) => ({ ...prev, [field.id]: e.target.value }))
-                      }
-                      placeholder={field.placeholder}
-                    />
-                    {field.hint && (
-                      <p className="text-xs text-warm-400 mt-1">{field.hint}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* CHECKLIST */}
-            {step.type === "checklist" && step.items && (
-              <div className="space-y-3">
-                {step.items.map((item) => {
-                  const checked = checklistState[item.id] ?? false;
-                  return (
-                    <label
-                      key={item.id}
-                      className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition-all ${
-                        checked
-                          ? "border-green-300 bg-green-50"
-                          : "border-warm-200 hover:border-warm-300"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) =>
-                          setChecklistState((prev) => ({
-                            ...prev,
-                            [item.id]: e.target.checked,
-                          }))
-                        }
-                        className="mt-0.5 h-4 w-4 accent-brand-teal shrink-0"
-                      />
-                      <div>
-                        <p className={`text-sm font-medium ${checked ? "text-green-700 line-through" : "text-warm-900"}`}>
-                          {item.label}
-                        </p>
-                        {item.description && (
-                          <p className="text-xs text-warm-500 mt-0.5">{item.description}</p>
-                        )}
-                      </div>
-                    </label>
-                  );
-                })}
-                {step.items.length > 0 && (
-                  <p className="text-xs text-warm-400 pt-2">
-                    {step.items.filter((i) => checklistState[i.id]).length} of {step.items.length} items completed
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Tip */}
-          {step.tip && <TipBox tip={step.tip} />}
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between mt-8">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              className="flex items-center gap-1.5"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Back
-            </Button>
-
-            <div className="flex items-center gap-3">
-              {saveMsg && (
-                <span className="text-xs text-green-600 font-medium">{saveMsg}</span>
-              )}
-              {currentStep < totalSteps ? (
-                <Button
-                  onClick={handleComplete}
-                  disabled={saving}
-                  className="bg-brand-teal hover:bg-brand-teal-dark text-white flex items-center gap-1.5"
-                >
-                  {saving ? "Saving..." : "Mark Complete & Continue"}
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleComplete}
-                  disabled={saving}
-                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1.5"
-                >
-                  {saving ? "Saving..." : "Complete Formation Guide"}
-                  <CheckCircle2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile phase indicator */}
-          <div className="lg:hidden mt-8 pt-6 border-t border-warm-200">
-            <p className="text-xs font-semibold text-warm-400 uppercase tracking-wide mb-3">All Phases</p>
-            <div className="flex gap-2 flex-wrap">
-              {PHASES.map((phase) => {
-                const isActive = phase.id === currentPhase.id;
-                const pct = getPhaseProgress(phase, completedSteps);
-                return (
-                  <div
-                    key={phase.id}
-                    className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border ${
-                      isActive
-                        ? "border-brand-teal text-brand-teal bg-brand-teal/5"
-                        : pct === 100
-                        ? "border-green-300 text-green-600 bg-green-50"
-                        : "border-warm-200 text-warm-500"
-                    }`}
-                  >
-                    {pct === 100 && <CheckCircle2 className="h-3 w-3" />}
-                    P{phase.id}: {phase.title}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        {/* Step content */}
+        <div className="flex-1 px-6 py-6 max-w-2xl w-full mx-auto">
+          <StepContent
+            stepId={currentStepId}
+            form={form}
+            setField={setField}
+            toggleMulti={toggleMulti}
+            updateBoardMember={updateBoardMember}
+            addBoardMember={addBoardMember}
+            removeBoardMember={removeBoardMember}
+            dragActive={dragActive}
+            setDragActive={setDragActive}
+            handleFileDrop={handleFileDrop}
+            handleFileInput={handleFileInput}
+            removeFile={removeFile}
+            fileError={fileError}
+            onSubmit={handleSubmit}
+            submitting={submitting}
+            goNext={goNext}
+            goBack={goBack}
+            canGoBack={canGoBack}
+            canGoForward={canGoForward}
+          />
         </div>
       </main>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// StepContent
+// ---------------------------------------------------------------------------
+
+interface StepContentProps {
+  stepId: string;
+  form: FormData;
+  setField: <K extends keyof FormData>(key: K, value: FormData[K]) => void;
+  toggleMulti: (field: "np_revenue_sources" | "np_populations" | "np_existing_docs", value: string) => void;
+  updateBoardMember: (index: number, key: keyof BoardMember, value: string) => void;
+  addBoardMember: () => void;
+  removeBoardMember: (index: number) => void;
+  dragActive: boolean;
+  setDragActive: (v: boolean) => void;
+  handleFileDrop: (e: React.DragEvent) => void;
+  handleFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  removeFile: (index: number) => void;
+  fileError: string;
+  onSubmit: () => void;
+  submitting: boolean;
+  goNext: () => void;
+  goBack: () => void;
+  canGoBack: boolean;
+  canGoForward: boolean;
+}
+
+function StepContent(props: StepContentProps) {
+  const { stepId, form, setField, goNext, goBack, canGoBack } = props;
+
+  switch (stepId) {
+    case "contact":
+      return <StepContact {...props} />;
+    case "mission":
+      return <StepMission {...props} />;
+    case "org_details":
+      return <StepOrgDetails {...props} />;
+    case "board":
+      return <StepBoard {...props} />;
+    case "officers":
+      return <StepOfficers {...props} />;
+    case "financials":
+      return <StepFinancials {...props} />;
+    case "programs":
+      return <StepPrograms {...props} />;
+    case "populations":
+      return <StepPopulations {...props} />;
+    case "existing_docs":
+      return <StepExistingDocs {...props} />;
+    case "doc_upload":
+      return <StepDocUpload {...props} />;
+    case "package":
+      return <StepPackage {...props} />;
+    case "review":
+      return <StepReview {...props} />;
+    default:
+      return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Navigation footer
+// ---------------------------------------------------------------------------
+
+function NavFooter({
+  onBack,
+  onNext,
+  canGoBack,
+  canGoForward,
+  nextLabel = "Continue",
+  onNextDisabled = false,
+}: {
+  onBack: () => void;
+  onNext: () => void;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  nextLabel?: string;
+  onNextDisabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between pt-8 border-t border-border mt-8">
+      <Button
+        variant="outline"
+        onClick={onBack}
+        disabled={!canGoBack}
+        className="gap-2"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Back
+      </Button>
+      {canGoForward && (
+        <Button
+          onClick={onNext}
+          disabled={onNextDisabled}
+          className="gap-2 bg-teal-600 hover:bg-teal-700 text-white"
+        >
+          {nextLabel}
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Contact Information
+// ---------------------------------------------------------------------------
+
+function StepContact({ form, setField, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Contact Information"
+        subtitle="Tell us how to reach you."
+      />
+      <div className="space-y-4">
+        <FormRow label="Full Name" htmlFor="np_full_name" required>
+          <Input
+            id="np_full_name"
+            value={form.np_full_name}
+            onChange={(e) => setField("np_full_name", e.target.value)}
+            placeholder="Jane Smith"
+          />
+        </FormRow>
+        <FormRow label="Email Address" htmlFor="np_email" required>
+          <Input
+            id="np_email"
+            type="email"
+            value={form.np_email}
+            onChange={(e) => setField("np_email", e.target.value)}
+            placeholder="jane@example.com"
+          />
+        </FormRow>
+        <FormRow label="Phone Number" htmlFor="np_phone">
+          <Input
+            id="np_phone"
+            type="tel"
+            value={form.np_phone}
+            onChange={(e) => setField("np_phone", e.target.value)}
+            placeholder="(555) 000-0000"
+          />
+        </FormRow>
+        <FormRow label="Preferred Contact Method" htmlFor="np_contact_method">
+          <div className="flex gap-3 flex-wrap">
+            {["Email", "Phone", "Text"].map((method) => (
+              <button
+                key={method}
+                type="button"
+                onClick={() => setField("np_contact_method", method.toLowerCase())}
+                className={[
+                  "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
+                  form.np_contact_method === method.toLowerCase()
+                    ? "bg-teal-600 border-teal-600 text-white"
+                    : "border-border text-foreground hover:border-teal-400",
+                ].join(" ")}
+              >
+                {method}
+              </button>
+            ))}
+          </div>
+        </FormRow>
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={!form.np_full_name || !form.np_email}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Mission
+// ---------------------------------------------------------------------------
+
+function StepMission({ form, setField, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Your Mission"
+        subtitle="Help us understand what your organization will do."
+      />
+      <div className="space-y-6">
+        <FormRow
+          label="Describe your mission in 1–3 sentences — what will your organization do and who will it serve?"
+          htmlFor="np_mission_statement"
+          required
+        >
+          <Textarea
+            id="np_mission_statement"
+            value={form.np_mission_statement}
+            onChange={(e) => setField("np_mission_statement", e.target.value)}
+            placeholder="Our organization will provide after-school tutoring and mentorship to underserved youth in Atlanta, helping them achieve academic success and build life skills."
+            rows={4}
+          />
+        </FormRow>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">
+            Which best describes your primary purpose?{" "}
+            <span className="text-destructive">*</span>
+          </Label>
+          <div className="space-y-3">
+            {MISSION_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setField("np_primary_purpose", opt.value)}
+                className={[
+                  "w-full text-left rounded-xl border p-4 transition-colors",
+                  form.np_primary_purpose === opt.value
+                    ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20"
+                    : "border-border hover:border-teal-300 bg-background",
+                ].join(" ")}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                    {opt.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                    )}
+                  </div>
+                  {opt.badge && (
+                    <span className="shrink-0 text-xs font-mono bg-muted px-2 py-0.5 rounded border border-border text-muted-foreground">
+                      {opt.badge}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={!form.np_mission_statement || !form.np_primary_purpose}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Org Details
+// ---------------------------------------------------------------------------
+
+function StepOrgDetails({ form, setField, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Organization Details"
+        subtitle="Basic information about the organization you're forming."
+      />
+      <div className="space-y-4">
+        <FormRow label="Proposed Organization Name" htmlFor="np_org_name" required>
+          <Input
+            id="np_org_name"
+            value={form.np_org_name}
+            onChange={(e) => setField("np_org_name", e.target.value)}
+            placeholder="Hope Forward Foundation"
+          />
+        </FormRow>
+        <div className="grid grid-cols-2 gap-4">
+          <FormRow label="State of Incorporation" htmlFor="np_state" required>
+            <select
+              id="np_state"
+              value={form.np_state}
+              onChange={(e) => setField("np_state", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <option value="">Select state…</option>
+              {US_STATES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </FormRow>
+          <FormRow label="City" htmlFor="np_city" required>
+            <Input
+              id="np_city"
+              value={form.np_city}
+              onChange={(e) => setField("np_city", e.target.value)}
+              placeholder="Atlanta"
+            />
+          </FormRow>
+        </div>
+        <FormRow label="Expected Launch Date" htmlFor="np_launch_date">
+          <Input
+            id="np_launch_date"
+            value={form.np_launch_date}
+            onChange={(e) => setField("np_launch_date", e.target.value)}
+            placeholder="e.g. July 2026, Q3 2026, ASAP"
+          />
+        </FormRow>
+        <FormRow label="Fiscal Year" htmlFor="np_fiscal_year">
+          <div className="flex gap-3 flex-wrap">
+            {["Calendar year (Jan–Dec)", "Custom fiscal year"].map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setField("np_fiscal_year", option)}
+                className={[
+                  "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
+                  form.np_fiscal_year === option
+                    ? "bg-teal-600 border-teal-600 text-white"
+                    : "border-border text-foreground hover:border-teal-400",
+                ].join(" ")}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </FormRow>
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={!form.np_org_name || !form.np_state || !form.np_city}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Board of Directors
+// ---------------------------------------------------------------------------
+
+function StepBoard({ form, updateBoardMember, addBoardMember, removeBoardMember, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  const boardValid = form.np_board_members
+    .slice(0, 3)
+    .every((m) => m.name.trim().length > 0);
+
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Board of Directors"
+        subtitle="The IRS requires at least 3 unrelated individuals on your board."
+      />
+      <div className="space-y-6">
+        {form.np_board_members.map((member, index) => (
+          <div key={index} className="rounded-xl border border-border p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-foreground">
+                Board Member {index + 1}
+                {index < 3 && (
+                  <span className="ml-2 text-xs text-destructive font-normal">Required</span>
+                )}
+              </p>
+              {index >= 3 && (
+                <button
+                  type="button"
+                  onClick={() => removeBoardMember(index)}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormRow label="Full Name" htmlFor={`board_name_${index}`} required={index < 3}>
+                <Input
+                  id={`board_name_${index}`}
+                  value={member.name}
+                  onChange={(e) => updateBoardMember(index, "name", e.target.value)}
+                  placeholder="Full name"
+                />
+              </FormRow>
+              <FormRow label="Email" htmlFor={`board_email_${index}`}>
+                <Input
+                  id={`board_email_${index}`}
+                  type="email"
+                  value={member.email}
+                  onChange={(e) => updateBoardMember(index, "email", e.target.value)}
+                  placeholder="email@example.com"
+                />
+              </FormRow>
+              <FormRow label="Phone" htmlFor={`board_phone_${index}`}>
+                <Input
+                  id={`board_phone_${index}`}
+                  type="tel"
+                  value={member.phone}
+                  onChange={(e) => updateBoardMember(index, "phone", e.target.value)}
+                  placeholder="(555) 000-0000"
+                />
+              </FormRow>
+              <FormRow label="Relationship to Founder" htmlFor={`board_rel_${index}`}>
+                <Input
+                  id={`board_rel_${index}`}
+                  value={member.relationship}
+                  onChange={(e) => updateBoardMember(index, "relationship", e.target.value)}
+                  placeholder="e.g. Friend, Colleague, Professional"
+                />
+              </FormRow>
+            </div>
+          </div>
+        ))}
+        {form.np_board_members.length < 5 && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addBoardMember}
+            className="gap-2 text-teal-600 border-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+          >
+            <Plus className="w-4 h-4" />
+            Add another board member
+          </Button>
+        )}
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={!boardValid}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Officers
+// ---------------------------------------------------------------------------
+
+function StepOfficers({ form, setField, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Officers"
+        subtitle="These are the individuals who will hold leadership positions."
+      />
+      <div className="space-y-4">
+        <FormRow label="President / Executive Director" htmlFor="np_president" required>
+          <Input
+            id="np_president"
+            value={form.np_president}
+            onChange={(e) => setField("np_president", e.target.value)}
+            placeholder="Full name"
+          />
+        </FormRow>
+        <FormRow label="Secretary" htmlFor="np_secretary" required>
+          <Input
+            id="np_secretary"
+            value={form.np_secretary}
+            onChange={(e) => setField("np_secretary", e.target.value)}
+            placeholder="Full name"
+          />
+        </FormRow>
+        <FormRow label="Treasurer" htmlFor="np_treasurer" required>
+          <Input
+            id="np_treasurer"
+            value={form.np_treasurer}
+            onChange={(e) => setField("np_treasurer", e.target.value)}
+            placeholder="Full name"
+          />
+        </FormRow>
+        <p className="text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+          The President and Treasurer should be different individuals.
+        </p>
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={!form.np_president || !form.np_secretary || !form.np_treasurer}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Financial Projections
+// ---------------------------------------------------------------------------
+
+function StepFinancials({ form, setField, toggleMulti, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Financial Projections"
+        subtitle="Your best estimates for Year 1 help us prepare your IRS application."
+      />
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          <FormRow label="Expected Year 1 Revenue" htmlFor="np_year1_revenue">
+            <Input
+              id="np_year1_revenue"
+              value={form.np_year1_revenue}
+              onChange={(e) => setField("np_year1_revenue", e.target.value)}
+              placeholder="e.g. $50,000"
+            />
+          </FormRow>
+          <FormRow label="Expected Year 1 Expenses" htmlFor="np_year1_expenses">
+            <Input
+              id="np_year1_expenses"
+              value={form.np_year1_expenses}
+              onChange={(e) => setField("np_year1_expenses", e.target.value)}
+              placeholder="e.g. $45,000"
+            />
+          </FormRow>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Primary Revenue Sources</Label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {REVENUE_OPTIONS.map((opt) => {
+              const selected = form.np_revenue_sources.includes(opt.value);
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => toggleMulti("np_revenue_sources", opt.value)}
+                  className={[
+                    "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors text-left",
+                    selected
+                      ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300"
+                      : "border-border hover:border-teal-300 text-foreground",
+                  ].join(" ")}
+                >
+                  {selected ? (
+                    <CheckSquare className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <Square className="w-4 h-4 shrink-0 text-muted-foreground" />
+                  )}
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <FormRow label="Do you plan to compensate any officers?" htmlFor="np_compensate">
+          <div className="flex gap-3">
+            {["Yes", "No"].map((val) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => setField("np_compensate_officers", val.toLowerCase())}
+                className={[
+                  "px-6 py-2 rounded-lg border text-sm font-medium transition-colors",
+                  form.np_compensate_officers === val.toLowerCase()
+                    ? "bg-teal-600 border-teal-600 text-white"
+                    : "border-border text-foreground hover:border-teal-400",
+                ].join(" ")}
+              >
+                {val}
+              </button>
+            ))}
+          </div>
+        </FormRow>
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Programs & Services
+// ---------------------------------------------------------------------------
+
+function StepPrograms({ form, setField, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Programs & Services"
+        subtitle="Describe the programs and services your organization will provide."
+      />
+      <div className="space-y-3">
+        <ul className="text-sm text-muted-foreground space-y-1 bg-muted/30 rounded-lg px-4 py-3">
+          <li>• Who you will serve</li>
+          <li>• What services / programs you will offer</li>
+          <li>• Where you will operate (geographic area)</li>
+          <li>• How often programs will run</li>
+        </ul>
+        <Textarea
+          value={form.np_programs_description}
+          onChange={(e) => setField("np_programs_description", e.target.value)}
+          placeholder="We will provide free weekly tutoring sessions to elementary school students in Atlanta's Westside neighborhoods, operating Monday–Thursday afternoons from September through May…"
+          rows={8}
+        />
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={!form.np_programs_description}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Populations Served
+// ---------------------------------------------------------------------------
+
+function StepPopulations({ form, toggleMulti, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Populations Served"
+        subtitle="Select all populations your organization will primarily serve."
+      />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {POPULATION_OPTIONS.map((opt) => {
+          const selected = form.np_populations.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => toggleMulti("np_populations", opt.value)}
+              className={[
+                "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors text-left",
+                selected
+                  ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300"
+                  : "border-border hover:border-teal-300 text-foreground",
+              ].join(" ")}
+            >
+              {selected ? (
+                <CheckSquare className="w-4 h-4 shrink-0" />
+              ) : (
+                <Square className="w-4 h-4 shrink-0 text-muted-foreground" />
+              )}
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={form.np_populations.length === 0}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Existing Documents
+// ---------------------------------------------------------------------------
+
+function StepExistingDocs({ form, toggleMulti, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="What Do You Already Have?"
+        subtitle="Check everything that already exists for your organization."
+      />
+      <div className="space-y-2">
+        {EXISTING_DOC_OPTIONS.map((opt) => {
+          const selected = form.np_existing_docs.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => toggleMulti("np_existing_docs", opt.value)}
+              className={[
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm transition-colors text-left",
+                selected
+                  ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300"
+                  : "border-border hover:border-teal-300 text-foreground bg-background",
+              ].join(" ")}
+            >
+              {selected ? (
+                <CheckSquare className="w-4 h-4 shrink-0" />
+              ) : (
+                <Square className="w-4 h-4 shrink-0 text-muted-foreground" />
+              )}
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={form.np_existing_docs.length === 0}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Document Upload
+// ---------------------------------------------------------------------------
+
+function StepDocUpload({
+  form,
+  dragActive,
+  setDragActive,
+  handleFileDrop,
+  handleFileInput,
+  removeFile,
+  fileError,
+  goNext,
+  goBack,
+  canGoBack,
+  canGoForward,
+}: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Document Upload"
+        subtitle="Upload any existing documents you already have. You can skip this step."
+      />
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+        onDragLeave={() => setDragActive(false)}
+        onDrop={handleFileDrop}
+        className={[
+          "border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer",
+          dragActive
+            ? "border-teal-400 bg-teal-50 dark:bg-teal-900/20"
+            : "border-border hover:border-teal-300 bg-muted/20",
+        ].join(" ")}
+      >
+        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+        <p className="text-sm font-medium text-foreground mb-1">
+          Drag & drop files here
+        </p>
+        <p className="text-xs text-muted-foreground mb-4">
+          Articles, bylaws, EIN letter, conflict of interest policy, etc.
+        </p>
+        <label className="cursor-pointer">
+          <span className="text-sm text-teal-600 font-medium hover:underline">
+            Browse files
+          </span>
+          <input
+            type="file"
+            multiple
+            onChange={handleFileInput}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+          />
+        </label>
+      </div>
+      {fileError && <p className="text-xs text-destructive">{fileError}</p>}
+      {form.np_uploaded_files.length > 0 && (
+        <ul className="space-y-2">
+          {form.np_uploaded_files.map((name, index) => (
+            <li key={index} className="flex items-center justify-between gap-2 text-sm bg-muted/30 rounded-lg px-3 py-2">
+              <span className="truncate text-foreground">{name}</span>
+              <button
+                type="button"
+                onClick={() => removeFile(index)}
+                className="shrink-0 text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        nextLabel={form.np_uploaded_files.length === 0 ? "Skip" : "Continue"}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Package Selection
+// ---------------------------------------------------------------------------
+
+function StepPackage({ form, setField, goNext, goBack, canGoBack, canGoForward }: StepContentProps) {
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Choose Your Package"
+        subtitle="Select the level of service that fits your needs."
+      />
+      <div className="space-y-4">
+        {PACKAGES.map((pkg) => {
+          const selected = form.np_package === pkg.value;
+          return (
+            <button
+              key={pkg.value}
+              type="button"
+              onClick={() => setField("np_package", pkg.value)}
+              className={[
+                "w-full text-left rounded-xl border-2 p-5 transition-all",
+                selected
+                  ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20"
+                  : "border-border hover:border-teal-300 bg-background",
+                pkg.highlight && !selected ? "border-teal-200 dark:border-teal-800" : "",
+              ].join(" ")}
+            >
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-bold text-foreground">{pkg.label}</p>
+                    {pkg.highlight && (
+                      <span className="text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-medium">
+                        Most Popular
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xl font-bold text-teal-600 shrink-0">{pkg.priceDisplay}</p>
+              </div>
+              <ul className="space-y-1.5">
+                {pkg.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0 mt-0.5" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </button>
+          );
+        })}
+      </div>
+      <NavFooter
+        onBack={goBack}
+        onNext={goNext}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onNextDisabled={!form.np_package}
+        nextLabel="Review Application"
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step: Review & Submit
+// ---------------------------------------------------------------------------
+
+function StepReview({ form, goBack, canGoBack, onSubmit, submitting }: StepContentProps) {
+  const selectedPackage = PACKAGES.find((p) => p.value === form.np_package);
+  const missionLabel = MISSION_OPTIONS.find((o) => o.value === form.np_primary_purpose)?.label;
+  const populationLabels = POPULATION_OPTIONS.filter((o) =>
+    form.np_populations.includes(o.value)
+  ).map((o) => o.label);
+  const revenueSrcLabels = REVENUE_OPTIONS.filter((o) =>
+    form.np_revenue_sources.includes(o.value)
+  ).map((o) => o.label);
+  const existingDocLabels = EXISTING_DOC_OPTIONS.filter((o) =>
+    form.np_existing_docs.includes(o.value)
+  ).map((o) => o.label);
+
+  return (
+    <div className="space-y-6">
+      <StepHeader
+        title="Review & Submit"
+        subtitle="Review your information before we send it to our formation team."
+      />
+
+      <div className="space-y-4">
+        {/* Contact */}
+        <ReviewSection title="Contact Information">
+          <ReviewRow label="Name" value={form.np_full_name} />
+          <ReviewRow label="Email" value={form.np_email} />
+          <ReviewRow label="Phone" value={form.np_phone} />
+          <ReviewRow label="Preferred Contact" value={form.np_contact_method} />
+        </ReviewSection>
+
+        {/* Mission */}
+        <ReviewSection title="Mission & Purpose">
+          <ReviewRow label="Mission" value={form.np_mission_statement} />
+          <ReviewRow label="Primary Purpose" value={missionLabel} />
+        </ReviewSection>
+
+        {/* Org Details */}
+        <ReviewSection title="Organization Details">
+          <ReviewRow label="Name" value={form.np_org_name} />
+          <ReviewRow label="State" value={form.np_state} />
+          <ReviewRow label="City" value={form.np_city} />
+          <ReviewRow label="Launch Date" value={form.np_launch_date} />
+          <ReviewRow label="Fiscal Year" value={form.np_fiscal_year} />
+        </ReviewSection>
+
+        {/* Board */}
+        <ReviewSection title="Board of Directors">
+          {form.np_board_members.map((m, i) => (
+            m.name && <ReviewRow key={i} label={`Member ${i + 1}`} value={m.name} />
+          ))}
+        </ReviewSection>
+
+        {/* Officers */}
+        <ReviewSection title="Officers">
+          <ReviewRow label="President" value={form.np_president} />
+          <ReviewRow label="Secretary" value={form.np_secretary} />
+          <ReviewRow label="Treasurer" value={form.np_treasurer} />
+        </ReviewSection>
+
+        {/* Financials */}
+        <ReviewSection title="Financials">
+          <ReviewRow label="Year 1 Revenue" value={form.np_year1_revenue} />
+          <ReviewRow label="Year 1 Expenses" value={form.np_year1_expenses} />
+          <ReviewRow label="Revenue Sources" value={revenueSrcLabels.join(", ")} />
+          <ReviewRow label="Compensate Officers" value={form.np_compensate_officers} />
+        </ReviewSection>
+
+        {/* Programs */}
+        <ReviewSection title="Programs & Populations">
+          <ReviewRow label="Programs" value={form.np_programs_description} />
+          <ReviewRow label="Populations" value={populationLabels.join(", ")} />
+        </ReviewSection>
+
+        {/* Existing docs */}
+        <ReviewSection title="Current Status">
+          <ReviewRow label="Already have" value={existingDocLabels.join(", ")} />
+          {form.np_uploaded_files.length > 0 && (
+            <ReviewRow
+              label="Uploaded files"
+              value={`${form.np_uploaded_files.length} file(s)`}
+            />
+          )}
+        </ReviewSection>
+
+        {/* Package */}
+        {selectedPackage && (
+          <div className="rounded-xl border-2 border-teal-500 bg-teal-50 dark:bg-teal-900/20 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-1">
+                  Selected Package
+                </p>
+                <p className="text-lg font-bold text-foreground">{selectedPackage.label}</p>
+              </div>
+              <p className="text-2xl font-bold text-teal-600">{selectedPackage.priceDisplay}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-lg bg-muted/30 border border-border px-4 py-3 text-sm text-muted-foreground">
+        By submitting, you agree to be contacted by our formation team within 24 hours. No payment
+        is collected at this stage — a service agreement will be sent separately.
+      </div>
+
+      <div className="flex items-center justify-between pt-4 border-t border-border">
+        <Button variant="outline" onClick={goBack} disabled={!canGoBack} className="gap-2">
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </Button>
+        <Button
+          onClick={onSubmit}
+          disabled={submitting}
+          className="gap-2 bg-teal-600 hover:bg-teal-700 text-white px-8"
+        >
+          {submitting ? "Submitting…" : "Submit Application"}
+          {!submitting && <ChevronRight className="w-4 h-4" />}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Small helpers
+// ---------------------------------------------------------------------------
+
+function StepHeader({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="space-y-1 pb-2">
+      <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+      <p className="text-muted-foreground">{subtitle}</p>
+    </div>
+  );
+}
+
+function FormRow({
+  label,
+  htmlFor,
+  required,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={htmlFor} className="text-sm font-medium">
+        {label}
+        {required && <span className="text-destructive ml-1">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border p-4 space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string | undefined | null }) {
+  if (!value) return null;
+  return (
+    <div className="flex gap-3 text-sm">
+      <span className="text-muted-foreground shrink-0 w-36">{label}</span>
+      <span className="text-foreground font-medium break-words min-w-0">{value}</span>
     </div>
   );
 }
