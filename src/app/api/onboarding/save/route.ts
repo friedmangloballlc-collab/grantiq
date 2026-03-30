@@ -1,0 +1,97 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+// Maps each onboarding step ID to which table and column it belongs to
+const FIELD_MAP: Record<
+  string,
+  { table: "organizations" | "org_profiles" | "org_capabilities"; column: string }
+> = {
+  entity_type:          { table: "organizations",    column: "entity_type" },
+  industry:             { table: "org_profiles",     column: "industry" },
+  funding_use:          { table: "org_profiles",     column: "funding_use" },
+  business_stage:       { table: "org_profiles",     column: "business_stage" },
+  grant_history:        { table: "org_profiles",     column: "grant_history_level" },
+  location:             { table: "organizations",    column: "city" }, // handled specially below
+  employee_count:       { table: "organizations",    column: "employee_count" },
+  annual_revenue:       { table: "organizations",    column: "annual_budget" },
+  ownership:            { table: "org_profiles",     column: "ownership_demographics" },
+  mission:              { table: "organizations",    column: "mission_statement" },
+  documents:            { table: "org_profiles",     column: "documents_ready" },
+  interested_nonprofit: { table: "org_profiles",     column: "interested_in_nonprofit" },
+};
+
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { field, value } = await req.json();
+
+    if (!field || value === undefined) {
+      return NextResponse.json(
+        { error: "field and value are required" },
+        { status: 400 }
+      );
+    }
+
+    const db = createAdminClient();
+
+    // Get user's org
+    const { data: membership } = await db
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .single();
+
+    if (!membership) {
+      return NextResponse.json({ error: "No organization found" }, { status: 404 });
+    }
+
+    const orgId = membership.org_id;
+    const mapping = FIELD_MAP[field as string];
+
+    if (!mapping) {
+      // Unknown field — silently ignore
+      return NextResponse.json({ success: true, skipped: true });
+    }
+
+    // Special case: location is "City, ST" — split and save city + state
+    if (field === "location" && typeof value === "string") {
+      const parts = value.split(",").map((s: string) => s.trim());
+      const city = parts[0] ?? value;
+      const state = parts[1] ?? "";
+      await db
+        .from("organizations")
+        .update({ city, state })
+        .eq("id", orgId);
+      return NextResponse.json({ success: true });
+    }
+
+    // Special case: multi_select arrays — join to comma-separated string
+    const saveValue = Array.isArray(value) ? (value as string[]).join(", ") : value;
+
+    const { error } = await db
+      .from(mapping.table)
+      .update({ [mapping.column]: saveValue })
+      .eq(mapping.table === "organizations" ? "id" : "org_id", orgId);
+
+    if (error) {
+      console.error(`Onboarding save error [${field}]:`, error.message);
+      // Return success anyway — UI should not block on DB errors
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Onboarding save error:", err);
+    return NextResponse.json({ success: false, error: "Internal error" }, { status: 500 });
+  }
+}

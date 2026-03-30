@@ -4,11 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Circle } from "lucide-react";
 
 export interface ProfileData {
-  entityType?: string;
+  // Step IDs — match onboarding step ids exactly
+  entity_type?: string;
   industry?: string;
+  funding_use?: string;
+  business_stage?: string;
+  grant_history?: string;
+  location?: string;
+  employee_count?: string;
+  annual_revenue?: string;
+  ownership?: string;
+  mission?: string;
+  documents?: string;
+  interested_nonprofit?: string;
+  // Legacy fields kept for backward compatibility
+  entityType?: string;
   fundingUse?: string;
   businessStage?: string;
-  mission?: string;
   state?: string;
   city?: string;
   annualBudget?: string;
@@ -34,17 +46,17 @@ export function ProfileCard({
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
-    { label: "Organization Type", value: data.entityType },
+    { label: "Organization Type", value: data.entity_type ?? data.entityType },
     { label: "Industry", value: data.industry },
-    { label: "Funding Purpose", value: data.fundingUse },
-    { label: "Business Stage", value: data.businessStage },
-    { label: "Location", value: data.city && data.state ? `${data.city}, ${data.state}` : data.state },
-    { label: "Employees", value: data.employeeCount },
-    { label: "Annual Revenue", value: data.annualBudget },
+    { label: "Funding Purpose", value: data.funding_use ?? data.fundingUse },
+    { label: "Business Stage", value: data.business_stage ?? data.businessStage },
+    { label: "Location", value: data.location ?? (data.city && data.state ? `${data.city}, ${data.state}` : data.state) },
+    { label: "Employees", value: data.employee_count ?? data.employeeCount },
+    { label: "Annual Revenue", value: data.annual_revenue ?? data.annualBudget },
     { label: "Mission", value: data.mission },
-    { label: "Ownership", value: data.ownershipDemographics },
-    { label: "Grant History", value: data.grantHistory },
-    { label: "Documents Ready", value: data.documentsMissing === "none" ? "All ready" : data.documentsMissing ? `Missing: ${data.documentsMissing}` : undefined },
+    { label: "Ownership", value: data.ownership ?? data.ownershipDemographics },
+    { label: "Grant History", value: data.grant_history ?? data.grantHistory },
+    { label: "Documents Ready", value: data.documents ? (data.documents === "none" ? "None yet" : data.documents) : (data.documentsMissing === "none" ? "All ready" : data.documentsMissing ? `Missing: ${data.documentsMissing}` : undefined) },
     {
       label: "501(c)(3) / SAM.gov",
       value: data.has501c3 != null || data.samGov != null
