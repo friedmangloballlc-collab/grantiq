@@ -23,53 +23,33 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
+    // Call server-side API to create user + org (bypasses RLS)
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, orgName }),
+    });
 
-    // 1. Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error ?? "Signup failed");
+      setLoading(false);
+      return;
+    }
+
+    // Sign in the user after account creation
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (authError || !authData.user) {
-      setError(authError?.message ?? "Signup failed");
+    if (signInError) {
+      setError("Account created but sign-in failed. Try logging in.");
       setLoading(false);
       return;
     }
-
-    // 2. Create organization
-    const { data: org, error: orgError } = await supabase
-      .from("organizations")
-      .insert({ name: orgName || "My Organization", entity_type: "other" })
-      .select("id")
-      .single();
-
-    if (orgError || !org) {
-      setError("Failed to create organization");
-      setLoading(false);
-      return;
-    }
-
-    // 3. Create org membership (owner)
-    await supabase.from("org_members").insert({
-      org_id: org.id,
-      user_id: authData.user.id,
-      role: "owner",
-      status: "active",
-      joined_at: new Date().toISOString(),
-    });
-
-    // 4. Create default subscription (free)
-    await supabase.from("subscriptions").insert({
-      org_id: org.id,
-      user_id: authData.user.id,
-      tier: "free",
-      status: "active",
-    });
-
-    // 5. Create org_capabilities + org_profiles
-    await supabase.from("org_capabilities").insert({ org_id: org.id });
-    await supabase.from("org_profiles").insert({ org_id: org.id });
 
     router.push("/onboarding");
   };

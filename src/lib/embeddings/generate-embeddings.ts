@@ -90,9 +90,9 @@ export async function generateMissingGrantEmbeddings(
   const limit = options?.limit ?? 500;
 
   const { data: grants, error } = await supabase
-    .from("grants")
+    .from("grant_sources")
     .select("id, name, funder_name, description, category, eligibility_types, states")
-    .is("embedding", null)
+    .is("description_embedding", null)
     .limit(limit);
 
   if (error || !grants) {
@@ -115,8 +115,8 @@ export async function generateMissingGrantEmbeddings(
     }
 
     const { error: updateError } = await supabase
-      .from("grants")
-      .update({ embedding })
+      .from("grant_sources")
+      .update({ description_embedding: embedding })
       .eq("id", grants[i].id);
 
     if (updateError) {

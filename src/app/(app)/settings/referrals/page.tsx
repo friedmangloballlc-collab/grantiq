@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { generateReferralCode } from "@/lib/referral";
 import { ReferralStats } from "@/components/referral/referral-stats";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -19,27 +20,40 @@ export default async function ReferralsPage() {
   let creditsEarned = 0;
 
   if (user) {
-    // Check for existing referral code or create one
-    const { data: existing } = await supabase
-      .from("referral_codes")
-      .select("code, referral_count, converted_count, credits_earned")
+    // Get user's org membership
+    const { data: membership } = await supabase
+      .from("org_members")
+      .select("org_id")
       .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
       .single();
 
-    if (existing) {
-      code = existing.code;
-      totalReferrals = existing.referral_count ?? 0;
-      signedUp = existing.converted_count ?? 0;
-      creditsEarned = existing.credits_earned ?? 0;
-    } else {
-      // Auto-generate on first visit
+    const orgId = membership?.org_id;
+
+    // Check for existing referral code
+    const { data: existing } = await supabase
+      .from("referrals")
+      .select("code, status, credit_amount_cents")
+      .eq("referrer_user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (existing && existing.length > 0) {
+      code = existing[0].code;
+      totalReferrals = existing.length;
+      signedUp = existing.filter((r) => r.status === "signed_up" || r.status === "converted" || r.status === "credit_applied").length;
+      creditsEarned = existing.filter((r) => r.status === "credit_applied").reduce((sum, r) => sum + (r.credit_amount_cents ?? 0), 0) / 100;
+    } else if (orgId) {
+      // Auto-generate on first visit using admin client (RLS may block insert)
+      const admin = createAdminClient();
       const newCode = generateReferralCode();
-      const { data: created } = await supabase
-        .from("referral_codes")
-        .insert({ user_id: user.id, code: newCode })
-        .select("code")
-        .single();
-      code = created?.code ?? newCode;
+      await admin.from("referrals").insert({
+        referrer_user_id: user.id,
+        referrer_org_id: orgId,
+        code: newCode,
+        status: "pending",
+      });
+      code = newCode;
     }
   }
 

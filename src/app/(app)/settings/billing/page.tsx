@@ -55,15 +55,15 @@ export default async function BillingPage() {
       startOfMonth.setHours(0, 0, 0, 0);
 
       const { data: usage } = await supabase
-        .from("usage_events")
-        .select("event_type")
+        .from("ai_usage")
+        .select("action_type")
         .eq("org_id", membership.org_id)
         .gte("created_at", startOfMonth.toISOString());
 
       if (usage) {
-        usageStats.matches = usage.filter((u: { event_type: string }) => u.event_type === "match").length;
-        usageStats.roadmaps = usage.filter((u: { event_type: string }) => u.event_type === "roadmap").length;
-        usageStats.readiness = usage.filter((u: { event_type: string }) => u.event_type === "readiness_score").length;
+        usageStats.matches = usage.filter((u: { event_type: string }) => u.action_type === "match").length;
+        usageStats.roadmaps = usage.filter((u: { event_type: string }) => u.action_type === "roadmap").length;
+        usageStats.readiness = usage.filter((u: { event_type: string }) => u.action_type === "readiness_score").length;
       }
     }
   }
