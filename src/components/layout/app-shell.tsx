@@ -6,8 +6,7 @@ import { AppSidebar } from "./app-sidebar";
 import { AppHeader } from "./app-header";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { AppSidebar as MobileSidebar } from "./app-sidebar";
-
-// TODO: Add <GrantieButton /> here once that component exists
+import { GrantieButton } from "@/components/grantie/grantie-button";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -37,6 +36,8 @@ export function AppShell({ children, orgContext }: AppShellProps) {
             {children}
           </main>
         </div>
+
+        <GrantieButton />
       </div>
     </OrgProvider>
   );
