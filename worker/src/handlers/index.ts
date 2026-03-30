@@ -6,6 +6,7 @@ import { handleGenerateEmbedding } from "./generate-embedding.js";
 import { handleMatchGrants } from "./match-grants.js";
 import { handleScoreReadiness } from "./score-readiness.js";
 import { handleGenerateRoadmap } from "./generate-roadmap.js";
+import { handleWritingJob } from "./writing.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -37,6 +38,9 @@ export async function handleJob(job: Job, supabase: SupabaseClient): Promise<voi
       break;
     case "generate_embedding":
       await handleGenerateEmbedding(job, supabase, openai);
+      break;
+    case "writing_pipeline":
+      await handleWritingJob(job.payload as Parameters<typeof handleWritingJob>[0]);
       break;
     case "weekly_digest":
       console.log(`[handler] weekly_digest — TODO: Plan 6`);
