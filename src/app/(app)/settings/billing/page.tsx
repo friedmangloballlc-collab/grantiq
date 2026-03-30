@@ -61,9 +61,9 @@ export default async function BillingPage() {
         .gte("created_at", startOfMonth.toISOString());
 
       if (usage) {
-        usageStats.matches = usage.filter((u: { event_type: string }) => u.action_type === "match").length;
-        usageStats.roadmaps = usage.filter((u: { event_type: string }) => u.action_type === "roadmap").length;
-        usageStats.readiness = usage.filter((u: { event_type: string }) => u.action_type === "readiness_score").length;
+        usageStats.matches = usage.filter((u: { action_type: string }) => u.action_type === "match").length;
+        usageStats.roadmaps = usage.filter((u: { action_type: string }) => u.action_type === "roadmap").length;
+        usageStats.readiness = usage.filter((u: { action_type: string }) => u.action_type === "readiness_score").length;
       }
     }
   }
