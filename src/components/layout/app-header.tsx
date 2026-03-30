@@ -1,16 +1,17 @@
 "use client";
 
-import { Bell, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { useOrg } from "@/hooks/use-org";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 interface AppHeaderProps {
   onMenuClick?: () => void;
 }
 
 export function AppHeader({ onMenuClick }: AppHeaderProps) {
-  const { orgName } = useOrg();
+  const { orgName, userId } = useOrg();
 
   return (
     <header className="flex items-center justify-between h-14 px-4 border-b border-border bg-background shrink-0">
@@ -32,9 +33,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
 
       {/* Right: notifications + theme toggle */}
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Notifications">
-          <Bell className="h-4 w-4" />
-        </Button>
+        <NotificationBell userId={userId} />
         <ThemeToggle />
       </div>
     </header>

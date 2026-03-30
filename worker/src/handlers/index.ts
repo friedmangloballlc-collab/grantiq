@@ -7,6 +7,7 @@ import { handleMatchGrants } from "./match-grants.js";
 import { handleScoreReadiness } from "./score-readiness.js";
 import { handleGenerateRoadmap } from "./generate-roadmap.js";
 import { handleWritingJob } from "./writing.js";
+import { handleWeeklyDigest } from "./weekly-digest.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -43,7 +44,7 @@ export async function handleJob(job: Job, supabase: SupabaseClient): Promise<voi
       await handleWritingJob(job.payload as Parameters<typeof handleWritingJob>[0]);
       break;
     case "weekly_digest":
-      console.log(`[handler] weekly_digest — TODO: Plan 6`);
+      await handleWeeklyDigest(supabase);
       break;
     default:
       throw new Error(`Unknown job type: ${job.jobType}`);

@@ -55,7 +55,7 @@ export default async function AppLayout({
 
   const tier = (subscription?.tier ?? "free") as OrgContext["tier"];
 
-  const orgContext: OrgContext = { orgId, orgName, role, tier };
+  const orgContext: OrgContext = { orgId, orgName, role, tier, userId };
 
   return <AppShell orgContext={orgContext}>{children}</AppShell>;
 }

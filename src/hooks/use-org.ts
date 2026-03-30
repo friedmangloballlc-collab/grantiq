@@ -7,6 +7,7 @@ export interface OrgContext {
   orgName: string;
   role: "owner" | "admin" | "editor" | "viewer";
   tier: "free" | "starter" | "pro" | "enterprise";
+  userId: string;
 }
 
 const OrgCtx = createContext<OrgContext | null>(null);
