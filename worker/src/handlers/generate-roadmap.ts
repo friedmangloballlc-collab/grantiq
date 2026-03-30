@@ -1,5 +1,5 @@
-import { createAdminClient } from "@/lib/supabase/admin";
-import { generateStrategy } from "@/lib/ai/engines/strategy";
+import { createAdminClient } from "../../../src/lib/supabase/admin";
+import { generateStrategy } from "../../../src/lib/ai/engines/strategy";
 
 interface GenerateRoadmapPayload {
   org_id: string;

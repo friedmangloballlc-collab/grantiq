@@ -63,20 +63,19 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { grant_id, stage = "researching", notes } = body;
+    const { grant_source_id, stage = "researching", notes } = body;
 
-    if (!grant_id) {
-      return NextResponse.json({ error: "grant_id is required" }, { status: 400 });
+    if (!grant_source_id) {
+      return NextResponse.json({ error: "grant_source_id is required" }, { status: 400 });
     }
 
     const { data, error } = await supabase
       .from("grant_pipeline")
       .insert({
         org_id: membership.org_id,
-        grant_id,
+        grant_source_id,
         stage,
         notes: notes ?? null,
-        added_by: user.id,
       })
       .select()
       .single();

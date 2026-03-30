@@ -44,7 +44,7 @@ export async function GET(
       .from("grant_matches")
       .select("*")
       .eq("org_id", membership.org_id)
-      .eq("grant_id", id)
+      .eq("grant_source_id", id)
       .maybeSingle();
 
     return NextResponse.json({ grant, match: match ?? null });

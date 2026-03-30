@@ -63,7 +63,7 @@ Red Flags: ${input.funder_analysis.red_flags.join(", ")}`;
       : `VALIDATION ERROR: ${lastError}\n\nFix your JSON.\n\n${userMessage}`;
 
     const response = await anthropic.messages.create({
-      model: "claude-opus-4-0-20250514",
+      model: "claude-opus-4-20250514",
       max_tokens: 16384,
       system: AI_AUDITOR_SYSTEM_PROMPT,
       messages: [{ role: "user", content: prompt }],
@@ -159,7 +159,7 @@ Avoid: ${funderAnalysis.red_flags.join(", ")}
 Return ONLY a JSON object matching the DraftSectionOutput schema.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-opus-4-0-20250514",
+      model: "claude-opus-4-20250514",
       max_tokens: 16384,
       messages: [{ role: "user", content: rewritePrompt }],
     });

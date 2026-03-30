@@ -30,7 +30,7 @@ export async function GET() {
       .from("readiness_scores")
       .select("*")
       .eq("org_id", membership.org_id)
-      .order("created_at", { ascending: false })
+      .order("scored_at", { ascending: false })
       .limit(10);
 
     if (error) {

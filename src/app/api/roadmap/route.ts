@@ -29,7 +29,7 @@ export async function GET() {
       .from("funding_roadmaps")
       .select("*")
       .eq("org_id", membership.org_id)
-      .order("created_at", { ascending: false })
+      .order("generated_at", { ascending: false })
       .limit(10);
 
     if (error) {

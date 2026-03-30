@@ -39,7 +39,7 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/onboarding/chat", {
+      const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

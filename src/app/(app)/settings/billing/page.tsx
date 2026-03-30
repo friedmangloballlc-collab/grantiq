@@ -6,15 +6,15 @@ import Link from "next/link";
 const TIER_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
-  growth: "Growth",
-  scale: "Scale",
+  pro: "Pro",
+  enterprise: "Enterprise",
 };
 
 const TIER_PRICES: Record<string, string> = {
   free: "$0/mo",
   starter: "$79/mo",
-  growth: "$199/mo",
-  scale: "$499/mo",
+  pro: "$199/mo",
+  enterprise: "$499/mo",
 };
 
 const TIER_LIMITS: Record<string, { matches: number; roadmaps: number; readiness: number }> = {

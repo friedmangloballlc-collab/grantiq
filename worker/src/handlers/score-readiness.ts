@@ -1,5 +1,5 @@
-import { createAdminClient } from "@/lib/supabase/admin";
-import { assessReadiness } from "@/lib/ai/engines/readiness";
+import { createAdminClient } from "../../../src/lib/supabase/admin";
+import { assessReadiness } from "../../../src/lib/ai/engines/readiness";
 
 interface ScoreReadinessPayload {
   org_id: string;
