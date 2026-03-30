@@ -18,7 +18,7 @@ CREATE TABLE grant_rfp_analyses (
 CREATE TABLE grant_drafts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id),
+  user_id UUID NOT NULL,
   rfp_analysis_id UUID NOT NULL REFERENCES grant_rfp_analyses(id),
   grant_source_id UUID REFERENCES grant_sources(id),
   pipeline_id UUID REFERENCES grant_pipeline(id),
@@ -71,23 +71,23 @@ ALTER TABLE full_confidence_applications ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies (same pattern as other org-scoped tables)
 CREATE POLICY "rfp_analyses_select" ON grant_rfp_analyses FOR SELECT
-  USING (org_id IN (SELECT auth.user_org_ids()));
+  USING (org_id IN (SELECT public.user_org_ids()));
 CREATE POLICY "rfp_analyses_insert" ON grant_rfp_analyses FOR INSERT
-  WITH CHECK (org_id IN (SELECT auth.user_org_ids()));
+  WITH CHECK (org_id IN (SELECT public.user_org_ids()));
 
 CREATE POLICY "grant_drafts_select" ON grant_drafts FOR SELECT
-  USING (org_id IN (SELECT auth.user_org_ids()));
+  USING (org_id IN (SELECT public.user_org_ids()));
 CREATE POLICY "grant_drafts_insert" ON grant_drafts FOR INSERT
-  WITH CHECK (org_id IN (SELECT auth.user_org_ids()));
+  WITH CHECK (org_id IN (SELECT public.user_org_ids()));
 CREATE POLICY "grant_drafts_update" ON grant_drafts FOR UPDATE
-  USING (org_id IN (SELECT auth.user_org_ids()));
+  USING (org_id IN (SELECT public.user_org_ids()));
 
 CREATE POLICY "full_confidence_select" ON full_confidence_applications FOR SELECT
-  USING (org_id IN (SELECT auth.user_org_ids()));
+  USING (org_id IN (SELECT public.user_org_ids()));
 CREATE POLICY "full_confidence_insert" ON full_confidence_applications FOR INSERT
-  WITH CHECK (org_id IN (SELECT auth.user_org_ids()));
+  WITH CHECK (org_id IN (SELECT public.user_org_ids()));
 CREATE POLICY "full_confidence_update" ON full_confidence_applications FOR UPDATE
-  USING (org_id IN (SELECT auth.user_org_ids()));
+  USING (org_id IN (SELECT public.user_org_ids()));
 
 -- Indexes
 CREATE INDEX idx_grant_drafts_org_status ON grant_drafts(org_id, status);

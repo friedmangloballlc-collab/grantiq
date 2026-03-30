@@ -11,7 +11,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-6">
             <a href="/privacy" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">Privacy</a>
             <a href="/terms" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">Terms</a>
-            <a href="/grants" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">Grant Directory</a>
+            <a href="/grant-directory" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">Grant Directory</a>
           </div>
         </div>
       </footer>

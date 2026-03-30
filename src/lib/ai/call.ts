@@ -16,6 +16,8 @@ export interface AiCallOptions {
   userInput: string;
   /** org_id from the orgs table */
   orgId: string;
+  /** user_id for audit logging */
+  userId?: string;
   /** Subscription tier (free | starter | growth | agency) */
   tier: string;
   /** Which action type this call counts toward (match, draft, chat, etc.) */

@@ -58,7 +58,7 @@ export default function LandingPage() {
           <Button
             size="lg"
             variant="outline"
-            render={<Link href="/grants">Browse Grant Directory</Link>}
+            render={<Link href="/grant-directory">Browse Grant Directory</Link>}
           />
         </div>
       </section>

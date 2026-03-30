@@ -73,7 +73,7 @@ export default async function PublicGrantPage({ params }: Props) {
       <div className="max-w-3xl mx-auto py-12 px-4">
         {/* Breadcrumb */}
         <nav className="text-sm text-warm-500 mb-6">
-          <Link href="/grants" className="hover:text-warm-900 dark:hover:text-warm-50">
+          <Link href="/grant-directory" className="hover:text-warm-900 dark:hover:text-warm-50">
             Grant Directory
           </Link>
           <span className="mx-2">/</span>
@@ -151,7 +151,7 @@ export default async function PublicGrantPage({ params }: Props) {
         {/* Back link */}
         <div className="mt-8 text-center">
           <Link
-            href="/grants"
+            href="/grant-directory"
             className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50"
           >
             &larr; Back to Grant Directory

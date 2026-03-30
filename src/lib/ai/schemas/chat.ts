@@ -5,7 +5,7 @@ export const GrantieChatOutputSchema = z.object({
   suggested_actions: z.array(z.object({
     action_type: z.enum(["add_to_pipeline", "draft_loi", "set_reminder", "run_matching", "view_grant", "update_profile", "check_readiness"]),
     label: z.string(),
-    payload: z.record(z.unknown()).optional(),
+    payload: z.record(z.string(), z.unknown()).optional(),
   })).optional(),
   follow_up_prompts: z.array(z.string()).max(3).optional(),
   sources_referenced: z.array(z.string()).optional(),

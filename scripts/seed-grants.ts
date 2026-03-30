@@ -70,30 +70,34 @@ async function main() {
   const { grants, stats } = parseGrantsXlsx(XLSX_PATH);
 
   console.log(`\nSheet summary:`);
-  let totalParsed = 0;
-  let totalSkipped = 0;
-  for (const s of stats) {
-    if (s.parsed > 0 || s.skipped > 0) {
-      console.log(`  ${s.sheet.padEnd(35)} parsed=${s.parsed}  skipped=${s.skipped}`);
+  for (const [sheet, counts] of Object.entries(stats.bySheet)) {
+    if (counts.parsed > 0 || counts.skipped > 0) {
+      console.log(`  ${sheet.padEnd(35)} parsed=${counts.parsed}  skipped=${counts.skipped}`);
     }
-    totalParsed += s.parsed;
-    totalSkipped += s.skipped;
   }
-  console.log(`\nTotal parsed: ${totalParsed}  Total skipped: ${totalSkipped}`);
+  console.log(`\nTotal parsed: ${stats.parsed}  Total skipped: ${stats.skipped}  Errors: ${stats.errors}`);
 
   if (grants.length === 0) {
     console.error("ERROR: No grants parsed. Check the XLSX path and sheet structure.");
     process.exit(1);
   }
 
-  console.log(`\nUpserting ${grants.length} grants in batches of ${BATCH_SIZE}...`);
+  // Deduplicate by (name, funder_name) — keep last occurrence
+  const deduped = new Map<string, typeof grants[0]>();
+  for (const g of grants) {
+    deduped.set(`${g.name}|||${g.funder_name}`, g);
+  }
+  const uniqueGrants = Array.from(deduped.values());
+  console.log(`\nDeduplicated: ${grants.length} → ${uniqueGrants.length} unique grants`);
+
+  console.log(`\nUpserting ${uniqueGrants.length} grants in batches of ${BATCH_SIZE}...`);
   let totalInserted = 0;
   let totalErrors = 0;
 
-  for (let i = 0; i < grants.length; i += BATCH_SIZE) {
-    const batch = grants.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < uniqueGrants.length; i += BATCH_SIZE) {
+    const batch = uniqueGrants.slice(i, i + BATCH_SIZE);
     const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-    const totalBatches = Math.ceil(grants.length / BATCH_SIZE);
+    const totalBatches = Math.ceil(uniqueGrants.length / BATCH_SIZE);
     process.stdout.write(`  Batch ${batchNum}/${totalBatches}... `);
 
     const { inserted, errors } = await upsertBatch(batch);

@@ -59,7 +59,7 @@ export default async function GrantDirectoryPage({
 
       {/* Type filter */}
       <div className="flex flex-wrap gap-2 mb-8">
-        <Link href="/grants">
+        <Link href="/grant-directory">
           <span className={cn(
             "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors",
             !type
@@ -70,7 +70,7 @@ export default async function GrantDirectoryPage({
           </span>
         </Link>
         {SOURCE_TYPES.map((t) => (
-          <Link key={t} href={type === t ? "/grants" : `/grants?type=${t}`}>
+          <Link key={t} href={type === t ? "/grant-directory" : `/grant-directory?type=${t}`}>
             <span className={cn(
               "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors capitalize",
               type === t
@@ -86,7 +86,7 @@ export default async function GrantDirectoryPage({
       {grants && grants.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {grants.map((grant) => (
-            <Link key={grant.id} href={`/grants/${grant.id}`}>
+            <Link key={grant.id} href={`/grant-directory/${grant.id}`}>
               <Card className="h-full border-warm-200 dark:border-warm-800 hover:border-brand-teal/50 hover:shadow-md transition-all cursor-pointer">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
@@ -129,7 +129,7 @@ export default async function GrantDirectoryPage({
             <Button
               variant="outline"
               render={
-                <Link href={`/grants?page=${page - 1}${type ? `&type=${type}` : ""}`}>Previous</Link>
+                <Link href={`/grant-directory?page=${page - 1}${type ? `&type=${type}` : ""}`}>Previous</Link>
               }
             />
           )}
@@ -140,7 +140,7 @@ export default async function GrantDirectoryPage({
             <Button
               variant="outline"
               render={
-                <Link href={`/grants?page=${page + 1}${type ? `&type=${type}` : ""}`}>Next</Link>
+                <Link href={`/grant-directory?page=${page + 1}${type ? `&type=${type}` : ""}`}>Next</Link>
               }
             />
           )}

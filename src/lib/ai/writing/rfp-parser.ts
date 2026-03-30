@@ -1,7 +1,12 @@
 // grantiq/src/lib/ai/writing/rfp-parser.ts
 
 import Anthropic from "@anthropic-ai/sdk";
-import pdfParse from "pdf-parse";
+// Dynamic import to avoid build-time DOM polyfill issues
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadPdfParse(): Promise<(buf: Buffer) => Promise<any>> {
+  const mod = await import("pdf-parse");
+  return (mod as any).default ?? mod;
+}
 import { RfpParseOutputSchema, type RfpParseOutput } from "./schemas";
 import { RFP_PARSER_SYSTEM_PROMPT } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -28,6 +33,7 @@ interface ParseRfpResult {
  * Handles common PDF issues: OCR-only PDFs return minimal text.
  */
 export async function extractPdfText(buffer: Buffer): Promise<string> {
+  const pdfParse = await loadPdfParse();
   const result = await pdfParse(buffer);
   if (!result.text || result.text.trim().length < 100) {
     throw new Error(
