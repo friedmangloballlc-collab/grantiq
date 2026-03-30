@@ -20,7 +20,13 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 
-  const supabase = createAdminClient();
+  // Try creating client directly to debug
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 
   // 1. Create auth user (admin client bypasses any restrictions)
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
