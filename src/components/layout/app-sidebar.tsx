@@ -9,6 +9,7 @@ import {
   Map,
   Settings,
   Sparkles,
+  PenLine,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/matches", label: "Grant Matches", icon: Search },
   { href: "/pipeline", label: "Pipeline", icon: Kanban },
+  { href: "/writing", label: "Writing", icon: PenLine },
   { href: "/roadmap", label: "Roadmap", icon: Map },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

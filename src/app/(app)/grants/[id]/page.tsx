@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { ReadinessGauge } from "@/components/grants/readiness-gauge";
 import { ActionPaths } from "@/components/shared/action-paths";
+import { AIDisclosure } from "@/components/shared/ai-disclosure";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
@@ -127,6 +128,9 @@ export default async function GrantDetailPage({ params }: Props) {
       <Card className="border-warm-200 dark:border-warm-800">
         <CardContent className="p-6">
           <ReadinessGauge overallScore={68} categories={readinessCategories} />
+          <div className="mt-4">
+            <AIDisclosure type="readiness" />
+          </div>
         </CardContent>
       </Card>
 

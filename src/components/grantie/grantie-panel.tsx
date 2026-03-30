@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AIDisclosure } from "@/components/shared/ai-disclosure";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -80,6 +81,7 @@ export function GrantiePanel({
           <span className="font-semibold text-warm-900 dark:text-warm-50">
             Grantie
           </span>
+          <AIDisclosure type="chat" />
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />

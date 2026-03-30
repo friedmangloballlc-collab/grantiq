@@ -10,6 +10,7 @@ import { WhyMatches } from "./why-matches";
 import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOrg } from "@/hooks/use-org";
+import { AIDisclosure } from "@/components/shared/ai-disclosure";
 
 interface MatchCardProps {
   id: string;
@@ -70,7 +71,10 @@ export function MatchCard(props: MatchCardProps) {
     <Card className="border-warm-200 dark:border-warm-800 hover:border-brand-teal/50 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
-          <MatchScoreRing score={props.matchScore} />
+          <div className="flex flex-col items-center gap-1">
+            <MatchScoreRing score={props.matchScore} />
+            <AIDisclosure type="match" />
+          </div>
           <div className="flex-1 min-w-0">
             <Link
               href={`/grants/${props.id}`}

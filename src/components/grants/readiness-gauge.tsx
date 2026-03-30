@@ -1,6 +1,7 @@
 import { Check, AlertTriangle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AIDisclosure } from "@/components/shared/ai-disclosure";
 
 export interface ReadinessCategory {
   name: string;
@@ -50,9 +51,12 @@ export function ReadinessGauge({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-warm-900 dark:text-warm-50">
-          Readiness Assessment
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-warm-900 dark:text-warm-50">
+            Readiness Assessment
+          </h3>
+          <AIDisclosure type="readiness" />
+        </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="text-warm-500">
             {readyCount}/{categories.length} ready
