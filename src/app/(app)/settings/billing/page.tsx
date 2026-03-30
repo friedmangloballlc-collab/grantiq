@@ -20,8 +20,8 @@ const TIER_PRICES: Record<string, string> = {
 const TIER_LIMITS: Record<string, { matches: number; roadmaps: number; readiness: number }> = {
   free: { matches: 1, roadmaps: 1, readiness: 1 },
   starter: { matches: 5, roadmaps: 5, readiness: 10 },
-  growth: { matches: 20, roadmaps: 20, readiness: 50 },
-  scale: { matches: 100, roadmaps: 100, readiness: 200 },
+  pro: { matches: 20, roadmaps: 20, readiness: 50 },
+  enterprise: { matches: 100, roadmaps: 100, readiness: 200 },
 };
 
 export default async function BillingPage() {
