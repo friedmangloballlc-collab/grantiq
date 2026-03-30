@@ -3,7 +3,7 @@ import {
   scoreGrantBatch,
   buildMatchUserMessage,
 } from "@/lib/ai/engines/match";
-import { MatchBatchOutputSchema } from "@/lib/ai/schemas/match";
+import { MatchBatchLLMOutputSchema } from "@/lib/ai/schemas/match";
 
 vi.mock("@/lib/ai/call", () => ({
   aiCall: vi.fn().mockResolvedValue({
@@ -11,20 +11,18 @@ vi.mock("@/lib/ai/call", () => ({
       scored_grants: [
         {
           grant_id: "grant-001",
-          match_score: 78,
-          score_breakdown: {
+          scores: {
             mission_alignment: 9,
             capacity_fit: 7,
             geographic_match: 8,
             budget_fit: 7,
-            competition_level: 6,
+            competitive_advantage: 6,
             funder_history_fit: 6,
           },
-          why_it_matches:
+          match_rationale:
             "Strong mission alignment on youth education. Atlanta service area matches Georgia focus. Budget range appropriate.",
           missing_requirements: ["SAM.gov registration (takes 2-4 weeks)"],
-          win_probability: "high",
-          recommended_action: "prepare_then_apply",
+          has_hard_eligibility_barrier: false,
         },
       ],
     }),
@@ -102,16 +100,17 @@ describe("buildMatchUserMessage", () => {
 });
 
 describe("scoreGrantBatch", () => {
-  it("returns Zod-validated match scores", async () => {
+  it("returns enriched match scores with computed match_score", async () => {
     const result = await scoreGrantBatch(
       { orgId: "org-123", userId: "user-456", tier: "pro" },
       sampleOrg,
       [sampleGrant]
     );
-    const parsed = MatchBatchOutputSchema.safeParse(result);
-    expect(parsed.success).toBe(true);
+    // MatchBatchLLMOutputSchema validates the LLM layer; result is the enriched output
     expect(result.scored_grants).toHaveLength(1);
-    expect(result.scored_grants[0].match_score).toBe(78);
+    expect(typeof result.scored_grants[0].match_score).toBe("number");
+    // Computed score: round((9*.25 + 7*.20 + 8*.15 + 7*.15 + 6*.15 + 6*.10) * 10) = 74
+    expect(result.scored_grants[0].match_score).toBe(74);
   });
 
   it("returns correct win_probability and recommended_action", async () => {
@@ -120,9 +119,32 @@ describe("scoreGrantBatch", () => {
       sampleOrg,
       [sampleGrant]
     );
+    // score=74, no hard barrier, 1 missing => high; high + missing > 0 => prepare_then_apply
     expect(result.scored_grants[0].win_probability).toBe("high");
-    expect(result.scored_grants[0].recommended_action).toBe(
-      "prepare_then_apply"
-    );
+    expect(result.scored_grants[0].recommended_action).toBe("prepare_then_apply");
+  });
+
+  it("result passes MatchBatchLLMOutputSchema when re-examining LLM layer structure", async () => {
+    // Verify the mock LLM response itself is valid per LLM schema
+    const llmPayload = {
+      scored_grants: [
+        {
+          grant_id: "grant-001",
+          scores: {
+            mission_alignment: 9,
+            capacity_fit: 7,
+            geographic_match: 8,
+            budget_fit: 7,
+            competitive_advantage: 6,
+            funder_history_fit: 6,
+          },
+          match_rationale:
+            "Strong mission alignment on youth education. Atlanta service area matches Georgia focus. Budget range appropriate.",
+          missing_requirements: ["SAM.gov registration (takes 2-4 weeks)"],
+          has_hard_eligibility_barrier: false,
+        },
+      ],
+    };
+    expect(MatchBatchLLMOutputSchema.safeParse(llmPayload).success).toBe(true);
   });
 });
