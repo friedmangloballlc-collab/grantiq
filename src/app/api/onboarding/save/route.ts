@@ -13,6 +13,9 @@ const FIELD_MAP: Record<
   business_stage:       { table: "org_profiles",     column: "business_stage" },
   grant_history:        { table: "org_profiles",     column: "grant_history_level" },
   location:             { table: "organizations",    column: "city" }, // handled specially below
+  business_model:       { table: "org_profiles",     column: "business_model" },
+  phone:                { table: "org_profiles",     column: "phone" },
+  contact_method:       { table: "org_profiles",     column: "contact_method" },
   employee_count:       { table: "organizations",    column: "employee_count" },
   annual_revenue:       { table: "organizations",    column: "annual_budget" },
   ownership:            { table: "org_profiles",     column: "ownership_demographics" },

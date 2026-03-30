@@ -220,6 +220,37 @@ const ONBOARDING_STEPS: Step[] = [
     placeholder: "e.g. Miami, FL",
   },
   {
+    id: "business_model",
+    question: "Tell us about your business setup",
+    subtitle: "This helps identify specialized grant opportunities",
+    type: "single_select",
+    options: [
+      { label: "Remote/Virtual Business", value: "remote" },
+      { label: "Home Based Business", value: "home_based" },
+      { label: "Online Business", value: "online" },
+      { label: "Physical Location", value: "physical" },
+      { label: "No Physical Location Yet", value: "no_location" },
+    ],
+  },
+  {
+    id: "phone",
+    question: "What's your phone number?",
+    subtitle: "So our advisory team can reach you if needed",
+    type: "text",
+    placeholder: "e.g. (305) 555-1234",
+  },
+  {
+    id: "contact_method",
+    question: "How would you prefer to be contacted?",
+    subtitle: "Your information is confidential",
+    type: "single_select",
+    options: [
+      { label: "Email", value: "email" },
+      { label: "Phone Call", value: "phone" },
+      { label: "Text Message", value: "text" },
+    ],
+  },
+  {
     id: "employee_count",
     question: "How many employees do you have?",
     type: "single_select",
@@ -349,6 +380,12 @@ function answerToProfileUpdate(
       return { grant_history: value as string };
     case "location":
       return { location: value as string };
+    case "business_model":
+      return { business_model: value as string };
+    case "phone":
+      return { phone: value as string };
+    case "contact_method":
+      return { contact_method: value as string };
     case "employee_count":
       return { employee_count: value as string };
     case "annual_revenue":

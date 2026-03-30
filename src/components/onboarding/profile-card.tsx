@@ -11,6 +11,9 @@ export interface ProfileData {
   business_stage?: string;
   grant_history?: string;
   location?: string;
+  business_model?: string;
+  phone?: string;
+  contact_method?: string;
   employee_count?: string;
   annual_revenue?: string;
   ownership?: string;
@@ -42,7 +45,7 @@ export function ProfileCard({
   data: ProfileData;
   completedFields: number;
 }) {
-  const totalFields = 12;
+  const totalFields = 15;
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
@@ -51,6 +54,9 @@ export function ProfileCard({
     { label: "Funding Purpose", value: data.funding_use ?? data.fundingUse },
     { label: "Business Stage", value: data.business_stage ?? data.businessStage },
     { label: "Location", value: data.location ?? (data.city && data.state ? `${data.city}, ${data.state}` : data.state) },
+    { label: "Business Setup", value: data.business_model },
+    { label: "Phone", value: data.phone },
+    { label: "Contact Preference", value: data.contact_method },
     { label: "Employees", value: data.employee_count ?? data.employeeCount },
     { label: "Annual Revenue", value: data.annual_revenue ?? data.annualBudget },
     { label: "Mission", value: data.mission },
