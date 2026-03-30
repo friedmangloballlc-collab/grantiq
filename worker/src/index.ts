@@ -1,8 +1,9 @@
-import "dotenv/config";
+import { config } from "dotenv";
+config({ path: ".env.local" });
 import { createClient } from "@supabase/supabase-js";
-import { parseJob } from "./queue.js";
-import { handleJob } from "./handlers/index.js";
-import { scheduleDueCrawls, seedCrawlSources } from "./scheduler.js";
+import { parseJob } from "./queue";
+import { handleJob } from "./handlers/index";
+import { scheduleDueCrawls, seedCrawlSources } from "./scheduler";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

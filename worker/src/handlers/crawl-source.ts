@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Job } from "../queue.js";
-import { fetchAllGrantsGov } from "../../../src/lib/ingestion/grants-gov-client.js";
-import { fetchAllSamGov } from "../../../src/lib/ingestion/sam-gov-client.js";
+import type { Job } from "../queue";
+import { fetchAllGrantsGov } from "../../../src/lib/ingestion/grants-gov-client";
+import { fetchAllSamGov } from "../../../src/lib/ingestion/sam-gov-client";
 
 export interface CrawlResult {
   crawl_source_id: string;

@@ -10,8 +10,10 @@ import {
 import { NARRATIVE_EXTRACTOR_SYSTEM_PROMPT } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const anthropic = new Anthropic();
-const openai = new OpenAI();
+let _anthropic: Anthropic | null = null;
+let _openai: OpenAI | null = null;
+function getAnthropic() { return _anthropic ??= new Anthropic(); }
+function getOpenAI() { return _openai ??= new OpenAI(); }
 
 /**
  * After a grant is submitted, extract reusable narrative segments,
@@ -28,7 +30,7 @@ export async function extractAndStoreSegments(
   // 1. Extract segments via Claude
   const applicationText = sections.map(s => `## ${s.section_name}\n${s.content}`).join("\n\n");
 
-  const response = await anthropic.messages.create({
+  const response = await getAnthropic().messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 4096,
     system: NARRATIVE_EXTRACTOR_SYSTEM_PROMPT,
@@ -54,7 +56,7 @@ export async function extractAndStoreSegments(
   const textsToEmbed = extraction.segments.map(s => s.text);
   if (textsToEmbed.length === 0) return;
 
-  const embeddingResponse = await openai.embeddings.create({
+  const embeddingResponse = await getOpenAI().embeddings.create({
     model: "text-embedding-3-small",
     input: textsToEmbed,
   });

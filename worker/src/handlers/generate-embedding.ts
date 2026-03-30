@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type OpenAI from "openai";
-import type { Job } from "../queue.js";
+import type { Job } from "../queue";
 import {
   buildEmbeddingText,
   batchGenerateEmbeddings,
   EMBEDDING_BATCH_SIZE,
-} from "../../../src/lib/embeddings/generate-embeddings.js";
+} from "../../../src/lib/embeddings/generate-embeddings";
 
 export interface EmbeddingResult {
   updated: number;

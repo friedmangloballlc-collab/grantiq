@@ -1,6 +1,6 @@
 // grantiq/worker/src/handlers/writing.ts
 
-import { runWritingPipeline } from "../../../src/lib/ai/writing/pipeline.js";
+import { runWritingPipeline } from "../../../src/lib/ai/writing/pipeline";
 
 interface WritingJobPayload {
   draft_id: string;
