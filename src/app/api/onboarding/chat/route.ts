@@ -66,9 +66,9 @@ export async function POST(req: NextRequest) {
     });
 
     const textBlock = response.content.find(
-      (block): block is { type: "text"; text: string } => block.type === "text"
+      (block) => block.type === "text"
     );
-    const responseText = textBlock?.text ?? "I'm sorry, could you repeat that?";
+    const responseText = (textBlock && "text" in textBlock ? textBlock.text : null) ?? "I'm sorry, could you repeat that?";
 
     // Extract profile update JSON if present
     let profileUpdate = null;
