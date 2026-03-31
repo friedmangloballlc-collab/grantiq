@@ -42,14 +42,20 @@ export const FEATURE_GATES: Record<string, { requiredTier: string; limit?: numbe
   readiness_tracking: { requiredTier: "growth" },      // Applicant: + auto-improvement tracking + unlock notifications
   readiness_team: { requiredTier: "enterprise" },      // Organization: + team dashboard + benchmarks + per-member scores
 
-  // Planning
+  // Planning — Pipeline
   pipeline_items: { requiredTier: "free", limit: 3 },           // Explorer: 3
   pipeline_items_starter: { requiredTier: "starter", limit: 10 }, // Seeker: 10
   pipeline_items_pro: { requiredTier: "pro", limit: 25 },        // Strategist: 25
   pipeline_unlimited: { requiredTier: "growth" },                 // Applicant+: unlimited
-  calendar_full: { requiredTier: "starter" },
-  calendar_workback: { requiredTier: "pro" },
-  calendar_alerts: { requiredTier: "growth" },
+
+  // Planning — Calendar (tiered, never shows funder URLs — always routes through GrantIQ)
+  calendar_count_only: { requiredTier: "free" },                 // Explorer: "3 upcoming deadlines" badge only
+  calendar_pipeline_deadlines: { requiredTier: "starter" },      // Seeker: pipeline grant names + dates (no funder URLs)
+  calendar_fiscal_cycle: { requiredTier: "pro" },                // Strategist: + fiscal cycle sidebar + work-back timelines
+  calendar_proactive_alerts: { requiredTier: "growth" },         // Applicant: + recurring grant predictions + prep nudges
+  calendar_team: { requiredTier: "enterprise" },                 // Organization: + team calendar + capacity view + shared deadlines
+
+  // Planning — Digest
   weekly_digest_full: { requiredTier: "starter" },
   annual_calendar_auto: { requiredTier: "pro" },
 
