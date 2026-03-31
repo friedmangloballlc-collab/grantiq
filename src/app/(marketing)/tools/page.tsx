@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calculator, CheckCircle, Search, FileText, Building2, Clock } from "lucide-react";
+import { Calculator, CheckCircle, Search, FileText, DollarSign, Clock, Shield } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,8 +21,32 @@ const TOOLS = [
     icon: CheckCircle,
     title: "Grant Readiness Quiz",
     description:
-      "Answer 10 quick questions to find out if your organization is ready to apply for grants. Get a readiness score and action plan.",
+      "Answer 10 questions to find out if your organization is ready to apply for grants. Get a readiness score and action plan.",
     href: "/tools/readiness-quiz",
+    badge: "New",
+  },
+  {
+    icon: Shield,
+    title: "Grant Eligibility Checker",
+    description:
+      "Select your entity type and instantly see which grant categories you qualify for — federal, foundation, SBIR, CDBG, and more.",
+    href: "/tools/eligibility-checker",
+    badge: "New",
+  },
+  {
+    icon: DollarSign,
+    title: "Grant Budget Estimator",
+    description:
+      "Estimate how much grant funding you could realistically pursue based on your industry, budget, and experience level.",
+    href: "/tools/budget-estimator",
+    badge: "New",
+  },
+  {
+    icon: Clock,
+    title: "Grant Application Timeline",
+    description:
+      "See how long a grant application takes from start to decision. Plan backwards from your deadline with a step-by-step timeline.",
+    href: "/tools/grant-timeline",
     badge: "New",
   },
   {
@@ -40,22 +64,6 @@ const TOOLS = [
       "Explore our database of 5,000+ active grants. Filter by industry, entity type, funding amount, and deadline.",
     href: "/grant-directory",
     badge: null,
-  },
-  {
-    icon: Building2,
-    title: "Nonprofit Startup Guide",
-    description:
-      "Learn what it takes to start a nonprofit. Understand entity types, 501(c)(3) requirements, and how to get grant-ready from day one.",
-    href: "/signup/nonprofit",
-    badge: null,
-  },
-  {
-    icon: Clock,
-    title: "Grant Deadline Tracker",
-    description:
-      "See upcoming grant deadlines across all categories. Never miss a submission window — sign up free to add them to your calendar.",
-    href: "/signup",
-    badge: "Sign up free",
   },
 ];
 
