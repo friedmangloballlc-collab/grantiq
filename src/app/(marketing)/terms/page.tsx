@@ -48,7 +48,7 @@ export default function TermsOfServicePage() {
         </p>
       </Section>
 
-      <Section title="3. AI Disclosure">
+      <Section title="3. AI Disclosure" id="ai-disclosure">
         <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
           <p className="font-semibold text-amber-900 dark:text-amber-100 mb-2">Important: AI-Generated Content</p>
           <p>
@@ -243,9 +243,9 @@ export default function TermsOfServicePage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section className="mb-10">
+    <section className="mb-10" id={id}>
       <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-3 pb-2 border-b border-warm-200 dark:border-warm-700">
         {title}
       </h2>

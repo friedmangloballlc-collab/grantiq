@@ -79,7 +79,7 @@ export default function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="5. Cookies &amp; Tracking">
+      <Section title="5. Cookies &amp; Tracking" id="cookies">
         <p className="mb-3 text-sm">We use a minimal set of cookies:</p>
         <ul className="list-disc pl-5 space-y-2 text-sm">
           <li>
@@ -190,9 +190,9 @@ export default function PrivacyPolicyPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section className="mb-10">
+    <section className="mb-10" id={id}>
       <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-3 pb-2 border-b border-warm-200 dark:border-warm-700">
         {title}
       </h2>

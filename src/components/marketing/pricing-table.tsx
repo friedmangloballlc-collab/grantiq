@@ -90,9 +90,9 @@ export function PricingTable() {
           Simple, Transparent Pricing
         </h2>
         <p className="text-center text-warm-500 mt-2">
-          Pay only when you win with our success fee model. No risk.
+          Start free, upgrade as you grow. Cancel anytime.
         </p>
-        <div className="grid md:grid-cols-5 gap-5 mt-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mt-12">
           {TIERS.map((tier) => (
             <Card
               key={tier.name}

@@ -46,7 +46,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 {TOP_INDUSTRIES.map((ind) => (
                   <li key={ind.slug}>
                     <Link
-                      href={`/grants/${ind.slug}`}
+                      href={`/grants/industry/${ind.slug}`}
                       className="text-sm text-warm-500 hover:text-brand-teal transition-colors"
                     >
                       {ind.label} Grants
@@ -90,31 +90,19 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               &copy; {new Date().getFullYear()} GrantAQ &mdash; Friedman Global LLC. All rights
               reserved.
             </p>
-            <div className="flex items-center gap-6">
-              <a
-                href="/privacy"
-                className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50"
-              >
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+              <Link href="/privacy" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">
                 Privacy Policy
-              </a>
-              <a
-                href="/terms"
-                className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50"
-              >
+              </Link>
+              <Link href="/terms" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">
                 Terms of Service
-              </a>
-              <a
-                href="/grant-directory"
-                className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50"
-              >
+              </Link>
+              <Link href="/grant-directory" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">
                 Grant Directory
-              </a>
-              <a
-                href="/partners"
-                className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50"
-              >
+              </Link>
+              <Link href="/partners" className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50">
                 Partner Program
-              </a>
+              </Link>
             </div>
           </div>
         </div>

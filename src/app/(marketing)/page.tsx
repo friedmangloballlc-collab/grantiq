@@ -1,6 +1,8 @@
 import { Hero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
+import { Features } from "@/components/marketing/features";
 import { PricingTable } from "@/components/marketing/pricing-table";
+import { FAQ } from "@/components/marketing/faq";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -10,6 +12,18 @@ export const metadata: Metadata = {
   title: "GrantAQ — AI-Powered Grant Discovery, Strategy & Writing",
   description:
     "Find grants you actually qualify for. AI matches your organization to 5,000+ funding sources, builds your strategy, and helps write winning applications.",
+  openGraph: {
+    title: "GrantAQ — Find Grants You Actually Qualify For",
+    description: "AI-powered grant discovery, strategy, and writing for nonprofits and small businesses.",
+    url: "https://grantaq.com",
+    siteName: "GrantAQ",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GrantAQ — AI-Powered Grant Discovery",
+    description: "Find grants you actually qualify for. AI does the heavy lifting.",
+  },
 };
 
 export default function LandingPage() {
@@ -35,6 +49,27 @@ export default function LandingPage() {
       </section>
 
       <HowItWorks />
+      <Features />
+
+      {/* Free Tools CTA */}
+      <section className="py-16 px-4 bg-brand-teal/5 dark:bg-brand-teal/10">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-3">
+            Try Our Free Grant Tools
+          </h2>
+          <p className="text-warm-500 mb-8 max-w-xl mx-auto">
+            No account needed. Check your grant readiness, estimate your funding gap, and explore grants by state — all for free.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              className="bg-brand-teal hover:bg-brand-teal-dark text-white"
+              render={<Link href="/tools/readiness-quiz">Take the Readiness Quiz</Link>}
+            />
+            <Button variant="outline" render={<Link href="/tools/funding-gap">Funding Gap Calculator</Link>} />
+            <Button variant="outline" render={<Link href="/tools">See All Free Tools</Link>} />
+          </div>
+        </div>
+      </section>
 
       {/* Start a Nonprofit Section */}
       <section id="start-nonprofit" className="py-20 px-4 bg-white dark:bg-warm-900 scroll-mt-16">
@@ -130,6 +165,7 @@ export default function LandingPage() {
       </section>
 
       <PricingTable />
+      <FAQ />
 
       {/* Bottom CTA */}
       <section className="py-24 px-4 text-center bg-warm-50 dark:bg-warm-800/30">

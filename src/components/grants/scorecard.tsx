@@ -294,7 +294,7 @@ export function Scorecard({ initialResult, grantName }: ScorecardProps) {
             This grant did not pass the automatic qualification check. Pursuing
             it would be a poor use of your resources.
           </p>
-          <Button variant="outline" render={<Link href="/grants">Back to Grants</Link>} />
+          <Button variant="outline" render={<Link href="/matches">Back to Matches</Link>} />
         </CardContent>
       </Card>
     );
