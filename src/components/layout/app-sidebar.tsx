@@ -10,12 +10,14 @@ import {
   Settings,
   Sparkles,
   PenLine,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/matches", label: "Grant Matches", icon: Search },
+  { href: "/library", label: "Grant Library", icon: BookOpen },
   { href: "/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/writing", label: "Writing", icon: PenLine },
   { href: "/roadmap", label: "Roadmap", icon: Map },

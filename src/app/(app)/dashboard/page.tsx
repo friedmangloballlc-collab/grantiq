@@ -6,6 +6,7 @@ import { WhatsChanged } from "@/components/dashboard/whats-changed";
 import { ServiceTracker, type ServiceEngagement } from "@/components/dashboard/service-tracker";
 import { AZQualification } from "@/components/dashboard/az-qualification";
 import { IndustryInsights } from "@/components/dashboard/industry-insights";
+import { ProfileCompletion } from "@/components/dashboard/profile-completion";
 import { calculateAZScore } from "@/lib/qualification/az-score";
 import type { AZScoreResult } from "@/lib/qualification/az-score";
 
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
   let activeEngagement: ServiceEngagement | null = null;
   let azScore: AZScoreResult | null = null;
   let industryKey: string | null = null;
+  let deferredAnswers: Record<string, string> = {};
 
   if (ctx) {
     const { orgId } = ctx;
@@ -40,6 +42,7 @@ export default async function DashboardPage() {
       azProfileResult,
       azCapabilitiesResult,
       azSubscriptionResult,
+      deferredProfileResult,
     ] = await Promise.all([
       // Stats via RPC (replaces 4 separate queries)
       db.rpc("get_dashboard_stats", { p_org_id: orgId }),
@@ -97,6 +100,13 @@ export default async function DashboardPage() {
 
       // A-Z score: subscription
       db.from("subscriptions").select("tier").eq("org_id", orgId).eq("status", "active").limit(1).single(),
+
+      // Deferred profile fields for ProfileCompletion card
+      db
+        .from("org_profiles")
+        .select("grant_history_level, business_model, phone, contact_method, documents_ready, ownership_demographics, interested_in_nonprofit")
+        .eq("org_id", orgId)
+        .single(),
     ]);
 
     // ── Stats ─────────────────────────────────────────────────────────────────
@@ -241,6 +251,44 @@ export default async function DashboardPage() {
       azCapabilitiesResult.data ?? null,
       azSubscriptionResult.data ?? null,
     );
+
+    // ── Deferred Profile Answers ──────────────────────────────────────────────
+    // Map DB columns back to onboarding step IDs for ProfileCompletion card
+    const dp = deferredProfileResult.data as {
+      grant_history_level?: string | null;
+      business_model?: string | null;
+      phone?: string | null;
+      contact_method?: string | null;
+      documents_ready?: string | null;
+      ownership_demographics?: string | null;
+      interested_in_nonprofit?: string | null;
+    } | null;
+
+    if (dp) {
+      const maybe = (v: string | null | undefined) => v ?? undefined;
+      const raw: Record<string, string | undefined> = {
+        grant_history:        maybe(dp.grant_history_level),
+        business_model:       maybe(dp.business_model),
+        phone:                maybe(dp.phone),
+        contact_method:       maybe(dp.contact_method),
+        documents:            maybe(dp.documents_ready),
+        ownership:            maybe(dp.ownership_demographics),
+        interested_nonprofit: maybe(dp.interested_in_nonprofit),
+      };
+      // We also need employee_count / annual_revenue / mission from organizations
+      const orgRow = azOrgResult.data as {
+        annual_budget?: string | null;
+        employee_count?: string | null;
+      } | null;
+      const missionRow = azProfileResult.data as { mission_statement?: string | null } | null;
+      raw.employee_count = maybe(orgRow?.employee_count ?? undefined);
+      raw.annual_revenue  = maybe(orgRow?.annual_budget ?? undefined);
+      raw.mission         = maybe(missionRow?.mission_statement ?? undefined);
+
+      deferredAnswers = Object.fromEntries(
+        Object.entries(raw).filter(([, v]) => v !== undefined && v !== null && v !== "")
+      ) as Record<string, string>;
+    }
   }
 
   return (
@@ -251,6 +299,7 @@ export default async function DashboardPage() {
       </div>
       <TodaysFocus items={focusItems} />
       <StatsOverview {...stats} />
+      <ProfileCompletion savedAnswers={deferredAnswers} />
       {activeEngagement && <ServiceTracker engagement={activeEngagement} />}
       {azScore && <AZQualification result={azScore} />}
       <IndustryInsights industryKey={industryKey} />
