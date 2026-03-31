@@ -29,8 +29,9 @@ export const FEATURE_GATES: Record<string, { requiredTier: string; limit?: numbe
   proactive_alerts: { requiredTier: "pro" },
 
   // Evaluation
-  qualification_scorecard: { requiredTier: "starter", limit: 3, perMonth: true },   // Seeker: 3/mo
-  qualification_scorecard_pro: { requiredTier: "pro", limit: 999 },                 // Strategist+: unlimited
+  qualification_scorecard: { requiredTier: "free", limit: 1, perMonth: true },       // Explorer: 1 demo
+  qualification_scorecard_starter: { requiredTier: "starter", limit: 10, perMonth: true }, // Seeker: 10/mo (matches pipeline)
+  qualification_scorecard_unlimited: { requiredTier: "pro" },                        // Strategist+: unlimited
   grant_readiness_badges: { requiredTier: "starter" },
   similar_orgs_social_proof: { requiredTier: "pro" },
 
