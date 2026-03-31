@@ -11,7 +11,7 @@ register({
 import { createClient } from "@supabase/supabase-js";
 import { parseJob } from "./queue";
 import { handleJob } from "./handlers/index";
-import { scheduleDueCrawls, seedCrawlSources } from "./scheduler";
+import { scheduleDueCrawls, seedCrawlSources, scheduleSequenceEmails } from "./scheduler";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -59,6 +59,7 @@ async function main() {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await scheduleDueCrawls(supabase);
+    await scheduleSequenceEmails(supabase);
     await pollAndProcess();
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }

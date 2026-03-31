@@ -58,6 +58,40 @@ export async function scheduleDueCrawls(supabase: SupabaseClient): Promise<numbe
   return enqueued;
 }
 
+/**
+ * Schedules a daily `send_sequence_emails` job if one hasn't already run today.
+ * Safe to call in the poll loop — only enqueues when the last job was >23 hours ago.
+ */
+export async function scheduleSequenceEmails(supabase: SupabaseClient): Promise<void> {
+  const twentyThreeHoursAgo = new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString();
+
+  // Check if a job was recently completed or is pending
+  const { data: existing } = await supabase
+    .from("job_queue")
+    .select("id")
+    .eq("job_type", "send_sequence_emails")
+    .in("status", ["pending", "processing", "completed"])
+    .gte("created_at", twentyThreeHoursAgo)
+    .limit(1);
+
+  if (existing && existing.length > 0) return;
+
+  const { error } = await supabase.from("job_queue").insert({
+    job_type: "send_sequence_emails",
+    payload: {},
+    status: "pending",
+    priority: 5,
+    max_attempts: 3,
+    scheduled_for: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Scheduler: failed to enqueue send_sequence_emails:", error.message);
+  } else {
+    console.log("Scheduler: enqueued send_sequence_emails");
+  }
+}
+
 export async function seedCrawlSources(supabase: SupabaseClient): Promise<void> {
   const sources = [
     {

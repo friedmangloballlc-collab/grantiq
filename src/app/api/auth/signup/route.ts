@@ -90,5 +90,18 @@ export async function POST(request: NextRequest) {
   await supabase.from("org_capabilities").insert({ org_id: org.id });
   await supabase.from("org_profiles").insert({ org_id: org.id });
 
+  // 6. Enqueue welcome email (day-0 post-signup sequence)
+  // The sequence runner handles dedup, so this is safe to fire and forget.
+  await supabase.from("job_queue").insert({
+    job_type: "send_sequence_emails",
+    payload: { trigger: "signup", user_id: userId },
+    status: "pending",
+    priority: 8,
+    max_attempts: 3,
+    scheduled_for: new Date().toISOString(),
+  }).then(({ error }) => {
+    if (error) console.error("[signup] Failed to enqueue sequence email job:", error.message);
+  });
+
   return NextResponse.json({ success: true, userId, orgId: org.id });
 }
