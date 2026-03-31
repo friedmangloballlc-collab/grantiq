@@ -18,4 +18,9 @@ RUN npm install --production=false
 WORKDIR /app
 
 # Start the worker from project root
-CMD ["npx", "tsx", "--tsconfig", "tsconfig.worker.json", "worker/src/index.ts"]
+# Install tsconfig-paths globally for @/ alias resolution
+RUN npm install tsconfig-paths
+
+CMD ["npx", "tsx", "--require", "tsconfig-paths/register", "worker/src/index.ts"]
+
+ENV TS_NODE_PROJECT=tsconfig.worker.json
