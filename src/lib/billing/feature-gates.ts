@@ -23,7 +23,7 @@ export const GRANTIE_DAILY_LIMITS: Record<string, number> = {
 export const FEATURE_GATES: Record<string, { requiredTier: string; limit?: number; perMonth?: boolean }> = {
   // Discovery
   grant_library_full: { requiredTier: "starter" },
-  ai_matches_unlimited: { requiredTier: "starter" },
+  ai_matches_unlimited: { requiredTier: "starter" },  // All paid tiers see unlimited matches
   ai_match_scores_visible: { requiredTier: "pro" },
   funder_profiles: { requiredTier: "starter" },
   proactive_alerts: { requiredTier: "pro" },
