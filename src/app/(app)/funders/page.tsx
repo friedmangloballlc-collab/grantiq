@@ -63,7 +63,7 @@ export default async function FundersPage() {
       .eq("org_id", ctx.orgId);
 
     for (const m of matchRows ?? []) {
-      const gs = m.grant_sources as { funder_name?: string } | null;
+      const gs = m.grant_sources as unknown as { funder_name?: string } | null;
       if (!gs?.funder_name) continue;
       const name = gs.funder_name;
       if (!matchScoreMap.has(name)) {

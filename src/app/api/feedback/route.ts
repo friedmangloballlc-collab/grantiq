@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 const VALID_ACTIONS = ["saved", "dismissed", "evaluated", "applied", "won", "lost"] as const;
 type UserAction = (typeof VALID_ACTIONS)[number];
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ feedback: data }, { status: 201 });
   } catch (err) {
-    console.error("POST /api/feedback error:", err);
+    logger.error("POST /api/feedback error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

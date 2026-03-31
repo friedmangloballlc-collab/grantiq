@@ -60,7 +60,7 @@ export function ReadinessResult({
   return (
     <Html lang="en">
       <Head />
-      <Preview>Your Readiness Score is {readinessScore} — {scoreLabel(readinessScore)}. Here&apos;s what it means for your grant eligibility.</Preview>
+      <Preview>{`Your Readiness Score is ${readinessScore} — ${scoreLabel(readinessScore)}. Here's what it means for your grant eligibility.`}</Preview>
 
       <Body style={{ backgroundColor: WARM_50, fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", margin: 0, padding: "32px 0" }}>
         <Container style={{ maxWidth: 600, margin: "0 auto", backgroundColor: "#ffffff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   req: NextRequest,
@@ -54,7 +55,7 @@ export async function GET(
       created_at: job.created_at,
     });
   } catch (err) {
-    console.error("GET /api/jobs/status error:", err);
+    logger.error("GET /api/jobs/status error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Loader2, Copy, Check, AlertCircle, FileText } from "lucide-react";
+import { ChevronLeft, Loader2, Copy, Check, AlertCircle, FileText, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -30,10 +30,26 @@ export default function GrantLOIPage({ params }: PageProps) {
   const [result, setResult] = useState<LOIResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [editedText, setEditedText] = useState("");
+  const [stripeConfigured, setStripeConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check if Stripe is configured by attempting to read from env via a lightweight check
+    // We check the public env var pattern — if NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is set and non-placeholder, Stripe is live
+    const pubKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+    const configured = pubKey.startsWith("pk_") && pubKey !== "pk_test_xxx" && pubKey.length > 20;
+    setStripeConfigured(configured);
+  }, []);
 
   async function handleGenerate() {
     if (projectSummary.trim().length < 20) {
       setError("Please enter at least 20 characters describing your project.");
+      return;
+    }
+
+    // If Stripe is configured, we'd initiate a Stripe checkout here before generating.
+    // For now, if Stripe IS configured we show an error to prevent free generation.
+    if (stripeConfigured) {
+      setError("Payment processing is required. Please use the checkout flow.");
       return;
     }
 
@@ -143,24 +159,35 @@ export default function GrantLOIPage({ params }: PageProps) {
               </div>
             )}
 
+            {stripeConfigured === false && (
+              <div className="flex items-start gap-2 text-sm bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2 text-blue-800 dark:text-blue-200">
+                <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                Payment setup coming soon — LOI generation is free during beta.
+              </div>
+            )}
+
             <Button
               size="lg"
               className="w-full bg-[var(--color-brand-teal)] hover:bg-[var(--color-brand-teal)]/90 text-white"
               onClick={handleGenerate}
-              disabled={loading}
+              disabled={loading || stripeConfigured === null}
             >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Generating LOI…
                 </>
-              ) : (
+              ) : stripeConfigured ? (
                 "Generate LOI — $49"
+              ) : (
+                "Generate LOI (Beta — Free)"
               )}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              Payment charged once. Output is yours to edit and submit.
+              {stripeConfigured
+                ? "Payment charged once. Output is yours to edit and submit."
+                : "Free during beta. Payment will be required after launch."}
             </p>
           </CardContent>
         </Card>

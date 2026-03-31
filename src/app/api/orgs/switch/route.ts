@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { switchOrg } from "@/lib/auth/switch-org";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("POST /api/orgs/switch error:", err);
+    logger.error("POST /api/orgs/switch error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

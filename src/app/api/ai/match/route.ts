@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkUsageLimit } from "@/lib/ai/usage";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +14,11 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { allowed: rateLimitAllowed } = checkRateLimit(`match:${user.id}`, 5, 60000);
+    if (!rateLimitAllowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     const body = await req.json();
@@ -76,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ job_id: job.id, status: "queued" }, { status: 202 });
   } catch (err) {
-    console.error("POST /api/ai/match error:", err);
+    logger.error("POST /api/ai/match error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

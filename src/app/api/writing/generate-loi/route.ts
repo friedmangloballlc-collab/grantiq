@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   // Fetch org
   const { data: org } = await supabase
     .from("organizations")
-    .select("id, name, mission, entity_type, state, city, annual_budget")
+    .select("id, name, mission_statement, entity_type, state, city, annual_budget, employee_count")
     .eq("id", orgId)
     .single();
 
@@ -76,20 +76,24 @@ export async function POST(req: NextRequest) {
 
   const orgProfile: OrgProfile = {
     name: org.name ?? "Your Organization",
-    mission: org.mission ?? "",
+    mission_statement: org.mission_statement ?? "",
     entity_type: org.entity_type ?? "nonprofit",
     state: org.state ?? null,
     city: org.city ?? null,
     annual_budget: org.annual_budget ?? null,
+    employee_count: org.employee_count ?? null,
+    program_areas: [],
+    population_served: [],
   };
 
   const grantDetails: GrantDetails = {
     name: grant.name,
     funder_name: grant.funder_name,
-    source_type: grant.source_type ?? null,
-    amount_max: grant.amount_max ?? null,
     description: grant.description ?? null,
-    category: grant.category ?? null,
+    amount_min: null,
+    amount_max: grant.amount_max ?? null,
+    deadline: null,
+    focus_areas: grant.category ?? null,
   };
 
   // Generate LOI
@@ -104,7 +108,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Persist to grant_lois table (best-effort — don't fail if table doesn't exist yet)
+  // Persist to grant_lois table (best-effort)
   let loiId: string | null = null;
   try {
     const { data: savedRow } = await supabase
@@ -112,23 +116,19 @@ export async function POST(req: NextRequest) {
       .insert({
         org_id: orgId,
         grant_source_id,
-        user_id: user.id,
-        project_summary: project_summary.trim(),
-        loi_text: loiOutput.loi_text,
-        word_count: loiOutput.word_count,
-        subject_line: loiOutput.subject_line,
-        key_themes: loiOutput.key_themes,
+        content: loiOutput,
         status: "draft",
       })
       .select("id")
       .single();
     loiId = savedRow?.id ?? null;
   } catch {
-    // Non-fatal — table may not exist yet in this environment
+    // Non-fatal — table may not exist yet
   }
 
   return NextResponse.json({
     loi_id: loiId,
-    ...loiOutput,
+    loi_text: loiOutput,
+    word_count: loiOutput.split(/\s+/).length,
   });
 }

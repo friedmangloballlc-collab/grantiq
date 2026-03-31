@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isStripeConfigured, getPriceId, type SubscriptionTierKey } from "@/lib/stripe/products";
 import { createCheckoutSession } from "@/lib/stripe/checkout";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    console.error("Stripe checkout error:", err);
+    logger.error("Stripe checkout error", { err: String(err) });
     return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
   }
 }

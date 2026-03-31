@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWeeklyDigest } from "@/lib/email/send-digest";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/digest/send
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
   const { data: prefs, error: prefsError } = await prefsQuery;
 
   if (prefsError) {
-    console.error("[digest/send] DB error:", prefsError.message);
+    logger.error("[digest/send] DB error", { message: prefsError.message });
     return NextResponse.json({ error: prefsError.message }, { status: 500 });
   }
 
@@ -125,13 +126,11 @@ export async function POST(req: NextRequest) {
       const message = err instanceof Error ? err.message : String(err);
       results.errors++;
       results.details.push({ userId: pref.user_id, status: "error", error: message });
-      console.error(`[digest/send] Error for user ${pref.user_id}:`, message);
+      logger.error("[digest/send] Error for user", { userId: pref.user_id, message });
     }
   }
 
-  console.log(
-    `[digest/send] Manual trigger complete — sent: ${results.sent}, skipped: ${results.skipped}, errors: ${results.errors}`
-  );
+  logger.info("[digest/send] Manual trigger complete", { sent: results.sent, skipped: results.skipped, errors: results.errors });
 
   return NextResponse.json(results);
 }

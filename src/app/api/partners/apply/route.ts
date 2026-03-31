@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   let body: {
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    console.error("[partners/apply] DB insert error:", error.message);
+    logger.error("[partners/apply] DB insert error", { message: error.message });
     // Don't surface DB errors to the client — still return 200 so the UX succeeds
     // but log for investigation. A missing table is handled gracefully.
     if (error.code !== "42P01") {

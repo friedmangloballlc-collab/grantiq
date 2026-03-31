@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { chatWithGrantie } from "@/lib/ai/engines/grantie";
 import { checkUsageLimit } from "@/lib/ai/usage";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,6 +15,11 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { allowed: rateLimitAllowed } = checkRateLimit(`chat:${user.id}`, 30, 60000);
+    if (!rateLimitAllowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     const { org_id, message, context, conversation_history } = await req.json();
@@ -136,7 +143,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err) {
-    console.error("POST /api/ai/chat error:", err);
+    logger.error("POST /api/ai/chat error", { err: String(err) });
     const errorMessage = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

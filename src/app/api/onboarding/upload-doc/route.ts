@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 const BUCKET = "org-documents";
 
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
 
     // Ignore "already exists" error (Postgres unique violation / storage duplicate)
     if (bucketError && !bucketError.message.toLowerCase().includes("already exists")) {
-      console.warn("Storage bucket creation warning:", bucketError.message);
+      logger.warn("Storage bucket creation warning", { message: bucketError.message });
     }
 
     // Build storage path
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("Storage upload error:", uploadError.message);
+      logger.error("Storage upload error", { message: uploadError.message });
       return NextResponse.json(
         { error: "Failed to upload file to storage" },
         { status: 500 }
@@ -141,7 +142,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (vaultError) {
-      console.error("document_vault insert error:", vaultError.message);
+      logger.error("document_vault insert error", { message: vaultError.message });
       // File is in storage but DB insert failed — return partial success
       return NextResponse.json(
         { success: true, warning: "File uploaded but metadata save failed", doc_id: null },
@@ -155,7 +156,7 @@ export async function POST(req: NextRequest) {
       file_url: fileUrl,
     });
   } catch (err) {
-    console.error("upload-doc route error:", err);
+    logger.error("upload-doc route error", { err: String(err) });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

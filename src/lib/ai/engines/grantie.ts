@@ -1,5 +1,6 @@
 import { aiCall } from "@/lib/ai/call";
 import { MODELS } from "@/lib/ai/client";
+import { logger } from "@/lib/logger";
 import { GrantieChatOutputSchema, type GrantieChatOutput } from "@/lib/ai/schemas/chat";
 import { GRANTIE_SYSTEM_PROMPT } from "@/lib/ai/prompts/grantie-system";
 
@@ -147,7 +148,7 @@ Respond as Grantie. Return ONLY valid JSON.`;
     return GrantieChatOutputSchema.parse(raw);
   } catch (err) {
     // If JSON parsing fails, wrap the raw text as a simple response
-    console.error("Grantie response parsing failed, returning raw:", err);
+    logger.error("Grantie response parsing failed, returning raw", { err: String(err) });
     return {
       response: response.content,
       suggested_actions: [],

@@ -154,7 +154,7 @@ export default async function DraftViewerPage({
   if (error || !draft) notFound();
 
   const d = draft as unknown as GrantDraft;
-  const gs = d.grant_sources as { name: string; funder_name: string } | null;
+  const gs = d.grant_sources as unknown as { name: string; funder_name: string } | null;
   const currentIdx = currentStepIndex(d.status);
   const isTier2Plus = d.tier === "tier2_ai_audit" || d.tier === "tier3_expert" || d.tier === "full_confidence";
   const isTier3 = d.tier === "tier3_expert" || d.tier === "full_confidence";

@@ -1,5 +1,6 @@
 import { aiCall } from "@/lib/ai/call";
 import { MODELS } from "@/lib/ai/client";
+import { logger } from "@/lib/logger";
 import { ReadinessLLMOutputSchema, enrichReadinessOutput, type ReadinessOutput } from "@/lib/ai/schemas/readiness";
 import { READINESS_ENGINE_SYSTEM_PROMPT } from "@/lib/ai/prompts/readiness-system";
 
@@ -102,8 +103,7 @@ export async function assessReadiness(
     const validated = ReadinessLLMOutputSchema.parse(raw);
     return enrichReadinessOutput(validated);
   } catch (err) {
-    console.error("Readiness Engine response parsing failed:", err);
-    console.error("Raw response:", response.content.slice(0, 500));
+    logger.error("Readiness Engine response parsing failed", { err: String(err), rawSnippet: response.content.slice(0, 500) });
     throw new Error("Readiness Engine returned invalid output. Please try again.");
   }
 }

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Gift, Mail, Linkedin, Twitter, Check } from "lucide-react";
+import { Copy, Gift, Mail, Share2, MessageCircle, Check } from "lucide-react";
 import { useState } from "react";
 import { REFERRAL_REWARDS, getNextReward, getCurrentReward } from "@/lib/referral/rewards";
 
@@ -109,7 +109,7 @@ export function ReferralDashboard({
               rel="noopener noreferrer"
               className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted transition-colors"
             >
-              <Linkedin className="h-3.5 w-3.5" />
+              <Share2 className="h-3.5 w-3.5" />
               LinkedIn
             </a>
             <a
@@ -118,7 +118,7 @@ export function ReferralDashboard({
               rel="noopener noreferrer"
               className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted transition-colors"
             >
-              <Twitter className="h-3.5 w-3.5" />
+              <MessageCircle className="h-3.5 w-3.5" />
               Twitter
             </a>
           </div>

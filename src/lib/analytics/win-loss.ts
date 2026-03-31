@@ -149,7 +149,7 @@ export async function analyzeWinLoss(
 
   const pipelineMap = new Map(
     (pipelineRows ?? []).map((row) => {
-      const gs = row.grant_sources as { grant_type?: string } | null;
+      const gs = row.grant_sources as unknown as { grant_type?: string } | null;
       return [
         row.id as string,
         {

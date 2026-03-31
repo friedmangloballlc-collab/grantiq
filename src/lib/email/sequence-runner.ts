@@ -284,7 +284,7 @@ async function renderTemplate(template: string, ctx: UserContext): Promise<{ htm
       const topMatches = (rawMatches ?? [])
         .filter((m) => m.grant_sources)
         .map((m) => {
-          const gs = m.grant_sources as { id: string; name: string; funder_name: string; amount_min: number | null; amount_max: number | null; deadline: string | null };
+          const gs = m.grant_sources as unknown as { id: string; name: string; funder_name: string; amount_min: number | null; amount_max: number | null; deadline: string | null };
           return {
             id: gs.id,
             name: gs.name,
@@ -337,7 +337,7 @@ async function renderTemplate(template: string, ctx: UserContext): Promise<{ htm
           .single();
 
         if (!topMatch?.grant_sources) return null;
-        const gs = topMatch.grant_sources as { id: string; name: string; funder_name: string; amount_min: number | null; amount_max: number | null; deadline: string | null };
+        const gs = topMatch.grant_sources as unknown as { id: string; name: string; funder_name: string; amount_min: number | null; amount_max: number | null; deadline: string | null };
         if (!gs.deadline) return null;
 
         return {
@@ -357,7 +357,7 @@ async function renderTemplate(template: string, ctx: UserContext): Promise<{ htm
       }
 
       const pipeline = pipelines[0];
-      const gs = pipeline.grant_sources as { id: string; name: string; funder_name: string; amount_min: number | null; amount_max: number | null };
+      const gs = pipeline.grant_sources as unknown as { id: string; name: string; funder_name: string; amount_min: number | null; amount_max: number | null };
       return {
         subject: "A deadline you should know about",
         html: await render(DeadlineWarning({

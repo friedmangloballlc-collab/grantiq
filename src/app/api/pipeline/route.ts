@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateSuccessFee, buildSuccessFeeMessage } from "@/lib/billing/success-fees";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -36,7 +38,7 @@ export async function GET() {
 
     return NextResponse.json({ items: data ?? [] });
   } catch (err) {
-    console.error("GET /api/pipeline error:", err);
+    logger.error("GET /api/pipeline error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -87,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ item: data }, { status: 201 });
   } catch (err) {
-    console.error("POST /api/pipeline error:", err);
+    logger.error("POST /api/pipeline error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -250,8 +252,8 @@ export async function PATCH(req: NextRequest) {
               writing_tier: writingTier,
               status: "pending",
             })
-            .catch((insertErr: unknown) => {
-              console.error("Failed to insert success_fee_invoice:", insertErr);
+            .then(({ error: insertErr }) => {
+              if (insertErr) logger.error("Failed to insert success_fee_invoice", { err: insertErr.message });
             });
 
           successFeeNotification = buildSuccessFeeMessage(resolvedAwardAmount, feeResult);
@@ -262,21 +264,20 @@ export async function PATCH(req: NextRequest) {
     // ── Fire-and-forget feedback for terminal outcomes ──────────────────────────
     if (stage === "awarded" || stage === "declined") {
       const feedbackAction = stage === "awarded" ? "won" : "lost";
-      fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          grant_source_id: item.grant_source_id,
-          user_action: feedbackAction,
-        }),
-      }).catch(() => {
-        // Feedback failures are non-critical — swallow silently.
+      // Direct insert instead of relative HTTP call (which fails server-side)
+      const adminDb = createAdminClient();
+      adminDb.from("match_feedback").insert({
+        org_id: item.org_id,
+        grant_source_id: item.grant_source_id,
+        user_action: feedbackAction,
+      }).then(({ error: fbErr }) => {
+        if (fbErr) logger.warn("Feedback insert failed", { err: fbErr.message });
       });
     }
 
     return NextResponse.json({ success: true, autoAction, successFeeNotification });
   } catch (err) {
-    console.error("PATCH /api/pipeline error:", err);
+    logger.error("PATCH /api/pipeline error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

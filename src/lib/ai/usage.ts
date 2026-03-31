@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 const ACTION_TO_FEATURE: Record<string, string> = {
   match: "matching_runs",
@@ -71,7 +72,7 @@ export async function checkUsageLimit(
     .lt("billing_period", periodEnd);
 
   if (usageError) {
-    console.error("Usage check query failed:", usageError);
+    logger.error("Usage check query failed", { err: String(usageError) });
     return {
       allowed: true,
       used: 0,
@@ -111,6 +112,6 @@ export async function recordUsage(params: RecordUsageParams): Promise<void> {
   });
 
   if (error) {
-    console.error("Failed to record AI usage:", error);
+    logger.error("Failed to record AI usage", { err: String(error) });
   }
 }

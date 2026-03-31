@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 // GET /api/readiness — fetch the latest readiness_scores for the org.
 // NOTE: POST /api/ai/readiness triggers AI scoring; this route only reads saved scores.
@@ -42,7 +43,7 @@ export async function GET() {
 
     return NextResponse.json({ latest, history });
   } catch (err) {
-    console.error("GET /api/readiness error:", err);
+    logger.error("GET /api/readiness error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

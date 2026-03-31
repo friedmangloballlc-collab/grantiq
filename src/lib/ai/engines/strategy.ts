@@ -1,5 +1,6 @@
 import { aiCall } from "@/lib/ai/call";
 import { MODELS } from "@/lib/ai/client";
+import { logger } from "@/lib/logger";
 import { StrategyOutputSchema, type StrategyOutput } from "@/lib/ai/schemas/strategy";
 import { STRATEGY_ENGINE_SYSTEM_PROMPT } from "@/lib/ai/prompts/strategy-system";
 
@@ -187,8 +188,7 @@ export async function generateStrategy(
     const raw = JSON.parse(response.content);
     return StrategyOutputSchema.parse(raw);
   } catch (err) {
-    console.error("Strategy Engine response parsing failed:", err);
-    console.error("Raw response:", response.content.slice(0, 500));
+    logger.error("Strategy Engine response parsing failed", { err: String(err), rawSnippet: response.content.slice(0, 500) });
     throw new Error("Strategy Engine returned invalid output. Please try again.");
   }
 }

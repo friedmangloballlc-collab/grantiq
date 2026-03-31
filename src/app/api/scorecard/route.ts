@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 // ─── GET: retrieve scorecard for a grant/org pair ─────────────────────────────
 
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ scorecard: data ?? null });
   } catch (err) {
-    console.error("GET /api/scorecard error:", err);
+    logger.error("GET /api/scorecard error", { err: String(err) });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -143,22 +145,21 @@ export async function POST(req: NextRequest) {
         ? { ai_score: aiScore, user_score: Math.round(total_score), delta: Math.round(total_score) - aiScore }
         : null;
 
-    fetch("/api/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grant_source_id,
-        user_action: "evaluated",
-        match_score: Math.round(total_score),
-        scorecard_overrides: scorecardOverrides,
-      }),
-    }).catch(() => {
-      // Feedback failures are non-critical — swallow silently.
+    // Direct insert instead of relative HTTP call (which fails server-side)
+    const adminDb = createAdminClient();
+    adminDb.from("match_feedback").insert({
+      org_id: orgId,
+      grant_source_id,
+      user_action: "evaluated",
+      match_score: Math.round(total_score),
+      scorecard_overrides: scorecardOverrides,
+    }).then(({ error: fbErr }) => {
+      if (fbErr) logger.warn("Scorecard feedback insert failed", { err: fbErr.message });
     });
 
     return NextResponse.json({ scorecard: data }, { status: 201 });
   } catch (err) {
-    console.error("POST /api/scorecard error:", err);
+    logger.error("POST /api/scorecard error", { err: String(err) });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

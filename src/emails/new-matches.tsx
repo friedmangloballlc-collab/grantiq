@@ -60,7 +60,7 @@ export function NewMatches({
   return (
     <Html lang="en">
       <Head />
-      <Preview>{newMatchCount} new grant match{newMatchCount !== 1 ? "es" : ""} since your last visit — some with upcoming deadlines.</Preview>
+      <Preview>{`${newMatchCount} new grant match${newMatchCount !== 1 ? "es" : ""} since your last visit — some with upcoming deadlines.`}</Preview>
 
       <Body style={{ backgroundColor: WARM_50, fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", margin: 0, padding: "32px 0" }}>
         <Container style={{ maxWidth: 600, margin: "0 auto", backgroundColor: "#ffffff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>

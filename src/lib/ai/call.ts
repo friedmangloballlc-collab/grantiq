@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAnthropicClient, estimateCostCents, MODELS } from "@/lib/ai/client";
+import { logger } from "@/lib/logger";
 import { detectPromptInjection, sanitizeInput } from "@/lib/ai/sanitize";
 import {
   checkUsageLimit,
@@ -127,7 +128,7 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
       estimated_cost_cents: costCents,
     });
     if (error) {
-      console.error("Failed to record ai_generations entry:", error);
+      logger.error("Failed to record ai_generations entry", { err: String(error) });
     }
   })();
 

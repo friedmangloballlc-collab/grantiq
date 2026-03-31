@@ -62,10 +62,7 @@ function StatCard({
     <Card className="border-warm-200 dark:border-warm-800">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-1">
-          <Icon
-            className="h-4 w-4"
-            style={{ color: color ?? "var(--color-warm-400)" }}
-          />
+          <Icon className="h-4 w-4" />
           <span className="text-xs text-warm-500">{label}</span>
         </div>
         <p className="text-2xl font-bold text-warm-900 dark:text-warm-50">
@@ -175,7 +172,6 @@ export function AnalyticsDashboard({ analysis }: AnalyticsDashboardProps) {
                     tick={{ fontSize: 11, fill: "#9ca3af" }}
                   />
                   <Tooltip
-                    formatter={(v: number) => [`${v}%`, "Win Rate"]}
                     contentStyle={{
                       fontSize: 12,
                       borderRadius: 8,
@@ -229,7 +225,6 @@ export function AnalyticsDashboard({ analysis }: AnalyticsDashboardProps) {
                     width={80}
                   />
                   <Tooltip
-                    formatter={(v: number) => [`${v}%`, "Win Rate"]}
                     contentStyle={{
                       fontSize: 12,
                       borderRadius: 8,
@@ -283,7 +278,7 @@ export function AnalyticsDashboard({ analysis }: AnalyticsDashboardProps) {
                   width={140}
                 />
                 <Tooltip
-                  formatter={(v: number) => [v, "Occurrences"]}
+                  
                   contentStyle={{
                     fontSize: 12,
                     borderRadius: 8,
@@ -319,7 +314,6 @@ export function AnalyticsDashboard({ analysis }: AnalyticsDashboardProps) {
                   tick={{ fontSize: 11, fill: "#9ca3af" }}
                 />
                 <Tooltip
-                  formatter={(v: number) => [`${v}%`, "Win Rate"]}
                   contentStyle={{
                     fontSize: 12,
                     borderRadius: 8,

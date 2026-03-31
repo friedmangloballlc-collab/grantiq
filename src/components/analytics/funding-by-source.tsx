@@ -90,9 +90,9 @@ export function FundingBySource({ sources, totalAwarded }: FundingBySourceProps)
                   outerRadius={80}
                   innerRadius={48}
                   paddingAngle={2}
-                  label={({ name, percent }) =>
-                    `${name} ${Math.round(percent * 100)}%`
-                  }
+                  label={(({ name, percent }: { name: string; percent?: number }) =>
+                    `${name} ${Math.round((percent ?? 0) * 100)}%`
+                  ) as never}
                   labelLine={false}
                 >
                   {pieData.map((entry, i) => (
@@ -100,7 +100,7 @@ export function FundingBySource({ sources, totalAwarded }: FundingBySourceProps)
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [formatDollars(value), "Awarded"]}
+                  formatter={((value: number) => [formatDollars(value), "Awarded"]) as never}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
                 />
                 <Legend

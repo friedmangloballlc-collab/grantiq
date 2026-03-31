@@ -32,7 +32,7 @@ async function exportMatches(orgId: string, admin: ReturnType<typeof createAdmin
 
   const headers = ["ID", "Title", "Funder", "Type", "Match Score", "Status", "Deadline", "Award Min", "Award Max", "Matched At"];
   const rows = (data ?? []).map((r) => {
-    const gs = r.grant_sources as Record<string, unknown> | null;
+    const gs = r.grant_sources as unknown as Record<string, unknown> | null;
     return [
       r.id,
       gs?.title as string ?? "",
@@ -60,7 +60,7 @@ async function exportPipeline(orgId: string, admin: ReturnType<typeof createAdmi
 
   const headers = ["ID", "Title", "Funder", "Type", "Stage", "Match Score", "Notes", "Deadline", "Award Min", "Award Max", "Added At"];
   const rows = (data ?? []).map((r) => {
-    const gs = r.grant_sources as Record<string, unknown> | null;
+    const gs = r.grant_sources as unknown as Record<string, unknown> | null;
     return [
       r.id,
       gs?.title as string ?? "",
@@ -89,7 +89,7 @@ async function exportScorecards(orgId: string, admin: ReturnType<typeof createAd
 
   const headers = ["ID", "Grant Title", "Funder", "Score", "Strengths", "Weaknesses", "Recommendation", "Created At"];
   const rows = (data ?? []).map((r) => {
-    const gs = r.grant_sources as Record<string, unknown> | null;
+    const gs = r.grant_sources as unknown as Record<string, unknown> | null;
     return [
       r.id,
       gs?.title as string ?? "",

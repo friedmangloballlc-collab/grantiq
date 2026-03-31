@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 // GET /api/roadmap — fetch existing funding_roadmaps for the org.
 // NOTE: POST /api/ai/roadmap triggers AI generation; this route only reads saved data.
@@ -38,7 +39,7 @@ export async function GET() {
 
     return NextResponse.json({ roadmaps: data ?? [] });
   } catch (err) {
-    console.error("GET /api/roadmap error:", err);
+    logger.error("GET /api/roadmap error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

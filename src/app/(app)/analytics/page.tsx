@@ -106,7 +106,7 @@ export default async function AnalyticsPage() {
 
         const pipelineSourceMap = new Map(
           (pipelineWithSources ?? []).map((r) => {
-            const gs = r.grant_sources as { grant_type?: string } | null;
+            const gs = r.grant_sources as unknown as { grant_type?: string } | null;
             return [r.id as string, gs?.grant_type ?? "Other"];
           })
         );
@@ -143,7 +143,7 @@ export default async function AnalyticsPage() {
 
         const pipelineDateMap = new Map(
           (pipelineWithDates ?? []).map((r) => {
-            const gs = r.grant_sources as { grant_type?: string } | null;
+            const gs = r.grant_sources as unknown as { grant_type?: string } | null;
             return [r.id as string, { addedAt: r.added_at as string, grantType: gs?.grant_type ?? "Other" }];
           })
         );

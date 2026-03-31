@@ -105,7 +105,7 @@ export function TimeToSubmit({ avgDays, byType, trend }: TimeToSubmitProps) {
                   label={{ value: "days", angle: -90, position: "insideLeft", fontSize: 10, fill: "#9ca3af" }}
                 />
                 <Tooltip
-                  formatter={(v: number) => [`${v} days`, "Avg Time to Submit"]}
+                  formatter={((v: number) => [`${v} days`, "Avg Time to Submit"]) as never}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
                 />
                 <ReferenceLine

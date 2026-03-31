@@ -58,7 +58,7 @@ export async function GET() {
     );
 
     const clients = memberships.map((m) => {
-      const org = m.organizations as {
+      const org = m.organizations as unknown as {
         id: string;
         name: string;
         entity_type?: string | null;

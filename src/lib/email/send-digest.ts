@@ -93,7 +93,7 @@ async function fetchDigestData(orgId: string, _userId: string): Promise<Omit<Org
   const newMatches: DigestMatch[] = (rawMatches ?? [])
     .filter((m) => m.grant_sources)
     .map((m) => {
-      const gs = m.grant_sources as {
+      const gs = m.grant_sources as unknown as {
         id: string;
         name: string;
         funder_name: string;
@@ -135,7 +135,7 @@ async function fetchDigestData(orgId: string, _userId: string): Promise<Omit<Org
   const upcomingDeadlines: DigestDeadline[] = (rawDeadlines ?? [])
     .filter((d) => d.grant_sources)
     .map((d) => {
-      const gs = d.grant_sources as { name: string };
+      const gs = d.grant_sources as unknown as { name: string };
       return {
         id: d.id,
         name: gs.name,
@@ -152,7 +152,7 @@ async function fetchDigestData(orgId: string, _userId: string): Promise<Omit<Org
   // 1. Check for high-score unreviewed match
   const topUnreviewed = (rawMatches ?? []).find((m) => m.match_score >= 85);
   if (topUnreviewed && topUnreviewed.grant_sources) {
-    const gs = topUnreviewed.grant_sources as { id: string; name: string };
+    const gs = topUnreviewed.grant_sources as unknown as { id: string; name: string };
     actionItem = {
       type: "unreviewed_match",
       grantName: gs.name,
@@ -178,7 +178,7 @@ async function fetchDigestData(orgId: string, _userId: string): Promise<Omit<Org
     .limit(1);
 
   if (staleItems?.length && staleItems[0].grant_sources) {
-    const gs = staleItems[0].grant_sources as { name: string };
+    const gs = staleItems[0].grant_sources as unknown as { name: string };
     actionItem = {
       type: "stale_pipeline",
       grantName: gs.name,

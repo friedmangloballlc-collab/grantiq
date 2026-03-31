@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAnthropicClient, MODELS } from "@/lib/ai/client";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const ONBOARDING_SYSTEM_PROMPT = `You are Grantie, GrantAQ's friendly AI assistant helping a new user set up their organization profile.
 
@@ -77,6 +79,11 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { allowed: rateLimitAllowed } = checkRateLimit(`onboarding-chat:${user.id}`, 20, 60000);
+    if (!rateLimitAllowed) {
+      return NextResponse.json({ response: "Too many requests. Please slow down.", error: true }, { status: 429 });
     }
 
     const { message, history } = await req.json();
@@ -182,7 +189,7 @@ export async function POST(req: NextRequest) {
       onboardingComplete,
     });
   } catch (err) {
-    console.error("Onboarding chat error:", err);
+    logger.error("Onboarding chat error", { err: String(err) });
     return NextResponse.json(
       { response: "I'm having a moment — could you try again?", error: true },
       { status: 200 } // Return 200 so the UI doesn't break

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 // Maps each onboarding step ID to which table and column it belongs to
 const FIELD_MAP: Record<
@@ -88,13 +89,13 @@ export async function POST(req: NextRequest) {
       .eq(mapping.table === "organizations" ? "id" : "org_id", orgId);
 
     if (error) {
-      console.error(`Onboarding save error [${field}]:`, error.message);
+      logger.error(`Onboarding save error [${field}]`, { message: error.message });
       // Return success anyway — UI should not block on DB errors
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Onboarding save error:", err);
+    logger.error("Onboarding save error", { err: String(err) });
     return NextResponse.json({ success: false, error: "Internal error" }, { status: 500 });
   }
 }

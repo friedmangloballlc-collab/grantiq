@@ -85,12 +85,13 @@ export default async function ClientsPage() {
   );
 
   const clients = (memberships ?? []).map((m) => {
-    const org = m.organizations as {
+    const orgData = m.organizations as unknown as {
       id: string;
       name: string;
       entity_type?: string | null;
       state?: string | null;
-    } | null;
+    }[] | { id: string; name: string; entity_type?: string | null; state?: string | null } | null;
+    const org = Array.isArray(orgData) ? orgData[0] : orgData;
 
     return {
       orgId: m.org_id,

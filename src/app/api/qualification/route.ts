@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateAZScore } from "@/lib/qualification/az-score";
+import { logger } from "@/lib/logger";
 
 // GET /api/qualification — returns the A-Z qualification score for the authenticated user's org.
 export async function GET() {
@@ -49,7 +50,7 @@ export async function GET() {
 
     return NextResponse.json(result);
   } catch (err) {
-    console.error("GET /api/qualification error:", err);
+    logger.error("GET /api/qualification error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

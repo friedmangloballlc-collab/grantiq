@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { generateBudgetNarrative } from "@/lib/ai/writing/budget-narrative";
+import { logger } from "@/lib/logger";
 import type { BudgetLineItem } from "@/components/budget/budget-builder";
 import type { BudgetNarrativeContext } from "@/lib/ai/writing/budget-narrative";
 
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(result);
   } catch (err) {
-    console.error("[budget/narrative] error:", err);
+    logger.error("[budget/narrative] error", { err: String(err) });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

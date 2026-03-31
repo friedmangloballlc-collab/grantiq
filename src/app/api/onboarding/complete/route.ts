@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import OpenAI from "openai";
+import { logger } from "@/lib/logger";
 
 export async function POST() {
   try {
@@ -58,7 +59,7 @@ export async function POST() {
         }
       } catch (embeddingErr) {
         // Non-blocking — proceed even if embedding fails
-        console.error("Embedding generation failed:", embeddingErr);
+        logger.error("Embedding generation failed", { err: String(embeddingErr) });
       }
     }
 
@@ -75,7 +76,7 @@ export async function POST() {
       .single();
 
     if (matchErr) {
-      console.error("Failed to queue match_grants job:", matchErr.message);
+      logger.error("Failed to queue match_grants job", { message: matchErr.message });
     }
 
     // Queue score_readiness job
@@ -91,7 +92,7 @@ export async function POST() {
       .single();
 
     if (readinessErr) {
-      console.error("Failed to queue score_readiness job:", readinessErr.message);
+      logger.error("Failed to queue score_readiness job", { message: readinessErr.message });
     }
 
     return NextResponse.json({
@@ -100,7 +101,7 @@ export async function POST() {
       readinessJobId: readinessJob?.id ?? null,
     });
   } catch (err) {
-    console.error("Onboarding complete error:", err);
+    logger.error("Onboarding complete error", { err: String(err) });
     return NextResponse.json({ success: false, error: "Internal error" }, { status: 500 });
   }
 }

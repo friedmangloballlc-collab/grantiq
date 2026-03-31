@@ -46,11 +46,11 @@ export default async function CalendarPage() {
     // Build pipeline deadline entries
     const pipelineDeadlines: DeadlineEntry[] = (pipelineResult.data ?? [])
       .filter((row) => {
-        const gs = row.grant_sources as { deadline?: string | null } | null;
+        const gs = row.grant_sources as unknown as { deadline?: string | null } | null;
         return gs?.deadline;
       })
       .map((row) => {
-        const gs = row.grant_sources as { name?: string; funder_name?: string; deadline?: string } | null;
+        const gs = row.grant_sources as unknown as { name?: string; funder_name?: string; deadline?: string } | null;
         return {
           id: `pipeline-${row.id}`,
           grantName: gs?.name ?? "Unknown Grant",
@@ -66,11 +66,11 @@ export default async function CalendarPage() {
 
     const matchDeadlines: DeadlineEntry[] = (matchesResult.data ?? [])
       .filter((row) => {
-        const gs = row.grant_sources as { name?: string; deadline?: string | null } | null;
+        const gs = row.grant_sources as unknown as { name?: string; deadline?: string | null } | null;
         return gs?.deadline && !pipelineGrantNames.has(gs?.name ?? "");
       })
       .map((row) => {
-        const gs = row.grant_sources as { name?: string; funder_name?: string; deadline?: string } | null;
+        const gs = row.grant_sources as unknown as { name?: string; funder_name?: string; deadline?: string } | null;
         return {
           id: `match-${row.id}`,
           grantName: gs?.name ?? "Unknown Grant",

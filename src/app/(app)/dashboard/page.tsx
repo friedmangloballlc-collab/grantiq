@@ -157,9 +157,9 @@ export default async function DashboardPage() {
     // ── Today's Focus ─────────────────────────────────────────────────────────
     const upcomingDeadlines = upcomingDeadlinesResult.data ?? [];
     const deadlineItems = upcomingDeadlines
-      .filter((row) => (row.grant_sources as { name?: string; deadline?: string } | null)?.deadline)
+      .filter((row) => (row.grant_sources as unknown as { name?: string; deadline?: string } | null)?.deadline)
       .map((row) => {
-        const gs = row.grant_sources as { name?: string; deadline?: string } | null;
+        const gs = row.grant_sources as unknown as { name?: string; deadline?: string } | null;
         return {
           id: `deadline-${row.id}`,
           priority: "urgent" as const,
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
         .limit(5);
 
       changeItems = (recentMatches ?? []).map((m) => {
-        const gs = m.grant_sources as { name?: string } | null;
+        const gs = m.grant_sources as unknown as { name?: string } | null;
         return {
           id: String(m.id),
           type: "new_match" as const,
@@ -338,20 +338,20 @@ export default async function DashboardPage() {
     ]);
 
     const calPipeline: CalendarPreviewDeadline[] = (calPipelineResult.data ?? [])
-      .filter((r) => (r.grant_sources as { deadline?: string | null } | null)?.deadline)
+      .filter((r) => (r.grant_sources as unknown as { deadline?: string | null } | null)?.deadline)
       .map((r) => {
-        const gs = r.grant_sources as { name?: string; funder_name?: string; deadline?: string } | null;
+        const gs = r.grant_sources as unknown as { name?: string; funder_name?: string; deadline?: string } | null;
         return { id: `p-${r.id}`, grantName: gs?.name ?? "Grant", funderName: gs?.funder_name ?? "", deadline: gs!.deadline!, isPipeline: true };
       });
 
     const calPipelineNames = new Set(calPipeline.map((d) => d.grantName));
     const calMatches: CalendarPreviewDeadline[] = (calMatchResult.data ?? [])
       .filter((r) => {
-        const gs = r.grant_sources as { name?: string; deadline?: string | null } | null;
+        const gs = r.grant_sources as unknown as { name?: string; deadline?: string | null } | null;
         return gs?.deadline && !calPipelineNames.has(gs?.name ?? "");
       })
       .map((r) => {
-        const gs = r.grant_sources as { name?: string; funder_name?: string; deadline?: string } | null;
+        const gs = r.grant_sources as unknown as { name?: string; funder_name?: string; deadline?: string } | null;
         return { id: `m-${r.id}`, grantName: gs?.name ?? "Grant", funderName: gs?.funder_name ?? "", deadline: gs!.deadline!, isPipeline: false };
       });
 
@@ -393,7 +393,7 @@ export default async function DashboardPage() {
       { totalScore: number; count: number }
     >();
     for (const m of funderMatchRows ?? []) {
-      const gs = m.grant_sources as { funder_name?: string } | null;
+      const gs = m.grant_sources as unknown as { funder_name?: string } | null;
       if (!gs?.funder_name) continue;
       const fn = gs.funder_name;
       if (!funderScoreMap.has(fn)) {
@@ -443,7 +443,7 @@ export default async function DashboardPage() {
     });
 
     // Use AZ score for readiness delta — in future we could store historical scores
-    const readinessNow = azScore?.total ?? 0;
+    const readinessNow = azScore?.overallScore ?? 0;
     const readinessPrev = Math.max(0, readinessNow - (vaultUploaded > 0 ? 7 : 0));
 
     monthlyImpact = {

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const { allowed } = checkRateLimit(`signup:${ip}`, 5, 60000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { email, password, orgName } = await request.json();
 
   if (!email || !password) {
@@ -83,7 +91,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (subError) {
-    console.error("Failed to create subscription:", subError.message);
+    logger.error("Failed to create subscription", { message: subError.message });
   }
 
   // 5. Create org_capabilities + org_profiles
@@ -100,7 +108,7 @@ export async function POST(request: NextRequest) {
     max_attempts: 3,
     scheduled_for: new Date().toISOString(),
   }).then(({ error }) => {
-    if (error) console.error("[signup] Failed to enqueue sequence email job:", error.message);
+    if (error) logger.error("[signup] Failed to enqueue sequence email job", { message: error.message });
   });
 
   return NextResponse.json({ success: true, userId, orgId: org.id });

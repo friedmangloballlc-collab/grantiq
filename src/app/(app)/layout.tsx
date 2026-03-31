@@ -50,7 +50,7 @@ export default async function AppLayout({
 
   const allOrgs = (membershipsResult.data ?? []).map((m) => ({
     orgId: m.org_id,
-    orgName: (m.organizations as { id: string; name: string } | null)?.name ?? "Unknown Org",
+    orgName: (m.organizations as unknown as { id: string; name: string } | null)?.name ?? "Unknown Org",
   }));
 
   const orgContext: OrgContext = {

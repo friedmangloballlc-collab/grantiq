@@ -61,6 +61,11 @@ export async function POST(req: NextRequest) {
 
   const { entity_type, industry, state } = body;
 
+  const VALID_STATES = new Set(["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"]);
+  if (state && !VALID_STATES.has(state.toUpperCase())) {
+    return NextResponse.json({ error: "Invalid state" }, { status: 400 });
+  }
+
   const supabase = createAdminClient();
 
   let query = supabase

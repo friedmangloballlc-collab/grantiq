@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isStripeConfigured } from "@/lib/stripe/products";
 import { createPortalSession } from "@/lib/stripe/checkout";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.redirect(session.url, { status: 303 });
   } catch (err) {
-    console.error("Stripe portal error:", err);
+    logger.error("Stripe portal error", { err: String(err) });
     return NextResponse.redirect(`${appUrl}/settings/billing?portal=error`, { status: 303 });
   }
 }

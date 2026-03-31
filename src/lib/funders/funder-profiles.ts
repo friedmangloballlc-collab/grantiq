@@ -101,7 +101,7 @@ export async function getTopFunders(
   >();
 
   for (const match of matches) {
-    const gs = match.grant_sources as {
+    const gs = match.grant_sources as unknown as {
       id?: string | number;
       funder_name?: string;
       source_type?: string;

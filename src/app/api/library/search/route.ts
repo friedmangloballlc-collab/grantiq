@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (error) {
-      console.error("search_grants RPC error:", error);
+      logger.error("search_grants RPC error", { message: error.message });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       hasMore: (data ?? []).length === limit,
     });
   } catch (err) {
-    console.error("GET /api/library/search error:", err);
+    logger.error("GET /api/library/search error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
