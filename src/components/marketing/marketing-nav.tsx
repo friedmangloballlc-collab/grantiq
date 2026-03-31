@@ -11,7 +11,7 @@ export function MarketingNav() {
           <span className="text-xl font-bold text-warm-900 dark:text-warm-50">GrantIQ</span>
         </Link>
         <div className="hidden md:flex items-center gap-6">
-          <Link href="/pricing" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Pricing</Link>
+          <Link href="/#pricing" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Pricing</Link>
           <Link href="/blog" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Blog</Link>
           <Link href="/leaderboard" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Leaderboard</Link>
           <Link href="/tools/funding-gap" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Free Tools</Link>

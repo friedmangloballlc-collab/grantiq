@@ -16,7 +16,7 @@ export default async function AnalyticsPage() {
   const tier = ctx?.tier ?? "free";
   const hasBasicAnalytics = tier !== "free"; // Seeker+
   const hasFullAnalytics =
-    tier === "applicant" || tier === "growth" || tier === "enterprise";
+    tier === "growth" || tier === "growth" || tier === "enterprise";
   const hasEnterprise = tier === "enterprise";
 
   // Fully locked out (free tier)

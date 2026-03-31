@@ -88,7 +88,16 @@ export default function GrantWritePage({ params }: PageProps) {
   const { orgId, tier } = useOrg();
   const router = useRouter();
 
-  // Gate: Free and Starter users cannot access AI Writing
+  // ALL hooks must be declared before any conditional returns (Rules of Hooks)
+  const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
+  const [rfpText, setRfpText] = useState("");
+  const [rfpFile, setRfpFile] = useState<File | null>(null);
+  const [rfpMode, setRfpMode] = useState<"paste" | "upload">("paste");
+  const [step, setStep] = useState<"select" | "rfp" | "processing">("select");
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Gate: Free and Starter users cannot access AI Writing (AFTER all hooks)
   if (TIER_ORDER.indexOf(tier) < TIER_ORDER.indexOf("pro")) {
     return (
       <div className="px-6 py-8 max-w-5xl">
@@ -98,27 +107,19 @@ export default function GrantWritePage({ params }: PageProps) {
         </div>
         <div className="flex flex-col items-center justify-center py-20 text-center border border-warm-200 dark:border-warm-800 rounded-xl bg-warm-50 dark:bg-warm-900/30">
           <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
-            AI Writing is a Pro feature
+            AI Writing is a Strategist feature
           </p>
           <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-            Upgrade to Pro to access AI-powered grant writing, including full narrative drafts, budget tables, and compliance checklists.
+            Upgrade to Strategist to access AI-powered grant writing, including full narrative drafts, budget tables, and compliance checklists.
           </p>
           <Button
             className="mt-6 bg-[var(--color-brand-teal)] text-white hover:bg-[var(--color-brand-teal)]/90"
-            render={<a href="/upgrade">Upgrade to Pro</a>}
+            render={<Link href="/upgrade">Upgrade to Strategist</Link>}
           />
         </div>
       </div>
     );
   }
-
-  const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
-  const [rfpText, setRfpText] = useState("");
-  const [rfpFile, setRfpFile] = useState<File | null>(null);
-  const [rfpMode, setRfpMode] = useState<"paste" | "upload">("paste");
-  const [step, setStep] = useState<"select" | "rfp" | "processing">("select");
-  const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   // ─── Step 1 → 2 ────────────────────────────────────────────────────────────
 

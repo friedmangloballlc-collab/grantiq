@@ -126,7 +126,7 @@ export default async function BillingPage() {
               </form>
             ) : (
               <Link
-                href="/pricing"
+                href="/upgrade"
                 className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
               >
                 Upgrade Plan
@@ -190,7 +190,7 @@ export default async function BillingPage() {
               </p>
             </div>
             <Link
-              href="/pricing"
+              href="/upgrade"
               className="inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground transition-colors hover:bg-primary/80 shrink-0"
             >
               View Plans
