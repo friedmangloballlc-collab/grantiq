@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { STATE_NAMES } from "@/app/(marketing)/grants/state/[state]/page";
-import { INDUSTRY_META } from "@/app/(marketing)/grants/[industry]/page";
+import { INDUSTRY_META } from "@/app/(marketing)/grants/industry/[slug]/page";
 import { Button } from "@/components/ui/button";
 
 export const revalidate = 86400;

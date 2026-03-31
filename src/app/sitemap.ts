@@ -1,8 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { MetadataRoute } from "next";
-import { TOP_30_INDUSTRIES } from "@/app/(marketing)/grants/[industry]/page";
+import { TOP_30_INDUSTRIES } from "@/app/(marketing)/grants/industry/[slug]/page";
 import { ALL_STATE_CODES } from "@/app/(marketing)/grants/state/[state]/page";
-import { INDUSTRY_META } from "@/app/(marketing)/grants/[industry]/page";
+import { INDUSTRY_META } from "@/app/(marketing)/grants/industry/[slug]/page";
 
 export const revalidate = 86400;
 
@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Industry hub pages
   // ---------------------------------------------------------------------------
   const industryPages = TOP_30_INDUSTRIES.map((industry) => ({
-    url: `https://grantiq.com/grants/${industry}`,
+    url: `https://grantiq.com/grants/industry/${industry}`,
     lastModified: new Date(),
     changeFrequency: "daily" as const,
     priority: 0.85,
@@ -65,7 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       if ((count ?? 0) >= 3) {
         crossRefPages.push({
-          url: `https://grantiq.com/grants/${industry}/${stateCode.toLowerCase()}`,
+          url: `https://grantiq.com/grants/industry/${industry}/${stateCode.toLowerCase()}`,
           lastModified: new Date(),
           changeFrequency: "daily" as const,
           priority: 0.75,
