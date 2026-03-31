@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { TOP_30_INDUSTRIES } from "@/app/(marketing)/grants/industry/[slug]/page";
 import { ALL_STATE_CODES } from "@/app/(marketing)/grants/state/[state]/page";
 import { INDUSTRY_META } from "@/app/(marketing)/grants/industry/[slug]/page";
+import { BLOG_POSTS } from "@/lib/blog/posts";
 
 export const revalidate = 86400;
 
@@ -74,6 +75,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Blog pages
+  // ---------------------------------------------------------------------------
+  const blogIndexPage: MetadataRoute.Sitemap = [
+    {
+      url: "https://grantiq.com/blog",
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    },
+  ];
+
+  const blogPostPages: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
+    url: `https://grantiq.com/blog/${post.slug}`,
+    lastModified: new Date(post.publishedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  }));
+
   return [
     // Core pages
     {
@@ -112,6 +132,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    // Blog
+    ...blogIndexPage,
+    ...blogPostPages,
     // Programmatic SEO pages
     ...industryPages,
     ...statePages,
