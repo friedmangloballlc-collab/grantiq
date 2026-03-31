@@ -13,8 +13,9 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Upload, FileText, Loader2, AlertCircle } from "lucide-react";
+import { Check, Upload, FileText, Loader2, AlertCircle, Calculator } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // ─── Tier definitions ────────────────────────────────────────────────────────
 
@@ -280,6 +281,20 @@ export default function GrantWritePage({ params }: PageProps) {
           Choose a writing tier, provide the RFP, and our AI will generate your
           application.
         </p>
+      </div>
+
+      {/* Build Budget nudge */}
+      <div className="mb-6 flex items-center gap-3 p-3 rounded-lg bg-warm-50 dark:bg-warm-800/30 border border-warm-200 dark:border-warm-700">
+        <Calculator className="h-4 w-4 text-brand-teal shrink-0" />
+        <p className="text-sm text-warm-600 dark:text-warm-400 flex-1">
+          Need a budget? Use the Budget Builder to create a line-item budget and AI-generated narrative.
+        </p>
+        <Link
+          href={`/grants/${grantId}/budget`}
+          className="shrink-0 text-xs font-medium text-brand-teal hover:underline"
+        >
+          Build Budget →
+        </Link>
       </div>
 
       {/* Step 1 — Tier selection */}

@@ -14,6 +14,7 @@ import {
   BookOpen,
   FolderLock,
   Building2,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/writing", label: "Writing", icon: PenLine },
   { href: "/vault", label: "Documents", icon: FolderLock },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/roadmap", label: "Roadmap", icon: Map },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

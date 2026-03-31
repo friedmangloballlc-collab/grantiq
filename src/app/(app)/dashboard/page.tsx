@@ -15,6 +15,7 @@ import { CalendarPreview, type CalendarPreviewDeadline } from "@/components/dash
 import { ReferralMiniCard } from "@/components/referral/referral-mini-card";
 import { generateReferralCode } from "@/lib/referral";
 import { TopFunders } from "@/components/dashboard/top-funders";
+import { MonthlyImpact, type MonthActivity } from "@/components/dashboard/monthly-impact";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -33,6 +34,7 @@ export default async function DashboardPage() {
   let calendarDeadlines: CalendarPreviewDeadline[] = [];
   let referralCode: string | null = null;
   let topFunders: { name: string; avgMatchScore: number; grantCount: number }[] = [];
+  let monthlyImpact: MonthActivity | null = null;
 
   if (ctx) {
     const { orgId } = ctx;
@@ -409,6 +411,51 @@ export default async function DashboardPage() {
       }))
       .sort((a, b) => b.avgMatchScore - a.avgMatchScore)
       .slice(0, 3);
+
+    // ── Monthly Impact ────────────────────────────────────────────────────────
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const [
+      monthMatchCountResult,
+      monthEvaluatedCountResult,
+      monthSubmittedCountResult,
+    ] = await Promise.all([
+      db
+        .from("grant_matches")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .gte("created_at", monthStart),
+      db
+        .from("grant_pipeline")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .gte("created_at", monthStart),
+      db
+        .from("grant_pipeline")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .eq("stage", "submitted")
+        .gte("updated_at", monthStart),
+    ]);
+
+    const currentMonthLabel = now.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+
+    // Use AZ score for readiness delta — in future we could store historical scores
+    const readinessNow = azScore?.total ?? 0;
+    const readinessPrev = Math.max(0, readinessNow - (vaultUploaded > 0 ? 7 : 0));
+
+    monthlyImpact = {
+      month: currentMonthLabel,
+      newMatches: monthMatchCountResult.count ?? 0,
+      grantsEvaluated: monthEvaluatedCountResult.count ?? 0,
+      applicationsSubmitted: monthSubmittedCountResult.count ?? 0,
+      readinessStart: readinessPrev,
+      readinessEnd: readinessNow,
+      grantsUnlocked: vaultUploaded > 0 ? Math.min(8, vaultUploaded * 2) : 0,
+      unlockReason: vaultUploaded > 0 ? "uploading documents" : undefined,
+    };
   }
 
   // Determine subscription tier for upgrade banner
@@ -441,6 +488,7 @@ export default async function DashboardPage() {
 
       <TodaysFocus items={focusItems} />
       <StatsOverview {...stats} />
+      {monthlyImpact && <MonthlyImpact currentMonth={monthlyImpact} />}
       {topFunders.length > 0 && <TopFunders funders={topFunders} />}
       <CalendarPreview deadlines={calendarDeadlines} />
       <ProfileCompletion savedAnswers={deferredAnswers} />

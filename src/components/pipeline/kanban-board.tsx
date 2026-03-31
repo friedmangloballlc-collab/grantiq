@@ -10,6 +10,8 @@ import {
 import { PipelineCard } from "./pipeline-card";
 import { CompliancePanel } from "./compliance-panel";
 import { DeclinedPanel } from "./declined-panel";
+import { ChecklistPanel } from "./checklist-panel";
+import { OutcomeLogger } from "./outcome-logger";
 import { cn } from "@/lib/utils";
 
 export const PIPELINE_STAGES = [
@@ -70,7 +72,10 @@ export function KanbanBoard({
   const [items, setItems] = useState<PipelineItem[]>(initialItems);
   const [autoActionMessage, setAutoActionMessage] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<PipelineItem | null>(null);
-  const [panelType, setPanelType] = useState<"compliance" | "declined" | null>(null);
+  const [panelType, setPanelType] = useState<"compliance" | "declined" | "checklist" | null>(null);
+  // Outcome logger: shown when a card is dragged to awarded/declined
+  const [outcomeItem, setOutcomeItem] = useState<PipelineItem | null>(null);
+  const [outcomeType, setOutcomeType] = useState<"awarded" | "declined" | null>(null);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -80,6 +85,8 @@ export function KanbanBoard({
     const fromStage = source.droppableId;
     const toStage = destination.droppableId;
 
+    const movedItem = items.find((item) => item.id === draggableId) ?? null;
+
     setItems((prev) =>
       prev.map((item) =>
         item.id === draggableId
@@ -88,6 +95,12 @@ export function KanbanBoard({
       )
     );
     onStageChange(draggableId, toStage);
+
+    // Trigger outcome logger when dragging to awarded or declined
+    if (movedItem && (toStage === "awarded" || toStage === "declined")) {
+      setOutcomeItem({ ...movedItem, stage: toStage });
+      setOutcomeType(toStage);
+    }
 
     const action = getAutoAction(fromStage, toStage);
     if (action) {
@@ -103,6 +116,9 @@ export function KanbanBoard({
     } else if (item.stage === "declined") {
       setSelectedItem(item);
       setPanelType("declined");
+    } else if (item.stage === "qualified" || item.stage === "in_development") {
+      setSelectedItem(item);
+      setPanelType("checklist");
     }
   };
 
@@ -164,7 +180,9 @@ export function KanbanBoard({
                                 {...item}
                                 clickable={
                                   item.stage === "awarded" ||
-                                  item.stage === "declined"
+                                  item.stage === "declined" ||
+                                  item.stage === "qualified" ||
+                                  item.stage === "in_development"
                                 }
                               />
                             </div>
@@ -186,6 +204,19 @@ export function KanbanBoard({
       )}
       {selectedItem && panelType === "declined" && (
         <DeclinedPanel item={selectedItem} onClose={closePanel} />
+      )}
+      {selectedItem && panelType === "checklist" && (
+        <ChecklistPanel item={selectedItem} onClose={closePanel} />
+      )}
+      {outcomeItem && outcomeType && (
+        <OutcomeLogger
+          item={outcomeItem}
+          outcome={outcomeType}
+          onClose={() => {
+            setOutcomeItem(null);
+            setOutcomeType(null);
+          }}
+        />
       )}
     </>
   );

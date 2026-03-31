@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/accordion";
 import { GrantActionButtons } from "@/components/grants/grant-action-buttons";
 import Link from "next/link";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ApplicationChecklist } from "@/components/pipeline/application-checklist";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -208,6 +209,44 @@ export default async function GrantDetailPage({ params }: Props) {
         </h2>
         <ActionPaths grantId={id} />
       </div>
+
+      {/* Build Budget CTA */}
+      <div className="flex items-center gap-3 p-4 bg-warm-50 dark:bg-warm-800/30 border border-warm-200 dark:border-warm-700 rounded-lg">
+        <Calculator className="h-5 w-5 text-brand-teal shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-warm-900 dark:text-warm-50">
+            Build your project budget
+          </p>
+          <p className="text-xs text-warm-500">
+            Line-item budget builder with indirect cost calculator and AI-generated narrative.
+          </p>
+        </div>
+        <Link
+          href={`/grants/${id}/budget`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-teal text-white text-sm font-medium hover:bg-brand-teal-dark transition-colors whitespace-nowrap"
+        >
+          Build Budget
+        </Link>
+      </div>
+
+      {/* Application Checklist */}
+      <Card className="border-warm-200 dark:border-warm-800">
+        <CardContent className="p-6">
+          <ApplicationChecklist
+            grant={{
+              id: grant.id,
+              name: grant.name,
+              funder_name: grant.funder_name,
+              source_type: (grant.source_type as "federal" | "state" | "foundation" | "corporate") ?? "foundation",
+              amount_max: grant.amount_max ?? null,
+              amount_min: grant.amount_min ?? null,
+              deadline: grant.deadline ?? null,
+              eligibility_types: grant.eligibility_types ?? [],
+              category: grant.category ?? null,
+            }}
+          />
+        </CardContent>
+      </Card>
 
       {/* Layer 2 + 3: Expandable detail sections */}
       <Accordion multiple className="space-y-2">
