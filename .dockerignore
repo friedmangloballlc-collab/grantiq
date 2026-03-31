@@ -1,0 +1,9 @@
+node_modules
+worker/node_modules
+.next
+.git
+*.md
+docs/
+tests/
+public/
+.env*
