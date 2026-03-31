@@ -1,68 +1,117 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendWeeklyDigest } from "@/lib/email/send-digest";
+
+interface DigestResult {
+  userId: string;
+  orgId: string;
+  email: string;
+  status: "sent" | "skipped" | "error";
+  error?: string;
+}
 
 export async function handleWeeklyDigest(supabase: SupabaseClient): Promise<void> {
-  // 1. Get all users with digest enabled
-  const { data: prefs } = await supabase
+  console.log("[digest] Starting weekly digest job");
+
+  // 1. Get all users with digest enabled (not 'off')
+  const { data: prefs, error: prefsError } = await supabase
     .from("notification_preferences")
-    .select("user_id, alert_new_matches_above_score, alert_deadline_days_before")
+    .select("user_id, digest_frequency, alert_new_matches_above_score, alert_deadline_days_before")
     .neq("digest_frequency", "off");
 
-  if (!prefs?.length) return;
+  if (prefsError) {
+    console.error("[digest] Failed to fetch notification_preferences:", prefsError.message);
+    return;
+  }
+
+  if (!prefs?.length) {
+    console.log("[digest] No users with digest enabled");
+    return;
+  }
+
+  console.log(`[digest] Processing ${prefs.length} user(s)`);
+
+  const results: DigestResult[] = [];
 
   for (const pref of prefs) {
-    // 2. Get user's org membership
-    const { data: membership } = await supabase
-      .from("org_members")
-      .select("org_id, organizations(name)")
-      .eq("user_id", pref.user_id)
-      .eq("status", "active")
-      .single();
+    let orgId: string | null = null;
 
-    if (!membership) continue;
+    try {
+      // 2. Get user's active org membership
+      const { data: membership } = await supabase
+        .from("org_members")
+        .select("org_id")
+        .eq("user_id", pref.user_id)
+        .eq("status", "active")
+        .single();
 
-    // 3. Get new matches above threshold (last 7 days)
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: matches } = await supabase
-      .from("grant_matches")
-      .select("match_score, grant_sources(name, funder_name, amount_max)")
-      .eq("org_id", membership.org_id)
-      .gte("match_score", pref.alert_new_matches_above_score ?? 80)
-      .gte("last_computed", weekAgo)
-      .order("match_score", { ascending: false })
-      .limit(5);
+      if (!membership) {
+        results.push({ userId: pref.user_id, orgId: "", email: "", status: "skipped" });
+        continue;
+      }
 
-    // 4. Get upcoming deadlines
-    const deadlineCutoff = new Date(
-      Date.now() + (pref.alert_deadline_days_before ?? 14) * 24 * 60 * 60 * 1000
-    ).toISOString();
-    const { data: deadlines } = await supabase
-      .from("grant_pipeline")
-      .select("deadline, grant_sources(name)")
-      .eq("org_id", membership.org_id)
-      .lte("deadline", deadlineCutoff)
-      .gte("deadline", new Date().toISOString())
-      .order("deadline")
-      .limit(5);
+      orgId = membership.org_id;
 
-    // 5. Skip if nothing to report
-    if (!matches?.length && !deadlines?.length) continue;
+      // 3. Get user email from auth.users via admin RPC
+      // Supabase admin client exposes auth.admin.getUserById
+      // The worker uses createAdminClient() internally in sendWeeklyDigest,
+      // so we use the passed supabase client here only for metadata lookups.
+      const { data: userRecord } = await supabase.auth.admin.getUserById(pref.user_id);
 
-    // 6. Send email via Resend
-    // TODO: render WeeklyDigest React Email template and send via Resend
-    console.log(
-      `[digest] Would send to user ${pref.user_id}: ${matches?.length ?? 0} matches, ${deadlines?.length ?? 0} deadlines`
-    );
+      if (!userRecord?.user?.email) {
+        console.warn(`[digest] No email found for user ${pref.user_id}, skipping`);
+        results.push({ userId: pref.user_id, orgId, email: "", status: "skipped" });
+        continue;
+      }
 
-    // 7. Log to notifications_log
-    await supabase.from("notifications_log").insert({
-      user_id: pref.user_id,
-      org_id: membership.org_id,
-      notification_type: "digest",
-      channel: "email",
-      content_snapshot: {
-        matches_count: matches?.length ?? 0,
-        deadlines_count: deadlines?.length ?? 0,
-      },
-    });
+      const userEmail = userRecord.user.email;
+      const userName = userRecord.user.user_metadata?.full_name as string | undefined;
+
+      // 4. Send digest (fetches data internally, skips if nothing to show)
+      await sendWeeklyDigest(orgId, userEmail, pref.user_id, userName);
+
+      results.push({ userId: pref.user_id, orgId, email: userEmail, status: "sent" });
+
+      // 5. Log to notifications_log
+      await supabase.from("notifications_log").insert({
+        user_id: pref.user_id,
+        org_id: orgId,
+        notification_type: "digest",
+        channel: "email",
+        content_snapshot: {
+          digest_frequency: pref.digest_frequency,
+          sent_at: new Date().toISOString(),
+        },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[digest] Error for user ${pref.user_id}:`, message);
+      results.push({
+        userId: pref.user_id,
+        orgId: orgId ?? "",
+        email: "",
+        status: "error",
+        error: message,
+      });
+
+      // Log the failure too
+      if (orgId) {
+        await supabase.from("notifications_log").insert({
+          user_id: pref.user_id,
+          org_id: orgId,
+          notification_type: "digest",
+          channel: "email",
+          content_snapshot: {
+            error: message,
+            failed_at: new Date().toISOString(),
+          },
+        });
+      }
+    }
   }
+
+  const sent = results.filter((r) => r.status === "sent").length;
+  const skipped = results.filter((r) => r.status === "skipped").length;
+  const errors = results.filter((r) => r.status === "error").length;
+
+  console.log(`[digest] Complete — sent: ${sent}, skipped: ${skipped}, errors: ${errors}`);
 }
