@@ -2,6 +2,7 @@ import { createAdminClient } from "../../../src/lib/supabase/admin";
 import { vectorRecall } from "../../../src/lib/matching/vector-recall";
 import { applyHardFilters, type HardFilterInput } from "../../../src/lib/matching/hard-filter";
 import { scoreGrantBatch } from "../../../src/lib/ai/engines/match";
+import { computeProfileHash } from "../../../src/lib/ai/cache";
 
 interface MatchGrantsPayload {
   org_id: string;

@@ -3,6 +3,26 @@ import { MODELS } from "@/lib/ai/client";
 import { GrantieChatOutputSchema, type GrantieChatOutput } from "@/lib/ai/schemas/chat";
 import { GRANTIE_SYSTEM_PROMPT } from "@/lib/ai/prompts/grantie-system";
 
+function classifyQueryComplexity(message: string): "simple" | "complex" {
+  const simplePatterns = [
+    /what('s| is) my (readiness|score|pipeline|status)/i,
+    /when is .* deadline/i,
+    /how many (grants|matches|applications)/i,
+    /show me .* (matches|grants|pipeline)/i,
+    /what documents? do I (need|have|missing)/i,
+    /what('s| is) my (budget|revenue|org type)/i,
+  ];
+  if (simplePatterns.some((p) => p.test(message))) return "simple";
+  if (
+    message.length < 50 &&
+    !message.includes("why") &&
+    !message.includes("should") &&
+    !message.includes("how")
+  )
+    return "simple";
+  return "complex";
+}
+
 interface GrantieContext {
   currentPage: string;
   pageData: Record<string, unknown>;
@@ -107,12 +127,15 @@ ${userMessage}
 
 Respond as Grantie. Return ONLY valid JSON.`;
 
+  const complexity = classifyQueryComplexity(userMessage);
+  const model = complexity === "simple" ? MODELS.CLASSIFY : MODELS.SCORING;
+
   const response = await aiCall({
     orgId: callCtx.orgId,
     userId: callCtx.userId,
     actionType: "chat",
     tier: callCtx.tier,
-    model: MODELS.SCORING,
+    model,
     systemPrompt: GRANTIE_SYSTEM_PROMPT,
     userInput: fullMessage,
     maxTokens: 2048,

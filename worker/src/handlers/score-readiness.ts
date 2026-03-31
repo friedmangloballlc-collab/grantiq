@@ -1,5 +1,6 @@
 import { createAdminClient } from "../../../src/lib/supabase/admin";
 import { assessReadiness } from "../../../src/lib/ai/engines/readiness";
+import { computeProfileHash } from "../../../src/lib/ai/cache";
 
 interface ScoreReadinessPayload {
   org_id: string;
@@ -40,7 +41,27 @@ export async function handleScoreReadiness(
     const capabilities = org.org_capabilities?.[0] ?? org.org_capabilities ?? {};
     const profile = org.org_profiles?.[0] ?? org.org_profiles ?? {};
 
-    // 2. Run Readiness Engine
+    // 2. Check profile hash cache — skip AI call if profile hasn't changed
+    const profileHash = computeProfileHash({ ...capabilities, ...profile });
+
+    const { data: latestScore } = await db
+      .from("readiness_scores")
+      .select("overall_score, tier_label, profile_hash")
+      .eq("org_id", org_id)
+      .order("scored_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (latestScore && latestScore.profile_hash === profileHash) {
+      console.log(`score_readiness: cache hit for org ${org_id}, skipping AI call`);
+      return {
+        status: "completed",
+        overall_score: latestScore.overall_score,
+        tier_label: latestScore.tier_label,
+      };
+    }
+
+    // 3. Run Readiness Engine
     const result = await assessReadiness(
       { orgId: org_id, userId: user_id, tier },
       {
@@ -69,13 +90,14 @@ export async function handleScoreReadiness(
       }
     );
 
-    // 3. Store results in readiness_scores table
+    // 4. Store results in readiness_scores table
     const { error: insertError } = await db.from("readiness_scores").insert({
       org_id,
       criteria: result.criteria,
       overall_score: result.overall_score,
       gaps: result.top_3_gaps.map((g) => g.gap_description),
       recommendations: result.top_3_gaps.map((g) => g.fix_action),
+      profile_hash: profileHash,
       scored_at: new Date().toISOString(),
     });
 
