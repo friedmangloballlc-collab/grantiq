@@ -228,7 +228,8 @@ export async function PATCH(req: NextRequest) {
     let successFeeNotification: string | null = null;
 
     if (stage === "awarded" && item.stage !== "awarded") {
-      const writingTier: string | null = (item as Record<string, unknown>).writing_tier as string | null ?? null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const writingTier: string | null = (item as any).writing_tier ?? null;
       const resolvedAwardAmount =
         typeof award_amount === "number" && award_amount > 0 ? award_amount : null;
 

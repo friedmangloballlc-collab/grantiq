@@ -18,6 +18,8 @@ export interface DeadlineEntry {
 
 interface CalendarViewProps {
   deadlines: DeadlineEntry[];
+  /** When false (Free tier), work-back timeline expand buttons are hidden */
+  showWorkBack?: boolean;
 }
 
 function daysUntil(deadline: string): number {
@@ -57,7 +59,7 @@ function groupByMonth(deadlines: DeadlineEntry[]): Map<string, DeadlineEntry[]> 
 }
 
 // --- List View ---
-function ListView({ deadlines }: { deadlines: DeadlineEntry[] }) {
+function ListView({ deadlines, showWorkBack = true }: { deadlines: DeadlineEntry[]; showWorkBack?: boolean }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   if (deadlines.length === 0) {
@@ -129,8 +131,8 @@ function ListView({ deadlines }: { deadlines: DeadlineEntry[] }) {
                         </div>
                       </div>
 
-                      {/* Expand toggle (pipeline items only) */}
-                      {entry.isPipeline && (
+                      {/* Expand toggle (pipeline items + Starter+ only) */}
+                      {entry.isPipeline && showWorkBack && (
                         <button
                           onClick={() => setExpanded(isExpanded ? null : entry.id)}
                           className="shrink-0 text-warm-400 hover:text-warm-600 transition-colors"
@@ -141,8 +143,8 @@ function ListView({ deadlines }: { deadlines: DeadlineEntry[] }) {
                       )}
                     </div>
 
-                    {/* Work-back timeline (expanded) */}
-                    {isExpanded && entry.isPipeline && (
+                    {/* Work-back timeline (expanded, Starter+ only) */}
+                    {isExpanded && entry.isPipeline && showWorkBack && (
                       <div className="mt-4 pt-4 border-t border-warm-100 dark:border-warm-800">
                         <WorkBackTimeline deadline={entry.deadline} grantName={entry.grantName} />
                       </div>
@@ -286,7 +288,7 @@ function GridCalendarView({ deadlines }: { deadlines: DeadlineEntry[] }) {
 }
 
 // --- Main CalendarView ---
-export function CalendarView({ deadlines }: CalendarViewProps) {
+export function CalendarView({ deadlines, showWorkBack = true }: CalendarViewProps) {
   const [view, setView] = useState<"list" | "grid">("list");
 
   const sorted = [...deadlines].sort(
@@ -318,7 +320,7 @@ export function CalendarView({ deadlines }: CalendarViewProps) {
         <span className="ml-auto text-xs text-warm-400">{deadlines.length} deadlines</span>
       </div>
 
-      {view === "list" ? <ListView deadlines={sorted} /> : <GridCalendarView deadlines={sorted} />}
+      {view === "list" ? <ListView deadlines={sorted} showWorkBack={showWorkBack} /> : <GridCalendarView deadlines={sorted} />}
     </div>
   );
 }

@@ -90,6 +90,7 @@ export default async function PipelinePage() {
       deadline: item.grant_sources?.deadline ?? item.deadline ?? null,
       progress: 0,
       aiStatus: "Ready to start",
+      loiStatus: item.loi_status ?? null,
     };
   });
 

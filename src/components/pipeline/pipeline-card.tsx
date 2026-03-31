@@ -2,6 +2,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DeadlineCountdown } from "@/components/shared/deadline-countdown";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import type { LOIStatus } from "./kanban-board";
+
+const LOI_STATUS_LABELS: Record<NonNullable<LOIStatus>, { label: string; className: string }> = {
+  not_required: { label: "LOI: Not Required", className: "text-warm-400" },
+  sent: { label: "LOI: Sent", className: "text-blue-500" },
+  accepted: { label: "LOI: Accepted", className: "text-green-600 dark:text-green-400 font-medium" },
+  declined: { label: "LOI: Declined", className: "text-red-500" },
+};
 
 export function PipelineCard({
   grantName,
@@ -10,6 +18,7 @@ export function PipelineCard({
   deadline,
   progress,
   aiStatus,
+  loiStatus,
   clickable = false,
 }: {
   grantName: string;
@@ -18,6 +27,7 @@ export function PipelineCard({
   deadline: string | null;
   progress: number;
   aiStatus: string;
+  loiStatus?: LOIStatus;
   clickable?: boolean;
 }) {
   return (
@@ -40,6 +50,11 @@ export function PipelineCard({
         </div>
         <Progress value={progress} className="h-1.5" />
         <p className="text-xs text-warm-400 italic">{aiStatus}</p>
+        {loiStatus && loiStatus !== "not_required" && (
+          <p className={cn("text-xs", LOI_STATUS_LABELS[loiStatus].className)}>
+            {LOI_STATUS_LABELS[loiStatus].label}
+          </p>
+        )}
         {clickable && (
           <p className="text-xs text-brand-teal font-medium">Click to view details →</p>
         )}

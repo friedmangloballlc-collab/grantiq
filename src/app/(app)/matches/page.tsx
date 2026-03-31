@@ -55,6 +55,14 @@ export default async function MatchesPage() {
     );
   }
 
+  // Fetch subscription tier
+  const { data: sub } = await db
+    .from("subscriptions")
+    .select("tier")
+    .eq("org_id", orgId)
+    .single();
+  const tier = (sub?.tier ?? "free") as string;
+
   const [{ data: matches }, { data: vaultRows }] = await Promise.all([
     db
       .from("grant_matches")
@@ -113,6 +121,10 @@ export default async function MatchesPage() {
     );
   }
 
+  const isFree = tier === "free";
+  const visibleMatches = isFree ? matches.slice(0, FREE_MATCH_LIMIT) : matches;
+  const lockedMatches = isFree ? matches.slice(FREE_MATCH_LIMIT) : [];
+
   return (
     <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-6">
@@ -122,11 +134,17 @@ export default async function MatchesPage() {
           </h1>
           <p className="text-sm text-warm-500 mt-1">
             {matches.length} grants matched to your profile
+            {isFree && matches.length > FREE_MATCH_LIMIT && (
+              <span className="ml-1 text-amber-600 dark:text-amber-400 font-medium">
+                — showing top {FREE_MATCH_LIMIT} on Free plan
+              </span>
+            )}
           </p>
         </div>
       </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {matches.map((match: any) => (
+        {visibleMatches.map((match: any) => (
           <MatchCard
             key={match.id}
             id={match.grant_source_id}
@@ -142,6 +160,43 @@ export default async function MatchesPage() {
           />
         ))}
       </div>
+
+      {/* Locked matches — blurred upgrade wall */}
+      {lockedMatches.length > 0 && (
+        <div className="relative mt-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 blur-sm pointer-events-none select-none">
+            {lockedMatches.map((match: any) => (
+              <MatchCard
+                key={match.id}
+                id={match.grant_source_id}
+                grantName={match.grant_sources?.name ?? "Unknown Grant"}
+                funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
+                sourceType={match.grant_sources?.source_type ?? "federal"}
+                amountMax={match.grant_sources?.amount_max}
+                deadline={match.grant_sources?.deadline}
+                matchScore={Math.round(match.match_score)}
+                scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
+                missingRequirements={match.missing_requirements ?? []}
+                uploadedDocs={uploadedDocs}
+              />
+            ))}
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-warm-900/80 rounded-xl">
+            <div className="text-center p-8 space-y-3">
+              <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
+                {lockedMatches.length} more matches available
+              </p>
+              <p className="text-sm text-warm-500 max-w-xs">
+                Upgrade to Starter or higher to see all your grant matches.
+              </p>
+              <Button
+                className="bg-[var(--color-brand-teal)] text-white"
+                render={<Link href="/upgrade">Upgrade Now</Link>}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -105,25 +105,30 @@ export async function POST(req: NextRequest) {
   }
 
   // Persist to grant_lois table (best-effort — don't fail if table doesn't exist yet)
-  const { data: saved } = await supabase
-    .from("grant_lois")
-    .insert({
-      org_id: orgId,
-      grant_source_id,
-      user_id: user.id,
-      project_summary: project_summary.trim(),
-      loi_text: loiOutput.loi_text,
-      word_count: loiOutput.word_count,
-      subject_line: loiOutput.subject_line,
-      key_themes: loiOutput.key_themes,
-      status: "draft",
-    })
-    .select("id")
-    .single()
-    .catch(() => ({ data: null }));
+  let loiId: string | null = null;
+  try {
+    const { data: savedRow } = await supabase
+      .from("grant_lois")
+      .insert({
+        org_id: orgId,
+        grant_source_id,
+        user_id: user.id,
+        project_summary: project_summary.trim(),
+        loi_text: loiOutput.loi_text,
+        word_count: loiOutput.word_count,
+        subject_line: loiOutput.subject_line,
+        key_themes: loiOutput.key_themes,
+        status: "draft",
+      })
+      .select("id")
+      .single();
+    loiId = savedRow?.id ?? null;
+  } catch {
+    // Non-fatal — table may not exist yet in this environment
+  }
 
   return NextResponse.json({
-    loi_id: saved?.data?.id ?? null,
+    loi_id: loiId,
     ...loiOutput,
   });
 }
