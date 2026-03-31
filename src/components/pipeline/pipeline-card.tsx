@@ -33,8 +33,8 @@ export function PipelineCard({
   return (
     <Card
       className={cn(
-        "border-warm-200 dark:border-warm-800 cursor-grab active:cursor-grabbing",
-        clickable && "ring-1 ring-brand-teal/40 hover:ring-brand-teal cursor-pointer"
+        "border-warm-200 dark:border-warm-800 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow duration-200",
+        clickable && "ring-1 ring-brand-teal/40 hover:ring-brand-teal hover:border-brand-teal/30 cursor-pointer"
       )}
     >
       <CardContent className="p-3 space-y-2">

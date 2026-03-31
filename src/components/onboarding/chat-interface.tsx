@@ -579,7 +579,14 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
           </span>
           <span>{progress}%</span>
         </div>
-        <div className="h-1.5 bg-warm-200 dark:bg-warm-700 rounded-full overflow-hidden">
+        <div
+          className="h-1.5 bg-warm-200 dark:bg-warm-700 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Onboarding progress: step ${currentStepIndex + 1} of ${totalSteps}`}
+        >
           <div
             className="h-full bg-brand-teal rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}

@@ -119,7 +119,7 @@ export function MatchCard(props: MatchCardProps) {
     "bg-warm-100 text-warm-700 dark:bg-warm-800 dark:text-warm-300";
 
   return (
-    <Card className="border-warm-200 dark:border-warm-800 hover:border-brand-teal/50 transition-colors">
+    <Card className="border-warm-200 dark:border-warm-800 hover:border-brand-teal/30 hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           <div className="flex flex-col items-center gap-1">

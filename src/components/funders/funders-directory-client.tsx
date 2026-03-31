@@ -186,7 +186,7 @@ export function FundersDirectoryClient({ funders, hasMatchData }: Props) {
             {filtered.map((funder) => (
               <tr
                 key={funder.name}
-                className="hover:bg-warm-50 dark:hover:bg-warm-900/30 transition-colors"
+                className="hover:bg-warm-50 dark:hover:bg-warm-900/30 transition-colors hover:shadow-sm"
               >
                 <td className="px-4 py-3">
                   <Link

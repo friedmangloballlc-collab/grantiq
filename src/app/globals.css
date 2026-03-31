@@ -48,7 +48,10 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* GrantIQ Brand Colors */
+  /* #0D9488 is used for backgrounds/non-text elements (3.5:1 on white — decorative) */
   --color-brand-teal: #0D9488;
+  /* #0B7C72 meets WCAG AA (4.5:1 on white) — use for text */
+  --color-brand-teal-text: #0B7C72;
   --color-brand-teal-dark: #115E59;
   --color-brand-teal-light: #5EEAD4;
   --color-warm-50: #FAFAF9;
@@ -143,3 +146,44 @@
     @apply font-sans;
   }
 }
+
+/* ─── Confetti animation (used by CelebrationModal) ──────────────────────── */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* ─── Stagger fade-in for list items (empty → populated transition) ───────── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  animation: fade-in-up 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.stagger-item:nth-child(1)  { animation-delay: 0ms; }
+.stagger-item:nth-child(2)  { animation-delay: 50ms; }
+.stagger-item:nth-child(3)  { animation-delay: 100ms; }
+.stagger-item:nth-child(4)  { animation-delay: 150ms; }
+.stagger-item:nth-child(5)  { animation-delay: 200ms; }
+.stagger-item:nth-child(6)  { animation-delay: 250ms; }
+.stagger-item:nth-child(7)  { animation-delay: 300ms; }
+.stagger-item:nth-child(8)  { animation-delay: 350ms; }
+.stagger-item:nth-child(9)  { animation-delay: 400ms; }
+.stagger-item:nth-child(10) { animation-delay: 450ms; }
+.stagger-item:nth-child(n+11) { animation-delay: 500ms; }

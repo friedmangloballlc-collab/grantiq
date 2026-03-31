@@ -21,15 +21,34 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
-  // Fetch all org memberships so the org switcher can show the full list
   const admin = createAdminClient();
-  const { data: allMemberships } = await admin
-    .from("org_members")
-    .select("org_id, organizations(id, name)")
-    .eq("user_id", ctx.userId)
-    .eq("status", "active");
 
-  const allOrgs = (allMemberships ?? []).map((m) => ({
+  // Fetch all org memberships + phase counts in parallel
+  const [membershipsResult, pipelineCountResult, vaultCountResult] =
+    await Promise.all([
+      // Org switcher list
+      admin
+        .from("org_members")
+        .select("org_id, organizations(id, name)")
+        .eq("user_id", ctx.userId)
+        .eq("status", "active"),
+
+      // Pipeline count for progressive sidebar reveal
+      admin
+        .from("grant_pipeline")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", ctx.orgId)
+        .not("stage", "in", '("awarded","declined")'),
+
+      // Vault doc count for progressive sidebar reveal
+      admin
+        .from("document_vault")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", ctx.orgId)
+        .eq("status", "active"),
+    ]);
+
+  const allOrgs = (membershipsResult.data ?? []).map((m) => ({
     orgId: m.org_id,
     orgName: (m.organizations as { id: string; name: string } | null)?.name ?? "Unknown Org",
   }));
@@ -43,5 +62,13 @@ export default async function AppLayout({
     allOrgs,
   };
 
-  return <AppShell orgContext={orgContext}>{children}</AppShell>;
+  return (
+    <AppShell
+      orgContext={orgContext}
+      pipelineCount={pipelineCountResult.count ?? 0}
+      vaultDocCount={vaultCountResult.count ?? 0}
+    >
+      {children}
+    </AppShell>
+  );
 }

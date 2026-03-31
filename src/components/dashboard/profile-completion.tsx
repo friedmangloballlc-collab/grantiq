@@ -284,7 +284,14 @@ export function ProfileCompletion({ savedAnswers = {} }: ProfileCompletionProps)
           </span>
         </div>
         {/* Progress bar */}
-        <div className="h-2 bg-warm-200 dark:bg-warm-700 rounded-full overflow-hidden mt-2">
+        <div
+          className="h-2 bg-warm-200 dark:bg-warm-700 rounded-full overflow-hidden mt-2"
+          role="progressbar"
+          aria-valuenow={overallPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Profile completion: ${overallPercent}%`}
+        >
           <div
             className="h-full bg-brand-teal rounded-full transition-all duration-500"
             style={{ width: `${overallPercent}%` }}
