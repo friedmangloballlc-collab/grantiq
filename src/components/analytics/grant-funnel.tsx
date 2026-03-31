@@ -3,11 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDown } from "lucide-react";
 
-export interface FunnelStage {
-  label: string;
-  count: number;
-}
-
 export interface GrantFunnelProps {
   matched: number;
   evaluated: number;
