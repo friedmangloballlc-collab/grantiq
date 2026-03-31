@@ -12,6 +12,8 @@ import { calculateAZScore } from "@/lib/qualification/az-score";
 import type { AZScoreResult } from "@/lib/qualification/az-score";
 import { DOCUMENT_DEFINITIONS } from "@/components/vault/document-checklist";
 import { CalendarPreview, type CalendarPreviewDeadline } from "@/components/dashboard/calendar-preview";
+import { ReferralMiniCard } from "@/components/referral/referral-mini-card";
+import { generateReferralCode } from "@/lib/referral";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -28,6 +30,7 @@ export default async function DashboardPage() {
   let vaultUploaded = 0;
   const vaultTotal = DOCUMENT_DEFINITIONS.length; // 13
   let calendarDeadlines: CalendarPreviewDeadline[] = [];
+  let referralCode: string | null = null;
 
   if (ctx) {
     const { orgId } = ctx;
@@ -351,6 +354,28 @@ export default async function DashboardPage() {
     calendarDeadlines = [...calPipeline, ...calMatches]
       .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
       .slice(0, 3);
+
+    // ── Referral code for mini card ───────────────────────────────────────────
+    const { data: referralRows } = await db
+      .from("referrals")
+      .select("code")
+      .eq("referrer_user_id", ctx.userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (referralRows && referralRows.length > 0) {
+      referralCode = referralRows[0].code as string;
+    } else {
+      // Auto-generate
+      const newCode = generateReferralCode();
+      await db.from("referrals").insert({
+        referrer_user_id: ctx.userId,
+        referrer_org_id: orgId,
+        code: newCode,
+        status: "pending",
+      });
+      referralCode = newCode;
+    }
   }
 
   // Determine subscription tier for upgrade banner
@@ -378,6 +403,8 @@ export default async function DashboardPage() {
           </Link>
         </div>
       )}
+
+      {referralCode && <ReferralMiniCard referralCode={referralCode} />}
 
       <TodaysFocus items={focusItems} />
       <StatsOverview {...stats} />

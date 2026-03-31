@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { generateReferralCode } from "@/lib/referral";
-import { ReferralStats } from "@/components/referral/referral-stats";
+import { ReferralDashboard } from "@/components/referral/referral-dashboard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 
@@ -17,6 +17,7 @@ export default async function ReferralsPage() {
   let code = "";
   let totalReferrals = 0;
   let signedUp = 0;
+  let active = 0;
   let creditsEarned = 0;
 
   if (user) {
@@ -41,8 +42,14 @@ export default async function ReferralsPage() {
     if (existing && existing.length > 0) {
       code = existing[0].code;
       totalReferrals = existing.length;
-      signedUp = existing.filter((r) => r.status === "signed_up" || r.status === "converted" || r.status === "credit_applied").length;
-      creditsEarned = existing.filter((r) => r.status === "credit_applied").reduce((sum, r) => sum + (r.credit_amount_cents ?? 0), 0) / 100;
+      signedUp = existing.filter(
+        (r) => r.status === "signed_up" || r.status === "converted" || r.status === "credit_applied"
+      ).length;
+      active = existing.filter((r) => r.status === "converted").length;
+      creditsEarned =
+        existing
+          .filter((r) => r.status === "credit_applied")
+          .reduce((sum, r) => sum + (r.credit_amount_cents ?? 0), 0) / 100;
     } else if (orgId) {
       // Auto-generate on first visit using admin client (RLS may block insert)
       const admin = createAdminClient();
@@ -58,21 +65,22 @@ export default async function ReferralsPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
+    <div className="p-6 max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
-          Referral Program
+          Referral Program 2.0
         </h1>
         <p className="text-sm text-warm-500 mt-1">
-          Invite others to GrantIQ and earn $50 in AI writing credits for each person who signs up.
+          Earn bigger rewards the more you share. Your referrals get a 14-day Strategist trial — free.
         </p>
       </div>
 
       {code ? (
-        <ReferralStats
+        <ReferralDashboard
           code={code}
           totalReferrals={totalReferrals}
           signedUp={signedUp}
+          active={active}
           creditsEarned={creditsEarned}
         />
       ) : (

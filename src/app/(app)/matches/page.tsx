@@ -2,6 +2,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MatchCard } from "@/components/grants/match-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ShareMatchCard } from "@/components/shared/share-match-card";
+import { InvitePrompt } from "@/components/shared/invite-prompt";
 import type { UploadedDocument } from "@/components/vault/document-checklist";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -63,7 +65,7 @@ export default async function MatchesPage() {
     .single();
   const tier = (sub?.tier ?? "free") as string;
 
-  const [{ data: matches }, { data: vaultRows }] = await Promise.all([
+  const [{ data: matches }, { data: vaultRows }, { data: orgRow }, { data: referralRows }] = await Promise.all([
     db
       .from("grant_matches")
       .select(
@@ -79,6 +81,19 @@ export default async function MatchesPage() {
       .eq("org_id", orgId)
       .eq("status", "active")
       .order("created_at", { ascending: false }),
+
+    db
+      .from("organizations")
+      .select("name")
+      .eq("id", orgId)
+      .single(),
+
+    db
+      .from("referrals")
+      .select("code")
+      .eq("referrer_user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
 
   // Deduplicate vault docs by type — keep most recent per type
@@ -125,6 +140,14 @@ export default async function MatchesPage() {
   const visibleMatches = isFree ? matches.slice(0, FREE_MATCH_LIMIT) : matches;
   const lockedMatches = isFree ? matches.slice(FREE_MATCH_LIMIT) : [];
 
+  const orgName = (orgRow as { name?: string } | null)?.name ?? "Your Organization";
+  const referralCode = (referralRows?.[0] as { code?: string } | undefined)?.code ?? "";
+
+  // Compute total potential value from visible matches
+  const totalValue = visibleMatches.reduce((sum, m: any) => {
+    return sum + (m.grant_sources?.amount_max ?? 0);
+  }, 0);
+
   return (
     <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-6">
@@ -141,7 +164,23 @@ export default async function MatchesPage() {
             )}
           </p>
         </div>
+        <ShareMatchCard
+          matchCount={visibleMatches.length}
+          totalValue={totalValue}
+          orgName={orgName}
+          referralCode={referralCode}
+        />
       </div>
+
+      {referralCode && (
+        <div className="mb-5">
+          <InvitePrompt
+            variant="first_match"
+            referralCode={referralCode}
+            storageKey="invite-prompt-first-match"
+          />
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {visibleMatches.map((match: any) => (
