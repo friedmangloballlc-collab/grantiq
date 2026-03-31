@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { generateLOI } from "@/lib/ai/writing/loi-generator";
 import type { OrgProfile, GrantDetails } from "@/lib/ai/writing/loi-generator";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
   try {
     loiOutput = await generateLOI(orgProfile, grantDetails, project_summary.trim());
   } catch (err) {
-    console.error("LOI generation error:", err);
+    logger.error("LOI generation error", { err: String(err) });
     return NextResponse.json(
       { error: "Failed to generate LOI. Please try again." },
       { status: 500 }

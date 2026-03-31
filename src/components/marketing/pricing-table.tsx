@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const TIERS = [
   {
-    name: "Free",
+    name: "Explorer",
     price: "$0",
     period: "forever",
     features: [
@@ -14,13 +14,14 @@ const TIERS = [
       "Federal grants only",
       "1 readiness score",
       "3 pipeline items",
+      "5 Grantie chats/day",
     ],
     cta: "Start Free",
     href: "/signup",
     highlighted: false,
   },
   {
-    name: "Starter",
+    name: "Seeker",
     price: "$49",
     period: "/month",
     features: [
@@ -28,34 +29,49 @@ const TIERS = [
       "10 pipeline items",
       "Calendar & workback schedule",
       "5 document uploads",
-      "Email digest",
+      "15 Grantie chats/day",
     ],
     cta: "Get Started",
     href: "/signup?plan=starter",
     highlighted: false,
   },
   {
-    name: "Pro",
-    price: "$149",
+    name: "Strategist",
+    price: "$99",
     period: "/month",
     features: [
-      "Unlimited everything",
-      "AI writing (1 draft/month)",
+      "Unlimited scorecard evaluations",
       "Document vault",
-      "Compliance tracker",
-      "Priority support",
+      "30 Grantie chats/day",
+      "A-Z Readiness tracking",
+      "Full analytics",
     ],
     cta: "Get Started",
     href: "/signup?plan=pro",
     highlighted: true,
   },
   {
-    name: "Enterprise",
-    price: "$499",
+    name: "Applicant",
+    price: "$199",
     period: "/month",
     features: [
-      "Everything in Pro",
-      "Team members",
+      "AI writing + compliance",
+      "Unlimited pipeline",
+      "Budget narratives",
+      "Full Confidence eligible",
+      "Priority support",
+    ],
+    cta: "Get Started",
+    href: "/signup?plan=growth",
+    highlighted: false,
+  },
+  {
+    name: "Organization",
+    price: "$399",
+    period: "/month",
+    features: [
+      "Everything in Applicant",
+      "Unlimited team members",
       "5 AI drafts/month",
       "API access",
       "Dedicated CSM",
@@ -76,7 +92,7 @@ export function PricingTable() {
         <p className="text-center text-warm-500 mt-2">
           Pay only when you win with our success fee model. No risk.
         </p>
-        <div className="grid md:grid-cols-4 gap-6 mt-12">
+        <div className="grid md:grid-cols-5 gap-5 mt-12">
           {TIERS.map((tier) => (
             <Card
               key={tier.name}

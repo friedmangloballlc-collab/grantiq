@@ -45,7 +45,7 @@ export interface OrgCapabilitiesRow {
 }
 
 export interface SubscriptionRow {
-  tier?: string | null; // "free" | "starter" | "pro" | "enterprise"
+  tier?: string | null; // "free" | "starter" | "pro" | "growth" | "enterprise"
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

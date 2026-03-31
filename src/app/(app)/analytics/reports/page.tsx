@@ -32,7 +32,7 @@ export default async function ReportsPage() {
   const ctx = await getOrgContext();
 
   const tier = ctx?.tier ?? "free";
-  const canAccess = tier === "growth" || tier === "growth" || tier === "enterprise";
+  const canAccess = tier === "growth" || tier === "enterprise";
 
   if (!canAccess) {
     return (

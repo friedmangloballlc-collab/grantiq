@@ -1,8 +1,8 @@
 export const SUBSCRIPTION_PRODUCTS = {
   starter: {
-    name: "Starter",
-    monthlyPrice: 4900, // cents
-    annualPrice: 47000, // cents (20% off)
+    name: "Seeker",
+    monthlyPrice: 4900, // cents — $49/mo
+    annualPrice: 47000, // cents — $470/yr
     features: [
       "Full grant library",
       "10 pipeline items",
@@ -11,22 +11,33 @@ export const SUBSCRIPTION_PRODUCTS = {
     ],
   },
   pro: {
-    name: "Pro",
-    monthlyPrice: 14900,
-    annualPrice: 143000,
+    name: "Strategist",
+    monthlyPrice: 9900, // cents — $99/mo
+    annualPrice: 95000, // cents — $950/yr
     features: [
-      "Unlimited everything",
-      "AI writing (1/mo)",
+      "Unlimited scorecard",
       "Document vault",
-      "Compliance tracker",
+      "30 Grantie chats/day",
+      "A-Z Readiness tracking",
+    ],
+  },
+  growth: {
+    name: "Applicant",
+    monthlyPrice: 19900, // cents — $199/mo
+    annualPrice: 191000, // cents — $1,910/yr
+    features: [
+      "AI writing + compliance",
+      "Unlimited pipeline",
+      "Budget narratives",
+      "Full Confidence eligible",
     ],
   },
   enterprise: {
-    name: "Enterprise",
-    monthlyPrice: 49900,
-    annualPrice: 479000,
+    name: "Organization",
+    monthlyPrice: 39900, // cents — $399/mo
+    annualPrice: 383000, // cents — $3,830/yr
     features: [
-      "Teams",
+      "Unlimited team members",
       "5 AI drafts/mo",
       "API access",
       "Priority support",
@@ -47,19 +58,7 @@ export function getPriceId(
   tier: SubscriptionTierKey,
   interval: "month" | "year"
 ): string | undefined {
-  const envKey =
-    tier === "starter" && interval === "month"
-      ? "STRIPE_PRICE_STARTER_MONTHLY"
-      : tier === "starter" && interval === "year"
-      ? "STRIPE_PRICE_STARTER_ANNUAL"
-      : tier === "pro" && interval === "month"
-      ? "STRIPE_PRICE_PRO_MONTHLY"
-      : tier === "pro" && interval === "year"
-      ? "STRIPE_PRICE_PRO_ANNUAL"
-      : tier === "enterprise" && interval === "month"
-      ? "STRIPE_PRICE_ENTERPRISE_MONTHLY"
-      : "STRIPE_PRICE_ENTERPRISE_ANNUAL";
-
-  const val = process.env[envKey];
+  const key = `STRIPE_PRICE_${tier.toUpperCase()}_${interval === "month" ? "MONTHLY" : "ANNUAL"}`;
+  const val = process.env[key];
   return val && val !== "price_xxx" ? val : undefined;
 }

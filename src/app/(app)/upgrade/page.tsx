@@ -9,11 +9,12 @@ import { cn } from "@/lib/utils";
 import { useOrg } from "@/hooks/use-org";
 import { SUBSCRIPTION_PRODUCTS, type SubscriptionTierKey } from "@/lib/stripe/products";
 
-const TIER_KEYS: SubscriptionTierKey[] = ["starter", "pro", "enterprise"];
+const TIER_KEYS: SubscriptionTierKey[] = ["starter", "pro", "growth", "enterprise"];
 
 const TIER_DISPLAY: Record<SubscriptionTierKey, { highlighted: boolean; badge?: string }> = {
   starter: { highlighted: false },
   pro: { highlighted: true, badge: "Most Popular" },
+  growth: { highlighted: false },
   enterprise: { highlighted: false },
 };
 

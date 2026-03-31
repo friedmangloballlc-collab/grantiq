@@ -11,7 +11,7 @@ export interface OrgContext {
   orgId: string;
   orgName: string;
   role: "owner" | "admin" | "editor" | "viewer";
-  tier: "free" | "starter" | "pro" | "enterprise";
+  tier: "free" | "starter" | "pro" | "growth" | "enterprise";
   userId: string;
   /** All orgs the user belongs to — used by the org switcher */
   allOrgs: OrgOption[];
