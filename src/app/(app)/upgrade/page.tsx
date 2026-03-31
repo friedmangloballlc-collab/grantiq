@@ -62,7 +62,7 @@ export default function UpgradePage() {
   }
 
   return (
-    <div className="max-w-5xl space-y-8">
+    <div className="max-w-5xl px-4 md:px-6 py-6 space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">Choose Your Plan</h1>
         <p className="text-warm-500 mt-2">
@@ -116,7 +116,7 @@ export default function UpgradePage() {
       )}
 
       {/* Plan cards */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {TIER_KEYS.map((tierKey) => {
           const product = SUBSCRIPTION_PRODUCTS[tierKey];
           const display = TIER_DISPLAY[tierKey];

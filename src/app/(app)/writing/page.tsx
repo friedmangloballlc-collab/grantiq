@@ -137,9 +137,9 @@ export default async function WritingDashboardPage() {
   }
 
   return (
-    <div className="px-6 py-8 max-w-5xl">
+    <div className="px-4 md:px-6 py-6 md:py-8 max-w-5xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold">Writing Projects</h1>
           <p className="text-sm text-muted-foreground mt-1">

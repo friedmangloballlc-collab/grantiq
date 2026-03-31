@@ -19,7 +19,7 @@ export default async function MatchesPage() {
 
   if (!user) {
     return (
-      <div className="max-w-6xl">
+      <div className="max-w-6xl px-4 md:px-6 py-6">
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Grant Matches</h1>
         <EmptyState
           title="Not signed in"
@@ -45,7 +45,7 @@ export default async function MatchesPage() {
 
   if (!orgId) {
     return (
-      <div className="max-w-6xl">
+      <div className="max-w-6xl px-4 md:px-6 py-6">
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Grant Matches</h1>
         <EmptyState
           title="No organization found"
@@ -149,8 +149,8 @@ export default async function MatchesPage() {
   }, 0);
 
   return (
-    <div className="max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-6xl px-4 md:px-6 py-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
             Grant Matches

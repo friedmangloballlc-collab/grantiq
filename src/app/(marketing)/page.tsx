@@ -41,7 +41,7 @@ export default function LandingPage() {
             { value: "3 min", label: "Avg. Onboarding" },
           ].map((stat) => (
             <div key={stat.label}>
-              <p className="text-3xl font-bold text-brand-teal">{stat.value}</p>
+              <p className="text-2xl md:text-3xl font-bold text-brand-teal">{stat.value}</p>
               <p className="text-sm text-warm-500 mt-1">{stat.label}</p>
             </div>
           ))}

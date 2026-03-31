@@ -201,8 +201,8 @@ export default async function AnalyticsPage() {
   const totalAwarded = fundingSources.reduce((s, r) => s + r.amount, 0);
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex items-start justify-between gap-4">
+    <div className="space-y-6 max-w-5xl px-4 md:px-6 py-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Analytics</h1>
           <p className="text-sm text-warm-500 mt-1">
