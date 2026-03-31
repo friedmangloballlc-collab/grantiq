@@ -77,7 +77,7 @@ export default async function AnalyticsPage() {
           await Promise.all([
             db.from("grant_matches").select("id", { count: "exact", head: true }).eq("org_id", ctx.orgId),
             db.from("grant_pipeline").select("id", { count: "exact", head: true }).eq("org_id", ctx.orgId),
-            db.from("grant_outcomes").select("outcome, amount_awarded, grant_pipeline_id").eq("org_id", ctx.orgId),
+            db.from("grant_outcomes").select("outcome, amount_awarded, grant_pipeline_id, logged_at").eq("org_id", ctx.orgId),
           ]);
 
         const submitted = (outcomeRows ?? []).length;
@@ -155,7 +155,8 @@ export default async function AnalyticsPage() {
           const info = pipelineDateMap.get(outcome.grant_pipeline_id);
           if (!info || !outcome.grant_pipeline_id) continue;
           const added = new Date(info.addedAt).getTime();
-          const logged = new Date((outcome as { grant_pipeline_id: string; outcome: string; amount_awarded?: number | null }).grant_pipeline_id && "logged_at" in outcome ? (outcome as unknown as Record<string, string>).logged_at : info.addedAt).getTime();
+          const loggedStr = (outcome as Record<string, unknown>).logged_at as string | undefined;
+          const logged = new Date(loggedStr ?? info.addedAt).getTime();
           const days = Math.round(Math.abs(logged - added) / (1000 * 60 * 60 * 24));
           if (days < 365) {
             if (!typeTimeMap[info.grantType]) typeTimeMap[info.grantType] = [];
