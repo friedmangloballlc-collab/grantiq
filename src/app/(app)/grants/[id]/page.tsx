@@ -119,7 +119,16 @@ export default async function GrantDetailPage({ params }: Props) {
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
           {grant.name}
         </h1>
-        <p className="text-lg text-warm-500 mt-1">{grant.funder_name}</p>
+        {grant.funder_name ? (
+          <Link
+            href={`/funders/${encodeURIComponent(grant.funder_name)}`}
+            className="text-lg text-warm-500 mt-1 hover:text-brand-teal transition-colors inline-block"
+          >
+            {grant.funder_name}
+          </Link>
+        ) : (
+          <p className="text-lg text-warm-500 mt-1">Unknown Funder</p>
+        )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 p-4 bg-warm-100 dark:bg-warm-800/50 rounded-lg">
           {/* Amount — always visible (basic info) */}

@@ -13,6 +13,7 @@ import {
   PenLine,
   BookOpen,
   FolderLock,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/matches", label: "Grant Matches", icon: Search },
   { href: "/library", label: "Grant Library", icon: BookOpen },
+  { href: "/funders", label: "Funders", icon: Building2 },
   { href: "/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/writing", label: "Writing", icon: PenLine },

@@ -14,6 +14,7 @@ import { DOCUMENT_DEFINITIONS } from "@/components/vault/document-checklist";
 import { CalendarPreview, type CalendarPreviewDeadline } from "@/components/dashboard/calendar-preview";
 import { ReferralMiniCard } from "@/components/referral/referral-mini-card";
 import { generateReferralCode } from "@/lib/referral";
+import { TopFunders } from "@/components/dashboard/top-funders";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -31,6 +32,7 @@ export default async function DashboardPage() {
   const vaultTotal = DOCUMENT_DEFINITIONS.length; // 13
   let calendarDeadlines: CalendarPreviewDeadline[] = [];
   let referralCode: string | null = null;
+  let topFunders: { name: string; avgMatchScore: number; grantCount: number }[] = [];
 
   if (ctx) {
     const { orgId } = ctx;
@@ -376,6 +378,37 @@ export default async function DashboardPage() {
       });
       referralCode = newCode;
     }
+
+    // ── Top Funders ───────────────────────────────────────────────────────────
+    const { data: funderMatchRows } = await db
+      .from("grant_matches")
+      .select("match_score, grant_sources(funder_name)")
+      .eq("org_id", orgId)
+      .order("match_score", { ascending: false });
+
+    const funderScoreMap = new Map<
+      string,
+      { totalScore: number; count: number }
+    >();
+    for (const m of funderMatchRows ?? []) {
+      const gs = m.grant_sources as { funder_name?: string } | null;
+      if (!gs?.funder_name) continue;
+      const fn = gs.funder_name;
+      if (!funderScoreMap.has(fn)) {
+        funderScoreMap.set(fn, { totalScore: 0, count: 0 });
+      }
+      const entry = funderScoreMap.get(fn)!;
+      entry.totalScore += m.match_score ?? 0;
+      entry.count += 1;
+    }
+    topFunders = [...funderScoreMap.entries()]
+      .map(([name, data]) => ({
+        name,
+        avgMatchScore: Math.round(data.totalScore / data.count),
+        grantCount: data.count,
+      }))
+      .sort((a, b) => b.avgMatchScore - a.avgMatchScore)
+      .slice(0, 3);
   }
 
   // Determine subscription tier for upgrade banner
@@ -408,6 +441,7 @@ export default async function DashboardPage() {
 
       <TodaysFocus items={focusItems} />
       <StatsOverview {...stats} />
+      {topFunders.length > 0 && <TopFunders funders={topFunders} />}
       <CalendarPreview deadlines={calendarDeadlines} />
       <ProfileCompletion savedAnswers={deferredAnswers} />
       <VaultSummary
