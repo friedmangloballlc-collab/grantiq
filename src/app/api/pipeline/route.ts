@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { calculateSuccessFee, buildSuccessFeeMessage } from "@/lib/billing/success-fees";
 
 export async function GET() {
   try {
@@ -157,10 +158,18 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, stage, notes } = body;
+    const { id, stage, notes, loi_status, award_amount } = body;
 
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    const VALID_LOI_STATUSES = ["not_required", "sent", "accepted", "declined"] as const;
+    if (loi_status !== undefined && !VALID_LOI_STATUSES.includes(loi_status)) {
+      return NextResponse.json(
+        { error: `Invalid loi_status. Must be one of: ${VALID_LOI_STATUSES.join(", ")}` },
+        { status: 400 }
+      );
     }
 
     if (stage !== undefined && !VALID_STAGES.includes(stage as PipelineStage)) {
@@ -175,11 +184,13 @@ export async function PATCH(req: NextRequest) {
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (stage !== undefined) updates.stage = stage;
     if (notes !== undefined) updates.notes = notes;
+    if (loi_status !== undefined) updates.loi_status = loi_status;
+    if (award_amount !== undefined) updates.award_amount = award_amount;
 
     // Fetch current item to verify ownership and capture previous stage
     const { data: item } = await supabase
       .from("grant_pipeline")
-      .select("org_id, stage, grant_source_id")
+      .select("org_id, stage, grant_source_id, writing_tier")
       .eq("id", id)
       .single();
 
@@ -213,6 +224,40 @@ export async function PATCH(req: NextRequest) {
         ? getAutoAction(item.stage ?? null, stage as PipelineStage)
         : null;
 
+    // ── Success fee: triggered when stage transitions to "awarded" ──────────────
+    let successFeeNotification: string | null = null;
+
+    if (stage === "awarded" && item.stage !== "awarded") {
+      const writingTier: string | null = (item as Record<string, unknown>).writing_tier as string | null ?? null;
+      const resolvedAwardAmount =
+        typeof award_amount === "number" && award_amount > 0 ? award_amount : null;
+
+      if (writingTier && resolvedAwardAmount) {
+        const feeResult = calculateSuccessFee(resolvedAwardAmount, writingTier);
+        if (feeResult) {
+          // Insert into success_fee_invoices (best-effort — table may not exist in all envs)
+          await supabase
+            .from("success_fee_invoices")
+            .insert({
+              org_id: item.org_id,
+              pipeline_id: id,
+              grant_source_id: item.grant_source_id,
+              award_amount: resolvedAwardAmount,
+              fee_amount: feeResult.feeAmount,
+              fee_percentage: feeResult.feePercentage,
+              minimum_applied: feeResult.minimumApplied,
+              writing_tier: writingTier,
+              status: "pending",
+            })
+            .catch((insertErr: unknown) => {
+              console.error("Failed to insert success_fee_invoice:", insertErr);
+            });
+
+          successFeeNotification = buildSuccessFeeMessage(resolvedAwardAmount, feeResult);
+        }
+      }
+    }
+
     // ── Fire-and-forget feedback for terminal outcomes ──────────────────────────
     if (stage === "awarded" || stage === "declined") {
       const feedbackAction = stage === "awarded" ? "won" : "lost";
@@ -228,7 +273,7 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, autoAction });
+    return NextResponse.json({ success: true, autoAction, successFeeNotification });
   } catch (err) {
     console.error("PATCH /api/pipeline error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

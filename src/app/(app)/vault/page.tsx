@@ -5,6 +5,16 @@ import type { UploadedDocument } from "@/components/vault/document-checklist";
 import { FolderLock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+// Upload limits per tier (null = unlimited)
+const VAULT_UPLOAD_LIMITS: Record<string, number | null> = {
+  free: 0,
+  starter: 5,
+  pro: null,
+  enterprise: null,
+};
 
 export default async function VaultPage() {
   const supabase = await createServerSupabaseClient();
@@ -14,6 +24,7 @@ export default async function VaultPage() {
 
   let uploadedDocs: UploadedDocument[] = [];
   const total = DOCUMENT_DEFINITIONS.length; // 13
+  let tier = "free";
 
   if (user) {
     const db = createAdminClient();
@@ -27,6 +38,13 @@ export default async function VaultPage() {
       .single();
 
     if (membership?.org_id) {
+      // Fetch subscription tier
+      const { data: sub } = await db
+        .from("subscriptions")
+        .select("tier")
+        .eq("org_id", membership.org_id)
+        .single();
+      tier = sub?.tier ?? "free";
       const { data: vaultRows } = await db
         .from("document_vault")
         .select("id, document_type, original_filename, file_url, file_size, created_at")
@@ -64,6 +82,8 @@ export default async function VaultPage() {
 
   const uploaded = uploadedDocs.length;
   const pct = Math.round((uploaded / total) * 100);
+  const uploadLimit = VAULT_UPLOAD_LIMITS[tier] ?? null;
+  const isFree = tier === "free";
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -79,6 +99,45 @@ export default async function VaultPage() {
           Upload and manage the documents grant funders require most.
         </p>
       </div>
+
+      {/* Tier gate banner — Free users can't upload */}
+      {isFree && (
+        <Card className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                Document uploads require a paid plan
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                Starter plan: 5 uploads. Pro+: unlimited. Upgrade to start building your vault.
+              </p>
+            </div>
+            <Button
+              className="shrink-0 bg-[var(--color-brand-teal)] text-white"
+              render={<Link href="/upgrade">Upgrade Now</Link>}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Starter plan usage banner */}
+      {tier === "starter" && uploadLimit !== null && (
+        <Card className="border-warm-200 dark:border-warm-800 bg-warm-50 dark:bg-warm-900/20">
+          <CardContent className="p-4 flex items-center justify-between">
+            <p className="text-sm text-warm-700 dark:text-warm-300">
+              <span className="font-semibold">{uploaded}</span> of{" "}
+              <span className="font-semibold">{uploadLimit}</span> uploads used on Starter plan
+            </p>
+            {uploaded >= uploadLimit && (
+              <Button
+                size="sm"
+                className="bg-[var(--color-brand-teal)] text-white"
+                render={<Link href="/upgrade">Upgrade for unlimited</Link>}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Completeness summary */}
       <Card className="border-warm-200 dark:border-warm-800">
@@ -119,7 +178,7 @@ export default async function VaultPage() {
           <CardTitle className="text-base">Required Documents Checklist</CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          <DocumentChecklist uploadedDocs={uploadedDocs} />
+          <DocumentChecklist uploadedDocs={uploadedDocs} uploadLimit={uploadLimit} />
         </CardContent>
       </Card>
     </div>

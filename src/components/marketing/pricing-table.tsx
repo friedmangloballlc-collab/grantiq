@@ -16,21 +16,22 @@ const TIERS = [
       "3 pipeline items",
     ],
     cta: "Start Free",
+    href: "/signup",
     highlighted: false,
   },
   {
     name: "Starter",
-    price: "$39",
+    price: "$49",
     period: "/month",
     features: [
-      "5 match runs/month (top 25)",
-      "Federal + State grants",
-      "5 readiness scores",
+      "Full grant library",
       "10 pipeline items",
+      "Calendar & workback schedule",
+      "5 document uploads",
       "Email digest",
-      "2 team members",
     ],
-    cta: "Start Starter",
+    cta: "Get Started",
+    href: "/signup?plan=starter",
     highlighted: false,
   },
   {
@@ -38,30 +39,29 @@ const TIERS = [
     price: "$149",
     period: "/month",
     features: [
-      "Unlimited matching",
-      "Full database access",
-      "Unlimited readiness",
-      "AI strategist roadmap",
-      "2 AI drafts/month",
+      "Unlimited everything",
+      "AI writing (1 draft/month)",
+      "Document vault",
+      "Compliance tracker",
       "Priority support",
-      "5 team members",
     ],
-    cta: "Start Pro",
+    cta: "Get Started",
+    href: "/signup?plan=pro",
     highlighted: true,
   },
   {
     name: "Enterprise",
-    price: "$349",
+    price: "$499",
     period: "/month",
     features: [
       "Everything in Pro",
-      "Funder intelligence",
-      "5 AI drafts + 2 packages",
-      "Unlimited team",
+      "Team members",
+      "5 AI drafts/month",
+      "API access",
       "Dedicated CSM",
-      "Custom alert rules",
     ],
     cta: "Contact Sales",
+    href: "/signup?plan=enterprise",
     highlighted: false,
   },
 ];
@@ -112,7 +112,7 @@ export function PricingTable() {
                     tier.highlighted ? "bg-brand-teal hover:bg-brand-teal-dark text-white" : ""
                   )}
                   variant={tier.highlighted ? "default" : "outline"}
-                  render={<Link href="/signup">{tier.cta}</Link>}
+                  render={<Link href={tier.href}>{tier.cta}</Link>}
                 />
               </CardContent>
             </Card>

@@ -12,6 +12,7 @@ import { calculateAZScore } from "@/lib/qualification/az-score";
 import type { AZScoreResult } from "@/lib/qualification/az-score";
 import { DOCUMENT_DEFINITIONS } from "@/components/vault/document-checklist";
 import { CalendarPreview, type CalendarPreviewDeadline } from "@/components/dashboard/calendar-preview";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const ctx = await getOrgContext();
@@ -352,12 +353,32 @@ export default async function DashboardPage() {
       .slice(0, 3);
   }
 
+  // Determine subscription tier for upgrade banner
+  const dashboardTier = ctx?.tier ?? "free";
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div>
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Dashboard</h1>
         <p className="text-sm text-warm-500 mt-1">Welcome back. Here&apos;s what needs your attention.</p>
       </div>
+
+      {/* Free-tier upgrade banner */}
+      {dashboardTier === "free" && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-brand-teal/30 bg-brand-teal/5 dark:bg-brand-teal/10 px-4 py-3">
+          <p className="text-sm text-warm-700 dark:text-warm-300">
+            <span className="font-medium">You&apos;re on the Free plan.</span>{" "}
+            Upgrade to unlock unlimited matches, AI writing, and more.
+          </p>
+          <Link
+            href="/upgrade"
+            className="shrink-0 inline-flex h-8 items-center justify-center rounded-lg bg-brand-teal px-3 text-sm font-medium text-white hover:bg-brand-teal/90 transition-colors"
+          >
+            Upgrade
+          </Link>
+        </div>
+      )}
+
       <TodaysFocus items={focusItems} />
       <StatsOverview {...stats} />
       <CalendarPreview deadlines={calendarDeadlines} />

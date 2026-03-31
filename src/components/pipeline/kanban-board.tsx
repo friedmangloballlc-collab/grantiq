@@ -23,6 +23,8 @@ export const PIPELINE_STAGES = [
   { id: "declined", label: "Declined", color: "border-t-red-400", description: "Not funded this cycle" },
 ];
 
+export type LOIStatus = "not_required" | "sent" | "accepted" | "declined" | null;
+
 export interface PipelineItem {
   id: string;
   stage: string;
@@ -32,6 +34,7 @@ export interface PipelineItem {
   deadline: string | null;
   progress: number;
   aiStatus: string;
+  loiStatus?: LOIStatus;
 }
 
 // Auto-action prompts triggered when a grant moves between stages

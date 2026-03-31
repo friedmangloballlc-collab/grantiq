@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { Scorecard } from "@/components/grants/scorecard";
 import { buildScorecard } from "@/lib/qualification/grant-scorecard";
@@ -8,6 +9,17 @@ import type {
 } from "@/lib/qualification/grant-scorecard";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const TIER_ORDER = ["free", "starter", "pro", "enterprise"];
+
+// Scorecard monthly limits per tier (null = unlimited)
+const SCORECARD_MONTHLY_LIMIT: Record<string, number | null> = {
+  free: 0,
+  starter: 3,
+  pro: null,
+  enterprise: null,
+};
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -33,6 +45,80 @@ export default async function EvaluateGrantPage({ params }: Props) {
 
   if (!membership) notFound();
   const orgId = membership.org_id;
+
+  // Fetch subscription tier
+  const adminDb = createAdminClient();
+  const { data: sub } = await adminDb
+    .from("subscriptions")
+    .select("tier")
+    .eq("org_id", orgId)
+    .single();
+  const tier = (sub?.tier ?? "free") as string;
+
+  // Gate: Free users blocked entirely
+  if (tier === "free") {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link href={`/grants/${id}`} className="flex items-center gap-1 hover:text-foreground">
+            <ChevronLeft className="h-4 w-4" />
+            Back to Grant Details
+          </Link>
+        </div>
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-warm-200 dark:border-warm-800 rounded-xl bg-warm-50 dark:bg-warm-900/30">
+          <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
+            Qualification Scorecard is a Starter feature
+          </p>
+          <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+            Upgrade to Starter (3 scorecards/month) or Pro (unlimited) to evaluate grants with AI-assisted scoring.
+          </p>
+          <Button
+            className="mt-6 bg-[var(--color-brand-teal)] text-white"
+            render={<Link href="/upgrade">Upgrade Now</Link>}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Gate: Starter users — check monthly usage (3/month limit)
+  if (tier === "starter") {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const { count: usedThisMonth } = await adminDb
+      .from("grant_scorecards")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .gte("created_at", monthStart.toISOString());
+
+    const limit = SCORECARD_MONTHLY_LIMIT["starter"]!;
+    if ((usedThisMonth ?? 0) >= limit) {
+      return (
+        <div className="max-w-3xl space-y-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link href={`/grants/${id}`} className="flex items-center gap-1 hover:text-foreground">
+              <ChevronLeft className="h-4 w-4" />
+              Back to Grant Details
+            </Link>
+          </div>
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-warm-200 dark:border-warm-800 rounded-xl bg-warm-50 dark:bg-warm-900/30">
+            <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
+              Monthly scorecard limit reached
+            </p>
+            <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+              You have used all {limit} scorecards for this month on the Starter plan. Upgrade to Pro for unlimited scorecards.
+            </p>
+            <Button
+              className="mt-6 bg-[var(--color-brand-teal)] text-white"
+              render={<Link href="/upgrade">Upgrade to Pro</Link>}
+            />
+          </div>
+        </div>
+      );
+    }
+  }
 
   // Fetch grant
   const { data: grant } = await supabase

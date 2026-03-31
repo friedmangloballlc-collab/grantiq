@@ -36,6 +36,8 @@ export interface UploadedDocument {
 
 interface DocumentChecklistProps {
   uploadedDocs: UploadedDocument[];
+  /** Maximum number of uploads allowed for the tier (null = unlimited, 0 = blocked) */
+  uploadLimit?: number | null;
 }
 
 // ─── Document Definitions (Module 3 Consulting System) ────────────────────────
@@ -188,11 +190,13 @@ function DocumentRow({
   uploaded,
   onUpload,
   onDelete,
+  uploadBlocked,
 }: {
   doc: DocumentDefinition;
   uploaded: UploadedDocument | undefined;
   onUpload: (docId: string, docType: string, file: File) => Promise<void>;
   onDelete: (docId: string, uploadedId: string) => Promise<void>;
+  uploadBlocked?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -301,6 +305,17 @@ function DocumentRow({
                 Delete
               </Button>
             </>
+          ) : uploadBlocked ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1 opacity-50 cursor-not-allowed"
+              disabled
+              title="Upgrade to upload documents"
+            >
+              <Upload className="h-3 w-3" />
+              Upload
+            </Button>
           ) : (
             <>
               <input
@@ -334,7 +349,7 @@ function DocumentRow({
 
 // ─── Document Checklist ───────────────────────────────────────────────────────
 
-export function DocumentChecklist({ uploadedDocs: initialDocs }: DocumentChecklistProps) {
+export function DocumentChecklist({ uploadedDocs: initialDocs, uploadLimit }: DocumentChecklistProps) {
   const [docs, setDocs] = useState<UploadedDocument[]>(initialDocs);
 
   const getUploaded = (docId: string) =>
@@ -377,6 +392,12 @@ export function DocumentChecklist({ uploadedDocs: initialDocs }: DocumentCheckli
     setDocs((prev) => prev.filter((d) => d.id !== uploadedId));
   };
 
+  // uploadBlocked: true when limit is 0 (free) or upload count reached limit
+  const uploadBlocked =
+    uploadLimit !== undefined &&
+    uploadLimit !== null &&
+    (uploadLimit === 0 || docs.length >= uploadLimit);
+
   return (
     <div className="divide-y-0">
       {DOCUMENT_DEFINITIONS.map((def) => (
@@ -386,6 +407,7 @@ export function DocumentChecklist({ uploadedDocs: initialDocs }: DocumentCheckli
           uploaded={getUploaded(def.id)}
           onUpload={handleUpload}
           onDelete={handleDelete}
+          uploadBlocked={uploadBlocked}
         />
       ))}
     </div>

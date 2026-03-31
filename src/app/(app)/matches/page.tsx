@@ -3,6 +3,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { MatchCard } from "@/components/grants/match-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import type { UploadedDocument } from "@/components/vault/document-checklist";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+// Free tier: show top 5, blur the rest
+const FREE_MATCH_LIMIT = 5;
 
 export default async function MatchesPage() {
   const supabase = await createServerSupabaseClient();
