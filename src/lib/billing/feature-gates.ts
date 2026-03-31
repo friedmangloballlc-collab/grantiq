@@ -28,12 +28,19 @@ export const FEATURE_GATES: Record<string, { requiredTier: string; limit?: numbe
   funder_profiles: { requiredTier: "starter" },
   proactive_alerts: { requiredTier: "pro" },
 
-  // Evaluation
+  // Evaluation — Scorecard
   qualification_scorecard: { requiredTier: "free", limit: 1, perMonth: true },       // Explorer: 1 demo
   qualification_scorecard_starter: { requiredTier: "starter", limit: 10, perMonth: true }, // Seeker: 10/mo (matches pipeline)
   qualification_scorecard_unlimited: { requiredTier: "pro" },                        // Strategist+: unlimited
   grant_readiness_badges: { requiredTier: "starter" },
   similar_orgs_social_proof: { requiredTier: "pro" },
+
+  // Evaluation — A-Z Readiness (tiered progression)
+  readiness_basic: { requiredTier: "free" },           // Explorer: overall score + tier label + blurred gap count
+  readiness_full: { requiredTier: "starter" },         // Seeker: + full 10-criteria breakdown + gap names
+  readiness_actionable: { requiredTier: "pro" },       // Strategist: + fix actions + cost/time + grants unlocked per fix
+  readiness_tracking: { requiredTier: "growth" },      // Applicant: + auto-improvement tracking + unlock notifications
+  readiness_team: { requiredTier: "enterprise" },      // Organization: + team dashboard + benchmarks + per-member scores
 
   // Planning
   pipeline_items: { requiredTier: "free", limit: 3 },           // Explorer: 3
