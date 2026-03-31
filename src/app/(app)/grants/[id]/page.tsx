@@ -122,6 +122,7 @@ export default async function GrantDetailPage({ params }: Props) {
         <p className="text-lg text-warm-500 mt-1">{grant.funder_name}</p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 p-4 bg-warm-100 dark:bg-warm-800/50 rounded-lg">
+          {/* Amount — always visible (basic info) */}
           <div>
             <span className="text-xs text-warm-500">Amount</span>
             <p className="text-sm font-medium text-warm-900 dark:text-warm-50">
@@ -130,20 +131,29 @@ export default async function GrantDetailPage({ params }: Props) {
                 : "Varies"}
             </p>
           </div>
+          {/* Deadline — exact date blurred for Free */}
           <div>
             <span className="text-xs text-warm-500">Deadline</span>
-            <p className="text-sm font-medium text-warm-900 dark:text-warm-50">
-              {grant.deadline
-                ? new Date(grant.deadline).toLocaleDateString()
-                : "Rolling"}
-            </p>
+            {isFree && grant.deadline ? (
+              <p className="text-sm font-medium text-warm-900 dark:text-warm-50 blur-sm select-none">
+                {new Date(grant.deadline).toLocaleDateString()}
+              </p>
+            ) : (
+              <p className="text-sm font-medium text-warm-900 dark:text-warm-50">
+                {grant.deadline
+                  ? new Date(grant.deadline).toLocaleDateString()
+                  : "Rolling"}
+              </p>
+            )}
           </div>
+          {/* Category — always visible (basic info) */}
           <div>
             <span className="text-xs text-warm-500">Category</span>
             <p className="text-sm font-medium text-warm-900 dark:text-warm-50">
               {grant.category || "General"}
             </p>
           </div>
+          {/* Recurrence — always visible (basic info) */}
           <div>
             <span className="text-xs text-warm-500">Recurrence</span>
             <p className="text-sm font-medium text-warm-900 dark:text-warm-50">
