@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { getOrgContext } from "@/lib/auth/get-org-context";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { OrgContext } from "@/hooks/use-org";
 
 export default async function AppLayout({
@@ -20,12 +21,26 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
+  // Fetch all org memberships so the org switcher can show the full list
+  const admin = createAdminClient();
+  const { data: allMemberships } = await admin
+    .from("org_members")
+    .select("org_id, organizations(id, name)")
+    .eq("user_id", ctx.userId)
+    .eq("status", "active");
+
+  const allOrgs = (allMemberships ?? []).map((m) => ({
+    orgId: m.org_id,
+    orgName: (m.organizations as { id: string; name: string } | null)?.name ?? "Unknown Org",
+  }));
+
   const orgContext: OrgContext = {
     orgId: ctx.orgId,
     orgName: ctx.orgName,
     role: ctx.role as OrgContext["role"],
     tier: ctx.tier as OrgContext["tier"],
     userId: ctx.userId,
+    allOrgs,
   };
 
   return <AppShell orgContext={orgContext}>{children}</AppShell>;

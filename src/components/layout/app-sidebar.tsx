@@ -15,8 +15,10 @@ import {
   FolderLock,
   Building2,
   BarChart3,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useOrg } from "@/hooks/use-org";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -34,6 +36,8 @@ const NAV_ITEMS = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { tier } = useOrg();
+  const isEnterprise = tier === "enterprise";
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-background shrink-0 h-full">
@@ -44,7 +48,7 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + "/");
           return (
@@ -63,6 +67,29 @@ export function AppSidebar() {
             </Link>
           );
         })}
+
+        {/* Clients — Enterprise only */}
+        {isEnterprise && (
+          <>
+            <div className="pt-2 pb-1">
+              <p className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Consultant
+              </p>
+            </div>
+            <Link
+              href="/clients"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                (pathname === "/clients" || pathname.startsWith("/clients/"))
+                  ? "bg-[var(--color-brand-teal)] text-white"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              Clients
+            </Link>
+          </>
+        )}
       </nav>
 
       {/* Footer */}

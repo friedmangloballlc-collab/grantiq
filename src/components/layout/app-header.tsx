@@ -4,6 +4,7 @@ import { Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { useOrg } from "@/hooks/use-org";
+import { OrgSwitcher } from "./org-switcher";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,7 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onMenuClick }: AppHeaderProps) {
-  const { orgName, userId } = useOrg();
+  const { userId, allOrgs } = useOrg();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -24,7 +25,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
 
   return (
     <header className="flex items-center justify-between h-14 px-4 border-b border-border bg-background shrink-0">
-      {/* Left: mobile menu + org name */}
+      {/* Left: mobile menu + org switcher */}
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -35,9 +36,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         >
           <Menu className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-semibold truncate max-w-[200px]">
-          {orgName}
-        </span>
+        <OrgSwitcher orgs={allOrgs} />
       </div>
 
       {/* Right: notifications + theme toggle + logout */}

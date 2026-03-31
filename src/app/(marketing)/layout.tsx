@@ -109,6 +109,12 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               >
                 Grant Directory
               </a>
+              <a
+                href="/partners"
+                className="text-sm text-warm-500 hover:text-warm-900 dark:hover:text-warm-50"
+              >
+                Partner Program
+              </a>
             </div>
           </div>
         </div>

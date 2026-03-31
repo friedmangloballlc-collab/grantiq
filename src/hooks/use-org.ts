@@ -2,12 +2,19 @@
 
 import { createContext, useContext } from "react";
 
+export interface OrgOption {
+  orgId: string;
+  orgName: string;
+}
+
 export interface OrgContext {
   orgId: string;
   orgName: string;
   role: "owner" | "admin" | "editor" | "viewer";
   tier: "free" | "starter" | "pro" | "enterprise";
   userId: string;
+  /** All orgs the user belongs to — used by the org switcher */
+  allOrgs: OrgOption[];
 }
 
 const OrgCtx = createContext<OrgContext | null>(null);
