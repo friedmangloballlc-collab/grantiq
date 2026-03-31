@@ -128,4 +128,44 @@ Set has_hard_eligibility_barrier to true ONLY when the org is categorically inel
 5. If you lack information to score a dimension confidently, default to 5 and note the uncertainty in match_rationale.
 6. Do NOT output any text outside the JSON object.
 7. Do NOT wrap output in markdown code fences.
+
+## CALIBRATION EXAMPLES
+
+Use these anchored examples to ensure you use the full 1-10 range. If your batch has no grants this extreme, that's fine — but a batch of 10 grants should span at least 4 points on most dimensions.
+
+### mission_alignment
+- 2: An after-school youth tutoring program in Detroit applying to a farm-to-table agricultural sustainability grant for rural Appalachia. Zero programmatic overlap.
+- 5: A health clinic serving low-income patients applying to a general community wellness grant. Some thematic overlap but the funder's core focus (preventive fitness programs) doesn't match clinical care.
+- 8: A workforce development nonprofit applying to a DOL sector-based training grant for in-demand industries — clear programmatic alignment, but org's target population is broader than funder's priority (returning citizens).
+- 10: A domestic violence shelter in Houston applying to Texas HHS's Victim Services grant for urban family violence shelters. Funder language mirrors the org's mission, geography, and population almost word for word.
+
+### capacity_fit
+- 2: A 1-person startup with no staff applying to a $2M federal contract requiring 20 FTEs and DCAA-compliant accounting systems.
+- 5: A 10-person org with some grant experience applying for their first federal grant requiring quarterly reporting, a single audit threshold, and a dedicated grants manager.
+- 8: A 30-person org with a part-time grants coordinator and 5 prior federal awards applying to a $500K HHS grant — capable but will be stretched on reporting bandwidth.
+- 10: A 50-person org with a dedicated grant team, 10+ prior federal awards, annual single audit on file, and established compliance systems applying to a $750K continuation grant.
+
+### geographic_match
+- 2: A Chicago nonprofit applying to a grant explicitly restricted to rural counties in the Mississippi Delta.
+- 5: A Texas org applying to a grant open to the broader Southwest region — eligible but not a focal geography.
+- 8: A nonprofit in California applying to a national funder with no geographic restrictions and a stated priority for high-cost urban areas.
+- 10: A nonprofit serving Milwaukee's north side applying to a grant from a Milwaukee-based community foundation explicitly targeting underserved north-side neighborhoods.
+
+### budget_fit
+- 2: A $200K/year org applying to a $3M federal award — the grant would be 15x their annual budget and operationally unmanageable.
+- 5: A $1M/year org applying to a $600K grant — the award is 60% of annual budget, creating real cash flow and compliance risk.
+- 8: A $2M/year org applying to a $400K grant — 20% of annual budget, well within the ideal 10-30% range.
+- 10: A $5M/year org applying to a $1M grant — the award is exactly 20% of budget, the textbook ideal ask-to-budget ratio.
+
+### competitive_advantage
+- 2: A generalist nonprofit applying to a nationally competitive NIH research grant with hundreds of well-resourced academic medical center applicants.
+- 5: A mid-sized nonprofit applying to a state grant that typically funds 30-40 organizations — org is competitive but not a standout candidate.
+- 8: A rural healthcare clinic applying to a grant specifically prioritizing rural critical access providers — the org's geography and designation give it a meaningful edge.
+- 10: A Native-led environmental org applying to a grant restricted to Tribal-affiliated entities — org is in a small, exclusive eligibility pool with few competitors.
+
+### funder_history_fit
+- 2: A performing arts organization applying to a funder whose entire portfolio is STEM education and robotics programs for K-12 students.
+- 5: A housing nonprofit applying to a general community foundation with a broad portfolio — org type is eligible but not a core funding priority.
+- 8: A legal aid nonprofit applying to a regional bar foundation that consistently funds civil legal services but favors organizations with longer operating histories.
+- 10: A food bank applying to a national food security funder that has awarded grants to 12 food banks in this state over the past 5 years, with award sizes matching this org's requested amount.
 `;

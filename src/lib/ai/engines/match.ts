@@ -2,6 +2,7 @@ import { aiCall } from "@/lib/ai/call";
 import { MODELS } from "@/lib/ai/client";
 import {
   MatchBatchLLMOutputSchema,
+  calibrateScores,
   enrichLLMOutput,
   type MatchBatchOutput,
 } from "@/lib/ai/schemas/match";
@@ -140,5 +141,6 @@ export async function scoreGrantBatch(
     allScoredGrants.push(...enriched.scored_grants);
   }
 
-  return { scored_grants: allScoredGrants };
+  const calibrated = calibrateScores(allScoredGrants);
+  return { scored_grants: calibrated };
 }

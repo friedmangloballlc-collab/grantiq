@@ -117,6 +117,48 @@ export function enrichLLMOutput(raw: MatchBatchLLMOutput): MatchBatchOutput {
   };
 }
 
+/**
+ * Post-LLM score normalization.
+ *
+ * LLMs tend to cluster scores in the 65-80 range. This function stretches the
+ * distribution to make the full 0-100 range meaningful for ranking.
+ *
+ * - If the batch is too uniform (stdDev < 5), apply a linear stretch so the
+ *   best grants still clearly separate from mediocre ones.
+ * - Otherwise, apply z-score normalization anchored at mean=55, stdDev=15.
+ *   This keeps the center of mass slightly below the midpoint so users
+ *   understand that "good" requires real alignment.
+ *
+ * Hard eligibility barriers are preserved — a barrier grant stays at its
+ * calibrated score; the engine's recommended_action field conveys the skip.
+ */
+export function calibrateScores(scores: MatchScoreOutput[]): MatchScoreOutput[] {
+  if (scores.length < 3) return scores; // Need enough data to normalize
+
+  const rawScores = scores.map((s) => s.match_score);
+  const mean = rawScores.reduce((a, b) => a + b, 0) / rawScores.length;
+  const stdDev = Math.sqrt(
+    rawScores.reduce((sum, s) => sum + Math.pow(s - mean, 2), 0) / rawScores.length
+  );
+
+  if (stdDev < 5) {
+    // Batch is too uniform — stretch the distribution
+    return scores.map((s) => ({
+      ...s,
+      match_score: Math.max(0, Math.min(100, Math.round(((s.match_score - 40) / 50) * 100))),
+    }));
+  }
+
+  // Z-score normalization: mean → 55, 1 stddev = 15 points
+  return scores.map((s) => ({
+    ...s,
+    match_score: Math.max(
+      0,
+      Math.min(100, Math.round(55 + ((s.match_score - mean) / stdDev) * 15))
+    ),
+  }));
+}
+
 // --- Legacy aliases for backward compatibility ---
 // TODO: Remove these after updating all consumers
 /** @deprecated Use MatchBatchLLMOutputSchema for LLM validation, then enrichLLMOutput() */
