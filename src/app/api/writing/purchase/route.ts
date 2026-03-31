@@ -32,6 +32,17 @@ export async function POST(req: NextRequest) {
 
   const { org_id, rfp_analysis_id, tier, grant_type } = parsed.data;
 
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("org_id", org_id)
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+  if (!membership) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+
   // Check eligibility
   const { allowed, reason } = await canPurchaseWriting(org_id, tier, grant_type);
   if (!allowed) {

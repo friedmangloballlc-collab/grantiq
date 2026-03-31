@@ -14,12 +14,26 @@ export async function GET(
 
   const { data: draft, error } = await supabase
     .from("grant_drafts")
-    .select("id, status, progress_pct, current_step, tier, grant_type, price_cents, is_full_confidence, error_message, started_at, completed_at")
+    .select("id, org_id, status, progress_pct, current_step, tier, grant_type, price_cents, is_full_confidence, error_message, started_at, completed_at")
     .eq("id", id)
     .single();
 
   if (error || !draft) {
     return NextResponse.json({ error: "Draft not found" }, { status: 404 });
+  }
+
+  // Get user's active org
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .limit(1)
+    .single();
+
+  // Verify draft belongs to user's org
+  if (draft.org_id !== membership?.org_id) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
   return NextResponse.json(draft);

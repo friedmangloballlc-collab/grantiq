@@ -31,6 +31,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "file and org_id are required" }, { status: 400 });
     }
 
+    const { data: membership } = await supabase
+      .from("org_members")
+      .select("org_id")
+      .eq("org_id", orgId)
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single();
+    if (!membership) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
     if (!file.name.endsWith(".pdf")) {
       return NextResponse.json({ error: "Only PDF files are supported" }, { status: 400 });
     }
@@ -67,6 +78,17 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const orgId = body.org_id;
   if (!orgId) return NextResponse.json({ error: "org_id is required" }, { status: 400 });
+
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("org_id", orgId)
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+  if (!membership) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
 
   const parsed = TextUploadSchema.safeParse(body);
   if (!parsed.success) {
