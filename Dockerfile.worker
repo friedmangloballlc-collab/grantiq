@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy everything (src + worker + configs)
 COPY package.json package-lock.json* ./
-COPY tsconfig.json ./
+COPY tsconfig.json tsconfig.worker.json ./
 COPY src/ ./src/
 COPY worker/ ./worker/
 
@@ -18,4 +18,4 @@ RUN npm install --production=false
 WORKDIR /app
 
 # Start the worker from project root
-CMD ["npx", "tsx", "worker/src/index.ts"]
+CMD ["npx", "tsx", "--tsconfig", "tsconfig.worker.json", "worker/src/index.ts"]
