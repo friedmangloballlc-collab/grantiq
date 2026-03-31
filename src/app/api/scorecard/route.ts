@@ -136,6 +136,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // ── Fire-and-forget feedback: record "evaluated" with AI vs user score diff ──
+    const aiScore = body.ai_score ?? null; // optional: caller may pass original AI score
+    const scorecardOverrides =
+      aiScore !== null && aiScore !== Math.round(total_score)
+        ? { ai_score: aiScore, user_score: Math.round(total_score), delta: Math.round(total_score) - aiScore }
+        : null;
+
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        grant_source_id,
+        user_action: "evaluated",
+        match_score: Math.round(total_score),
+        scorecard_overrides: scorecardOverrides,
+      }),
+    }).catch(() => {
+      // Feedback failures are non-critical — swallow silently.
+    });
+
     return NextResponse.json({ scorecard: data }, { status: 201 });
   } catch (err) {
     console.error("POST /api/scorecard error:", err);

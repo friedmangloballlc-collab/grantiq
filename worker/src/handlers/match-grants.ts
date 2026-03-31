@@ -54,15 +54,44 @@ export async function handleMatchGrants(
       };
     }
 
-    // 2. Stage 1: Vector Recall — top 200 by cosine similarity
+    // 2. Cache check — skip full pipeline if profile unchanged within last 24 hours
+    const capabilities = org.org_capabilities?.[0] ?? org.org_capabilities ?? {};
+    const orgProfile = org.org_profiles?.[0] ?? org.org_profiles ?? {};
+    const profileHash = computeProfileHash({ ...capabilities, ...orgProfile });
+
+    const { data: latestMatch } = await db
+      .from("grant_matches")
+      .select("computed_at, profile_hash")
+      .eq("org_id", org_id)
+      .order("computed_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (latestMatch && latestMatch.profile_hash === profileHash && latestMatch.computed_at) {
+      const computedAt = new Date(latestMatch.computed_at).getTime();
+      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+      if (computedAt > twentyFourHoursAgo) {
+        console.log(`match_grants: cache hit for org ${org_id}, skipping full pipeline`);
+        const { count } = await db
+          .from("grant_matches")
+          .select("*", { count: "exact", head: true })
+          .eq("org_id", org_id);
+        return {
+          status: "completed",
+          matches_found: count ?? 0,
+          matches_scored: count ?? 0,
+        };
+      }
+    }
+
+    // 4. Stage 1: Vector Recall — top 200 by cosine similarity
     const vectorResults = await vectorRecall(org.mission_embedding);
 
     if (vectorResults.length === 0) {
       return { status: "completed", matches_found: 0, matches_scored: 0 };
     }
 
-    // 3. Stage 2: Hard Filter — eligibility, geography, deadlines
-    const capabilities = org.org_capabilities?.[0] ?? org.org_capabilities ?? {};
+    // 5. Stage 2: Hard Filter — eligibility, geography, deadlines
     const filterInput: HardFilterInput = {
       entity_type: org.entity_type,
       state: org.state,
@@ -79,8 +108,7 @@ export async function handleMatchGrants(
       return { status: "completed", matches_found: 0, matches_scored: 0 };
     }
 
-    // 4. Stage 3: AI Scoring — Claude Sonnet scores each grant
-    const orgProfile = org.org_profiles?.[0] ?? org.org_profiles ?? {};
+    // 6. Stage 3: AI Scoring — Claude Sonnet scores each grant
     const scoringResult = await scoreGrantBatch(
       { orgId: org_id, userId: user_id, tier },
       {
@@ -116,10 +144,11 @@ export async function handleMatchGrants(
       }))
     );
 
-    // 5. Upsert results into grant_matches table
+    // 7. Upsert results into grant_matches table
     // Delete old matches for this org first, then insert new ones
     await db.from("grant_matches").delete().eq("org_id", org_id);
 
+    const computedAt = new Date().toISOString();
     const matchRows = scoringResult.scored_grants.map((scored) => {
       const vectorMatch = filteredCandidates.find((c) => c.id === scored.grant_id);
       return {
@@ -134,7 +163,9 @@ export async function handleMatchGrants(
         recommended_quarter: null, // Strategy Engine fills this
         model_version: "claude-sonnet-4-20250514",
         embedding_similarity: vectorMatch?.similarity ?? null,
-        last_computed: new Date().toISOString(),
+        last_computed: computedAt,
+        computed_at: computedAt,
+        profile_hash: profileHash,
       };
     });
 

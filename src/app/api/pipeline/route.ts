@@ -179,7 +179,7 @@ export async function PATCH(req: NextRequest) {
     // Fetch current item to verify ownership and capture previous stage
     const { data: item } = await supabase
       .from("grant_pipeline")
-      .select("org_id, stage")
+      .select("org_id, stage, grant_source_id")
       .eq("id", id)
       .single();
 
@@ -212,6 +212,21 @@ export async function PATCH(req: NextRequest) {
       stage !== undefined
         ? getAutoAction(item.stage ?? null, stage as PipelineStage)
         : null;
+
+    // ── Fire-and-forget feedback for terminal outcomes ──────────────────────────
+    if (stage === "awarded" || stage === "declined") {
+      const feedbackAction = stage === "awarded" ? "won" : "lost";
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          grant_source_id: item.grant_source_id,
+          user_action: feedbackAction,
+        }),
+      }).catch(() => {
+        // Feedback failures are non-critical — swallow silently.
+      });
+    }
 
     return NextResponse.json({ success: true, autoAction });
   } catch (err) {

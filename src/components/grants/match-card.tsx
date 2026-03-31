@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MatchScoreRing } from "./match-score-ring";
 import { DeadlineCountdown } from "@/components/shared/deadline-countdown";
 import { WhyMatches } from "./why-matches";
-import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOrg } from "@/hooks/use-org";
 import { AIDisclosure } from "@/components/shared/ai-disclosure";
@@ -38,11 +38,32 @@ const TYPE_COLORS: Record<string, string> = {
     "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
 };
 
+/** Fire-and-forget feedback POST — never throws so it never blocks user actions. */
+async function recordFeedback(payload: {
+  grant_source_id: string;
+  user_action: string;
+  match_score?: number;
+  relevance_rating?: number;
+  scorecard_overrides?: Record<string, unknown>;
+}) {
+  try {
+    await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    // Feedback failures are non-critical — swallow silently.
+  }
+}
+
 export function MatchCard(props: MatchCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const [dismissToast, setDismissToast] = useState(false);
   const { orgId } = useOrg();
 
   const handleSaveToPipeline = async () => {
@@ -59,12 +80,39 @@ export function MatchCard(props: MatchCardProps) {
         throw new Error(data.error ?? "Failed to save");
       }
       setSaved(true);
+      // Track save as feedback — fire and forget
+      recordFeedback({
+        grant_source_id: props.id,
+        user_action: "saved",
+        match_score: props.matchScore,
+      });
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
     }
   };
+
+  const handleDismiss = () => {
+    // Track dismissal as feedback — fire and forget
+    recordFeedback({
+      grant_source_id: props.id,
+      user_action: "dismissed",
+      match_score: props.matchScore,
+    });
+    setDismissed(true);
+    setDismissToast(true);
+    setTimeout(() => setDismissToast(false), 3000);
+  };
+
+  // Hide card after dismissal
+  if (dismissed) {
+    return dismissToast ? (
+      <div className="rounded-lg border border-warm-200 dark:border-warm-800 bg-warm-50 dark:bg-warm-900/30 px-4 py-3 text-sm text-warm-500 dark:text-warm-400">
+        Dismissed. We&apos;ll improve your matches.
+      </div>
+    ) : null;
+  }
 
   const typeColor =
     TYPE_COLORS[props.sourceType.toLowerCase()] ??
@@ -79,14 +127,24 @@ export function MatchCard(props: MatchCardProps) {
             <AIDisclosure type="match" />
           </div>
           <div className="flex-1 min-w-0">
-            <Link
-              href={`/grants/${props.id}`}
-              className="hover:underline"
-            >
-              <h3 className="font-semibold text-warm-900 dark:text-warm-50 truncate">
-                {props.grantName}
-              </h3>
-            </Link>
+            <div className="flex items-start justify-between gap-2">
+              <Link
+                href={`/grants/${props.id}`}
+                className="hover:underline flex-1 min-w-0"
+              >
+                <h3 className="font-semibold text-warm-900 dark:text-warm-50 truncate">
+                  {props.grantName}
+                </h3>
+              </Link>
+              <button
+                onClick={handleDismiss}
+                title="Not for me"
+                aria-label="Dismiss this grant"
+                className="shrink-0 p-1 rounded text-warm-400 hover:text-warm-600 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
             <p className="text-sm text-warm-500 truncate">{props.funderName}</p>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span
