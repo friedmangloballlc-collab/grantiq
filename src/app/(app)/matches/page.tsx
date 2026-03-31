@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MatchCard } from "@/components/grants/match-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import type { UploadedDocument } from "@/components/vault/document-checklist";
 
 export default async function MatchesPage() {
   const supabase = await createServerSupabaseClient();
@@ -49,14 +50,47 @@ export default async function MatchesPage() {
     );
   }
 
-  const { data: matches } = await db
-    .from("grant_matches")
-    .select(
-      "id, grant_source_id, match_score, scores, score_breakdown, missing_requirements, grant_sources(id, name, funder_name, source_type, amount_max, deadline)"
-    )
-    .eq("org_id", orgId)
-    .order("match_score", { ascending: false })
-    .limit(50);
+  const [{ data: matches }, { data: vaultRows }] = await Promise.all([
+    db
+      .from("grant_matches")
+      .select(
+        "id, grant_source_id, match_score, scores, score_breakdown, missing_requirements, grant_sources(id, name, funder_name, source_type, amount_max, deadline)"
+      )
+      .eq("org_id", orgId)
+      .order("match_score", { ascending: false })
+      .limit(50),
+
+    db
+      .from("document_vault")
+      .select("id, document_type, original_filename, file_url, file_size, created_at")
+      .eq("org_id", orgId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false }),
+  ]);
+
+  // Deduplicate vault docs by type — keep most recent per type
+  const seenVaultTypes = new Set<string>();
+  const uploadedDocs: UploadedDocument[] = [];
+  for (const row of (vaultRows ?? []) as {
+    id: string;
+    document_type: string;
+    original_filename: string;
+    file_url: string;
+    file_size: number;
+    created_at: string;
+  }[]) {
+    if (!seenVaultTypes.has(row.document_type)) {
+      seenVaultTypes.add(row.document_type);
+      uploadedDocs.push({
+        id: row.id,
+        docType: row.document_type,
+        filename: row.original_filename,
+        fileUrl: row.file_url,
+        fileSize: row.file_size,
+        uploadedAt: row.created_at,
+      });
+    }
+  }
 
   if (!matches?.length) {
     return (
@@ -99,6 +133,7 @@ export default async function MatchesPage() {
             matchScore={Math.round(match.match_score)}
             scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
             missingRequirements={match.missing_requirements ?? []}
+            uploadedDocs={uploadedDocs}
           />
         ))}
       </div>

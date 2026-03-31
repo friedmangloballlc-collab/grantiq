@@ -11,6 +11,8 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { GrantActionButtons } from "@/components/grants/grant-action-buttons";
+import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -133,6 +135,25 @@ export default async function GrantDetailPage({ params }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Evaluate CTA */}
+      <div className="flex items-center gap-3 p-4 bg-warm-50 dark:bg-warm-800/30 border border-warm-200 dark:border-warm-700 rounded-lg">
+        <ClipboardList className="h-5 w-5 text-brand-teal shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-warm-900 dark:text-warm-50">
+            Is this grant worth pursuing?
+          </p>
+          <p className="text-xs text-warm-500">
+            Run a 9-criteria scorecard. AI pre-fills 6 — you complete the rest.
+          </p>
+        </div>
+        <Link
+          href={`/grants/${id}/evaluate`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-teal text-white text-sm font-medium hover:bg-brand-teal-dark transition-colors whitespace-nowrap"
+        >
+          Evaluate This Grant
+        </Link>
+      </div>
 
       {/* Action Paths */}
       <div>

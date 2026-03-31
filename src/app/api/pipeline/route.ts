@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { grant_source_id, stage = "researching", notes } = body;
+    const { grant_source_id, stage = "identified", notes } = body;
 
     if (!grant_source_id) {
       return NextResponse.json({ error: "grant_source_id is required" }, { status: 400 });
@@ -91,6 +91,60 @@ export async function POST(req: NextRequest) {
   }
 }
 
+const VALID_STAGES = [
+  "identified",
+  "qualified",
+  "in_development",
+  "under_review",
+  "submitted",
+  "pending_decision",
+  "awarded",
+  "declined",
+] as const;
+
+type PipelineStage = (typeof VALID_STAGES)[number];
+
+// Auto-action metadata returned to the client so it can surface prompts
+function getAutoAction(
+  fromStage: string | null,
+  toStage: PipelineStage
+): { action: string; description: string } | null {
+  if (fromStage === "identified" && toStage === "qualified") {
+    return {
+      action: "run_qualification_scorecard",
+      description: "Run the Qualification Scorecard to confirm this grant is worth pursuing.",
+    };
+  }
+  if (fromStage === "qualified" && toStage === "in_development") {
+    return {
+      action: "generate_application_checklist",
+      description:
+        "Auto-generating application checklist by cross-referencing grant requirements with your document vault.",
+    };
+  }
+  if (fromStage === "submitted" && toStage === "pending_decision") {
+    return {
+      action: "start_decision_timer",
+      description: "Decision timer started. A follow-up reminder has been scheduled for 30 days out.",
+    };
+  }
+  if (fromStage === "pending_decision" && toStage === "awarded") {
+    return {
+      action: "create_compliance_calendar",
+      description:
+        "Congratulations! Compliance calendar created. Review your obligations in the Awarded panel.",
+    };
+  }
+  if (fromStage === "pending_decision" && toStage === "declined") {
+    return {
+      action: "prompt_feedback_and_resubmission",
+      description:
+        "Marked as declined. Consider requesting feedback and flagging for resubmission next cycle.",
+    };
+  }
+  return null;
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -109,14 +163,23 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
+    if (stage !== undefined && !VALID_STAGES.includes(stage as PipelineStage)) {
+      return NextResponse.json(
+        {
+          error: `Invalid stage. Must be one of: ${VALID_STAGES.join(", ")}`,
+        },
+        { status: 400 }
+      );
+    }
+
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (stage !== undefined) updates.stage = stage;
     if (notes !== undefined) updates.notes = notes;
 
-    // Verify membership via org ownership of the pipeline item
+    // Fetch current item to verify ownership and capture previous stage
     const { data: item } = await supabase
       .from("grant_pipeline")
-      .select("org_id")
+      .select("org_id, stage")
       .eq("id", id)
       .single();
 
@@ -145,7 +208,12 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    const autoAction =
+      stage !== undefined
+        ? getAutoAction(item.stage ?? null, stage as PipelineStage)
+        : null;
+
+    return NextResponse.json({ success: true, autoAction });
   } catch (err) {
     console.error("PATCH /api/pipeline error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

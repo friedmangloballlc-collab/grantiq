@@ -1,16 +1,25 @@
 import type { PipelineItem } from "./kanban-board";
 
 const STAGE_LABELS: Record<string, string> = {
+  identified: "Identified",
+  qualified: "Qualified",
+  in_development: "In Development",
+  under_review: "Under Review",
+  submitted: "Submitted",
+  pending_decision: "Pending Decision",
+  awarded: "Awarded",
+  declined: "Declined",
+  // legacy labels kept for backward compat with old DB rows
   researching: "Researching",
   preparing: "Preparing",
   writing: "Writing",
-  submitted: "Submitted",
-  awarded: "Awarded",
-  declined: "Declined",
 };
 
 export function PipelineSummary({ items }: { items: PipelineItem[] }) {
   const totalValue = items.reduce((sum, i) => sum + (i.amount ?? 0), 0);
+  const awardedValue = items
+    .filter((i) => i.stage === "awarded")
+    .reduce((sum, i) => sum + (i.amount ?? 0), 0);
 
   const stageCounts = items.reduce<Record<string, number>>((acc, item) => {
     acc[item.stage] = (acc[item.stage] ?? 0) + 1;
@@ -29,6 +38,14 @@ export function PipelineSummary({ items }: { items: PipelineItem[] }) {
           ${(totalValue / 1000).toFixed(0)}K
         </span>
       </div>
+      {awardedValue > 0 && (
+        <div className="flex flex-col">
+          <span className="text-xs text-warm-500">Awarded</span>
+          <span className="text-lg font-bold text-green-600 dark:text-green-400">
+            ${(awardedValue / 1000).toFixed(0)}K
+          </span>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2 ml-auto">
         {Object.entries(stageCounts).map(([stage, count]) => (
           <span

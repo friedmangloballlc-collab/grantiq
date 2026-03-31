@@ -7,8 +7,11 @@ import { ServiceTracker, type ServiceEngagement } from "@/components/dashboard/s
 import { AZQualification } from "@/components/dashboard/az-qualification";
 import { IndustryInsights } from "@/components/dashboard/industry-insights";
 import { ProfileCompletion } from "@/components/dashboard/profile-completion";
+import { VaultSummary } from "@/components/vault/vault-summary";
 import { calculateAZScore } from "@/lib/qualification/az-score";
 import type { AZScoreResult } from "@/lib/qualification/az-score";
+import { DOCUMENT_DEFINITIONS } from "@/components/vault/document-checklist";
+import { CalendarPreview, type CalendarPreviewDeadline } from "@/components/dashboard/calendar-preview";
 
 export default async function DashboardPage() {
   const ctx = await getOrgContext();
@@ -21,6 +24,9 @@ export default async function DashboardPage() {
   let azScore: AZScoreResult | null = null;
   let industryKey: string | null = null;
   let deferredAnswers: Record<string, string> = {};
+  let vaultUploaded = 0;
+  const vaultTotal = DOCUMENT_DEFINITIONS.length; // 13
+  let calendarDeadlines: CalendarPreviewDeadline[] = [];
 
   if (ctx) {
     const { orgId } = ctx;
@@ -43,6 +49,7 @@ export default async function DashboardPage() {
       azCapabilitiesResult,
       azSubscriptionResult,
       deferredProfileResult,
+      vaultDocsResult,
     ] = await Promise.all([
       // Stats via RPC (replaces 4 separate queries)
       db.rpc("get_dashboard_stats", { p_org_id: orgId }),
@@ -107,6 +114,13 @@ export default async function DashboardPage() {
         .select("grant_history_level, business_model, phone, contact_method, documents_ready, ownership_demographics, interested_in_nonprofit")
         .eq("org_id", orgId)
         .single(),
+
+      // Document vault count
+      db
+        .from("document_vault")
+        .select("document_type")
+        .eq("org_id", orgId)
+        .eq("status", "active"),
     ]);
 
     // ── Stats ─────────────────────────────────────────────────────────────────
@@ -289,6 +303,53 @@ export default async function DashboardPage() {
         Object.entries(raw).filter(([, v]) => v !== undefined && v !== null && v !== "")
       ) as Record<string, string>;
     }
+
+    // ── Vault uploaded count (deduplicated by doc type) ───────────────────────
+    const vaultRows = (vaultDocsResult.data ?? []) as { document_type: string }[];
+    const seenTypes = new Set(vaultRows.map((r) => r.document_type));
+    vaultUploaded = seenTypes.size;
+
+    // ── Calendar Preview: next 3 deadlines ───────────────────────────────────
+    const [calPipelineResult, calMatchResult] = await Promise.all([
+      db
+        .from("grant_pipeline")
+        .select("id, grant_sources(name, funder_name, deadline)")
+        .eq("org_id", orgId)
+        .not("stage", "in", '("awarded","declined")')
+        .gte("grant_sources.deadline", now.toISOString())
+        .order("grant_sources(deadline)", { ascending: true })
+        .limit(3),
+      db
+        .from("grant_matches")
+        .select("id, grant_sources(name, funder_name, deadline)")
+        .eq("org_id", orgId)
+        .not("grant_sources.deadline", "is", null)
+        .gte("grant_sources.deadline", now.toISOString())
+        .order("grant_sources(deadline)", { ascending: true })
+        .limit(3),
+    ]);
+
+    const calPipeline: CalendarPreviewDeadline[] = (calPipelineResult.data ?? [])
+      .filter((r) => (r.grant_sources as { deadline?: string | null } | null)?.deadline)
+      .map((r) => {
+        const gs = r.grant_sources as { name?: string; funder_name?: string; deadline?: string } | null;
+        return { id: `p-${r.id}`, grantName: gs?.name ?? "Grant", funderName: gs?.funder_name ?? "", deadline: gs!.deadline!, isPipeline: true };
+      });
+
+    const calPipelineNames = new Set(calPipeline.map((d) => d.grantName));
+    const calMatches: CalendarPreviewDeadline[] = (calMatchResult.data ?? [])
+      .filter((r) => {
+        const gs = r.grant_sources as { name?: string; deadline?: string | null } | null;
+        return gs?.deadline && !calPipelineNames.has(gs?.name ?? "");
+      })
+      .map((r) => {
+        const gs = r.grant_sources as { name?: string; funder_name?: string; deadline?: string } | null;
+        return { id: `m-${r.id}`, grantName: gs?.name ?? "Grant", funderName: gs?.funder_name ?? "", deadline: gs!.deadline!, isPipeline: false };
+      });
+
+    calendarDeadlines = [...calPipeline, ...calMatches]
+      .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+      .slice(0, 3);
   }
 
   return (
@@ -299,7 +360,18 @@ export default async function DashboardPage() {
       </div>
       <TodaysFocus items={focusItems} />
       <StatsOverview {...stats} />
+      <CalendarPreview deadlines={calendarDeadlines} />
       <ProfileCompletion savedAnswers={deferredAnswers} />
+      <VaultSummary
+        uploaded={vaultUploaded}
+        total={vaultTotal}
+        blockedFederalCount={vaultTotal - vaultUploaded > 0 ? Math.max(0, 47 - vaultUploaded * 5) : 0}
+        nextUploadHint={
+          vaultUploaded < vaultTotal
+            ? "Upload your audited financials to unlock more federal grant matches."
+            : undefined
+        }
+      />
       {activeEngagement && <ServiceTracker engagement={activeEngagement} />}
       {azScore && <AZQualification result={azScore} />}
       <IndustryInsights industryKey={industryKey} />

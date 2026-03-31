@@ -71,16 +71,27 @@ export default async function PipelinePage() {
     );
   }
 
-  const pipelineItems: PipelineItem[] = items.map((item: any) => ({
-    id: item.id,
-    stage: item.stage ?? "researching",
-    grantName: item.grant_sources?.name ?? "Unknown Grant",
-    funderName: item.grant_sources?.funder_name ?? "Unknown Funder",
-    amount: item.grant_sources?.amount_max ?? null,
-    deadline: item.grant_sources?.deadline ?? item.deadline ?? null,
-    progress: 0,
-    aiStatus: "Ready to start",
-  }));
+  // Normalize legacy stage values to the 8-stage schema
+  const STAGE_MIGRATION: Record<string, string> = {
+    researching: "identified",
+    preparing: "qualified",
+    writing: "in_development",
+  };
+
+  const pipelineItems: PipelineItem[] = items.map((item: any) => {
+    const rawStage = item.stage ?? "identified";
+    const stage = STAGE_MIGRATION[rawStage] ?? rawStage;
+    return {
+      id: item.id,
+      stage,
+      grantName: item.grant_sources?.name ?? "Unknown Grant",
+      funderName: item.grant_sources?.funder_name ?? "Unknown Funder",
+      amount: item.grant_sources?.amount_max ?? null,
+      deadline: item.grant_sources?.deadline ?? item.deadline ?? null,
+      progress: 0,
+      aiStatus: "Ready to start",
+    };
+  });
 
   return (
     <div className="p-6 max-w-full">

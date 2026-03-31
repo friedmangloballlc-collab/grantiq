@@ -11,6 +11,8 @@ import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOrg } from "@/hooks/use-org";
 import { AIDisclosure } from "@/components/shared/ai-disclosure";
+import { GrantReadinessBadge } from "@/components/vault/grant-readiness-badge";
+import type { UploadedDocument } from "@/components/vault/document-checklist";
 
 interface MatchCardProps {
   id: string;
@@ -22,6 +24,7 @@ interface MatchCardProps {
   matchScore: number;
   scoreBreakdown: Record<string, number>;
   missingRequirements: string[];
+  uploadedDocs?: UploadedDocument[];
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -150,6 +153,11 @@ export function MatchCard(props: MatchCardProps) {
               "Save to Pipeline"
             )}
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            render={<Link href={`/grants/${props.id}/evaluate`}>Evaluate</Link>}
+          />
           <Button
             size="sm"
             className="flex-1 bg-brand-teal hover:bg-brand-teal-dark text-white"
