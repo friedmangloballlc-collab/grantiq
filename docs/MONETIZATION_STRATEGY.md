@@ -1,4 +1,4 @@
-# GrantIQ Complete Monetization Strategy
+# GrantAQ Complete Monetization Strategy
 ## Revenue Architecture Analysis and Optimization
 
 **Prepared:** 2026-03-29
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-GrantIQ has five active revenue streams generating a theoretical ARPU ceiling of roughly $500/month per SaaS customer when AI writing, success fees, and formation services are included. This analysis identifies nine additional revenue vectors that could increase blended ARPU to $800-$1,200/month per account and create a total addressable revenue pool of $2.4M ARR within 18 months at 200 paying organizations — without adding a single new user.
+GrantAQ has five active revenue streams generating a theoretical ARPU ceiling of roughly $500/month per SaaS customer when AI writing, success fees, and formation services are included. This analysis identifies nine additional revenue vectors that could increase blended ARPU to $800-$1,200/month per account and create a total addressable revenue pool of $2.4M ARR within 18 months at 200 paying organizations — without adding a single new user.
 
 The highest-leverage untapped opportunities in ranked order:
 1. Data products and API licensing
@@ -161,7 +161,7 @@ Examples: "State of Grant Funding Q2 2026," "Top 50 Most Applied-For Grants," "G
 **Model:** 200 report purchases at $399 average = $79,800/year.
 
 ### Product Line D: Embedded Grant Widget — Free / $49/month premium
-JavaScript widget for nonprofit blogs and association websites. Free version: 3 grants + "Powered by GrantIQ" attribution. Premium: unlimited grants, no branding.
+JavaScript widget for nonprofit blogs and association websites. Free version: 3 grants + "Powered by GrantAQ" attribution. Premium: unlimited grants, no branding.
 
 This is a distribution play — every embedded widget is a backlink and traffic source.
 
@@ -185,7 +185,7 @@ Data products are the path to an eight-figure ARR business. SaaS subscriptions a
 
 Vetting: portfolio review, 2 client references, writing sample scored against Friedman Global quality rubric, probationary first engagement.
 
-**Demand side:** GrantIQ users who need human help beyond AI — triggered when AI Writing Expert Review tier selected or when user explicitly requests marketplace referral.
+**Demand side:** GrantAQ users who need human help beyond AI — triggered when AI Writing Expert Review tier selected or when user explicitly requests marketplace referral.
 
 ### Take Rate Structure
 | Engagement Type | Platform Take Rate | Writer Receives |
@@ -197,7 +197,7 @@ Vetting: portfolio review, 2 client references, writing sample scored against Fr
 | Fiscal sponsorship referral | $500 flat fee | Fiscal sponsor pays |
 
 ### Critical Implementation Note
-The Expert Written tier of AI Writing ($1,749) should route directly to the marketplace. Writers receive $1,312 (75%), GrantIQ receives $437 (25%). This converts a fixed-cost product SKU into a scalable marketplace transaction.
+The Expert Written tier of AI Writing ($1,749) should route directly to the marketplace. Writers receive $1,312 (75%), GrantAQ receives $437 (25%). This converts a fixed-cost product SKU into a scalable marketplace transaction.
 
 ### Marketplace Revenue Model
 | Metric | Year 1 | Year 2 | Year 3 |
@@ -209,7 +209,7 @@ The Expert Written tier of AI Writing ($1,749) should route directly to the mark
 | Gross marketplace volume | $45,000 | $192,000 | $765,000 |
 | Platform take (20%) | $9,000 | $38,400 | $153,000 |
 
-Strategic benefit: users who hire writers through GrantIQ are anchored to the platform because all history, pipeline, and documents live here.
+Strategic benefit: users who hire writers through GrantAQ are anchored to the platform because all history, pipeline, and documents live here.
 
 ---
 
@@ -391,7 +391,7 @@ Target: County/municipal governments, school districts, workforce development bo
 Includes: 25 seats ($30/additional), full API access (100,000 calls/month), custom grant database additions, audit trail exports, federal grant calendar, custom branded reporting, dedicated CSM, 99.9% SLA.
 
 ### Institutional Tier: CDFIs and Community Development — from $999/month
-CDFIs serve grant-eligible borrowers. GrantIQ's alternative funding engine integrates directly with the CDFI mission.
+CDFIs serve grant-eligible borrowers. GrantAQ's alternative funding engine integrates directly with the CDFI mission.
 
 Revenue model: per-member license ($5-$15/member/month). A CDFI with 1,000 borrowers at $8/month = $8,000/month = $96,000/year from one account.
 
@@ -454,7 +454,7 @@ These three add $638,730 in Year 1 with minimal product changes.
 
 **Month 1-2:** Launch Training products. Grant Readiness Foundations course: 2 weeks to build. Certification program outline already exists in the 14-module Friedman Global consulting system — converting it to a sellable course is a 4-6 week project. Fastest path to $100K in Year 1 revenue.
 
-**Month 2-3:** Approach 5 Friedman Global government or CDFI clients about institutional GrantIQ licenses. Warm relationships, annual contracts, highest ARPU per sales hour of any segment.
+**Month 2-3:** Approach 5 Friedman Global government or CDFI clients about institutional GrantAQ licenses. Warm relationships, annual contracts, highest ARPU per sales hour of any segment.
 
 **Month 3-4:** Launch Grant Intelligence API as beta. Target 3 CRM vendors or CDFI networks as early partners. Revenue starts small but the first live API integration is enormous for the white-label pipeline.
 
@@ -471,7 +471,7 @@ Convert the Friedman Global 14-module consulting system into a Grant Consulting 
 This one product does four things simultaneously:
 1. Generates $60,000-$120,000 in Year 1 training revenue
 2. Builds the marketplace supply side at zero acquisition cost
-3. Creates a community of certified practitioners who refer clients to GrantIQ
-4. Establishes GrantIQ as the credential authority in an unregulated field — a strategic moat no competitor can replicate
+3. Creates a community of certified practitioners who refer clients to GrantAQ
+4. Establishes GrantAQ as the credential authority in an unregulated field — a strategic moat no competitor can replicate
 
-Instrumentl has 400,000 grants. No one has a certification. That white space belongs to GrantIQ.
+Instrumentl has 400,000 grants. No one has a certification. That white space belongs to GrantAQ.

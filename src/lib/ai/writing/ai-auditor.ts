@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/ai-auditor.ts
+// grantaq/src/lib/ai/writing/ai-auditor.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 import {

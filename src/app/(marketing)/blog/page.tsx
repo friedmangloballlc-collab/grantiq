@@ -4,18 +4,18 @@ import { BLOG_POSTS } from "@/lib/blog/posts";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "GrantIQ Blog — Grant Strategy & Writing Insights",
+  title: "GrantAQ Blog — Grant Strategy & Writing Insights",
   description:
     "Expert guides on grant discovery, proposal writing, nonprofit operations, and AI-powered funding strategy. Written by the team behind Friedman Global's grant consulting playbooks.",
   alternates: {
-    canonical: "https://grantiq.com/blog",
+    canonical: "https://grantaq.com/blog",
   },
   openGraph: {
-    title: "GrantIQ Blog — Grant Strategy & Writing Insights",
+    title: "GrantAQ Blog — Grant Strategy & Writing Insights",
     description:
-      "Expert guides on grant strategy, proposal writing, and nonprofit funding. AI-powered insights from the GrantIQ team.",
-    url: "https://grantiq.com/blog",
-    siteName: "GrantIQ",
+      "Expert guides on grant strategy, proposal writing, and nonprofit funding. AI-powered insights from the GrantAQ team.",
+    url: "https://grantaq.com/blog",
+    siteName: "GrantAQ",
     type: "website",
   },
 };
@@ -123,7 +123,7 @@ export default function BlogIndexPage() {
           Ready to put this into practice?
         </h2>
         <p className="text-warm-500 mt-2 max-w-xl mx-auto">
-          GrantIQ matches your organization to 5,000+ grants — and helps you write winning
+          GrantAQ matches your organization to 5,000+ grants — and helps you write winning
           applications faster with AI.
         </p>
         <Link

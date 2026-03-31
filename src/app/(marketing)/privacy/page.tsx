@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — GrantIQ",
-  description: "How GrantIQ collects, uses, and protects your data.",
+  title: "Privacy Policy — GrantAQ",
+  description: "How GrantAQ collects, uses, and protects your data.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -13,14 +13,14 @@ export default function PrivacyPolicyPage() {
 
       <Section title="1. Who We Are">
         <p>
-          GrantIQ is a product of <strong>Friedman Global LLC</strong>, a grant consulting and technology company. When
-          this policy says "GrantIQ," "we," "us," or "our," it refers to Friedman Global LLC and the GrantIQ platform
-          operated at grantiq.com.
+          GrantAQ is a product of <strong>Friedman Global LLC</strong>, a grant consulting and technology company. When
+          this policy says "GrantAQ," "we," "us," or "our," it refers to Friedman Global LLC and the GrantAQ platform
+          operated at grantaq.com.
         </p>
         <p className="mt-3">
           Questions about this policy? Contact us at{" "}
-          <a href="mailto:privacy@grantiq.com" className="text-brand-teal hover:underline">
-            privacy@grantiq.com
+          <a href="mailto:privacy@grantaq.com" className="text-brand-teal hover:underline">
+            privacy@grantaq.com
           </a>
           .
         </p>
@@ -105,8 +105,8 @@ export default function PrivacyPolicyPage() {
         </ul>
         <p className="mt-3 text-sm">
           To exercise any of these rights, email{" "}
-          <a href="mailto:privacy@grantiq.com" className="text-brand-teal hover:underline">
-            privacy@grantiq.com
+          <a href="mailto:privacy@grantaq.com" className="text-brand-teal hover:underline">
+            privacy@grantaq.com
           </a>
           .
         </p>
@@ -123,11 +123,11 @@ export default function PrivacyPolicyPage() {
 
       <Section title="8. Children's Privacy (COPPA)">
         <p className="text-sm">
-          GrantIQ is not directed to children under the age of 13, and we do not knowingly collect personal information
+          GrantAQ is not directed to children under the age of 13, and we do not knowingly collect personal information
           from children under 13. If you believe a child under 13 has provided us with personal information, contact us
           immediately at{" "}
-          <a href="mailto:privacy@grantiq.com" className="text-brand-teal hover:underline">
-            privacy@grantiq.com
+          <a href="mailto:privacy@grantaq.com" className="text-brand-teal hover:underline">
+            privacy@grantaq.com
           </a>{" "}
           and we will delete it promptly.
         </p>
@@ -146,8 +146,8 @@ export default function PrivacyPolicyPage() {
         </ul>
         <p className="mt-3 text-sm">
           To submit a CCPA request, email{" "}
-          <a href="mailto:privacy@grantiq.com" className="text-brand-teal hover:underline">
-            privacy@grantiq.com
+          <a href="mailto:privacy@grantaq.com" className="text-brand-teal hover:underline">
+            privacy@grantaq.com
           </a>{" "}
           with the subject line "CCPA Request."
         </p>
@@ -175,15 +175,15 @@ export default function PrivacyPolicyPage() {
       <Section title="12. Changes to This Policy">
         <p className="text-sm">
           We may update this Privacy Policy from time to time. Material changes will be communicated by email and/or a
-          prominent notice on the platform at least 30 days before taking effect. Continued use of GrantIQ after the
+          prominent notice on the platform at least 30 days before taking effect. Continued use of GrantAQ after the
           effective date constitutes acceptance of the updated policy.
         </p>
       </Section>
 
       <div className="mt-12 p-4 rounded-lg bg-warm-100 dark:bg-warm-800 text-sm text-warm-600 dark:text-warm-400">
-        <strong>Contact:</strong> Friedman Global LLC / GrantIQ &mdash;{" "}
-        <a href="mailto:privacy@grantiq.com" className="text-brand-teal hover:underline">
-          privacy@grantiq.com
+        <strong>Contact:</strong> Friedman Global LLC / GrantAQ &mdash;{" "}
+        <a href="mailto:privacy@grantaq.com" className="text-brand-teal hover:underline">
+          privacy@grantaq.com
         </a>
       </div>
     </main>

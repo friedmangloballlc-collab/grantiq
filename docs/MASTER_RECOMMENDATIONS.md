@@ -1,4 +1,4 @@
-# GrantIQ Master Strategy & Recommendations
+# GrantAQ Master Strategy & Recommendations
 
 ## Compiled from 6 Specialist Agents + 4 Source Documents + Full System Design
 
@@ -182,12 +182,12 @@ The following items were recommended by agents but NOT included in the original 
 - [ ] **Grant Writer Marketplace** — 15-20% take rate connecting orgs with vetted writers
 - [ ] **Fiscal Sponsorship facilitation** — $199-$499 matching fee for pre-501c3 orgs
 - [ ] **Data products** — sell anonymized grant intelligence to foundations ($5K-$25K/yr)
-- [ ] **White-label licensing** — state nonprofit associations resell GrantIQ
-- [ ] **"Powered by GrantIQ" watermark** — on free-tier AI-generated content
+- [ ] **White-label licensing** — state nonprofit associations resell GrantAQ
+- [ ] **"Powered by GrantAQ" watermark** — on free-tier AI-generated content
 
 ### From Growth Hacker:
 - [ ] **Embeddable Grant Finder widget** — partners embed on their sites ✅ In Top 20
-- [ ] **Shareable match results card** — "GrantIQ found 47 grants worth $2.3M" with signup link
+- [ ] **Shareable match results card** — "GrantAQ found 47 grants worth $2.3M" with signup link
 - [ ] **Public Readiness Score pages** — shareable URL showing score + breakdown
 - [ ] **Two-sided referral program** — referrer gets credit + referred gets 14-day Pro trial
 - [ ] **SCORE partnership** — 900+ chapters, 1M+ entrepreneurs/year

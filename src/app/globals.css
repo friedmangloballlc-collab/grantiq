@@ -47,7 +47,7 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* GrantIQ Brand Colors */
+  /* GrantAQ Brand Colors */
   /* #0D9488 is used for backgrounds/non-text elements (3.5:1 on white — decorative) */
   --color-brand-teal: #0D9488;
   /* #0B7C72 meets WCAG AA (4.5:1 on white) — use for text */

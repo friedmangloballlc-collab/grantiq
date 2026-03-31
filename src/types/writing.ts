@@ -1,4 +1,4 @@
-// grantiq/src/types/writing.ts
+// grantaq/src/types/writing.ts
 
 import type {
   RfpParseOutput,

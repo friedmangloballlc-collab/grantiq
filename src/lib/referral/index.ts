@@ -5,5 +5,5 @@ export function generateReferralCode(): string {
 }
 
 export function getReferralUrl(code: string): string {
-  return `${process.env.NEXT_PUBLIC_APP_URL || "https://grantiq.com"}/ref/${code}`;
+  return `${process.env.NEXT_PUBLIC_APP_URL || "https://grantaq.com"}/ref/${code}`;
 }

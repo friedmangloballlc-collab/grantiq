@@ -6,7 +6,7 @@ export interface SequenceEmail {
 }
 
 export const POST_SIGNUP_SEQUENCE: SequenceEmail[] = [
-  { day: 0, subject: "Your GrantIQ account is ready — start here", template: "welcome" },
+  { day: 0, subject: "Your GrantAQ account is ready — start here", template: "welcome" },
   { day: 1, subject: "The one thing most grant seekers skip", template: "readiness_nudge", condition: "readiness_not_complete" },
   { day: 2, subject: "Your readiness score is in — here's what it means", template: "readiness_result", condition: "readiness_complete" },
   { day: 3, subject: "How organizations like yours find grants they never knew existed", template: "discovery_story" },

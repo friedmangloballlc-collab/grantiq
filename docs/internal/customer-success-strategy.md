@@ -1,11 +1,11 @@
-# GrantIQ Customer Success Strategy
+# GrantAQ Customer Success Strategy
 ## Internal Playbook — Version 1.0 | March 2026
 
 ---
 
 ## Overview
 
-This document defines GrantIQ's complete customer success framework across all six revenue segments. It is the operational source of truth for onboarding milestones, health scoring, engagement triggers, churn prevention, upsell timing, consulting renewal cadences, and NPS collection.
+This document defines GrantAQ's complete customer success framework across all six revenue segments. It is the operational source of truth for onboarding milestones, health scoring, engagement triggers, churn prevention, upsell timing, consulting renewal cadences, and NPS collection.
 
 The underlying philosophy: **every customer interaction should either reduce churn risk, accelerate upgrade, or generate advocacy**. No touchpoint is neutral.
 
@@ -73,7 +73,7 @@ Activation is segment-specific. A user who completes onboarding but never runs a
 ### Consulting Clients ($1,500–$15,000 engagements) — Activated When:
 1. Intake form completed and reviewed by CSM
 2. Kickoff call held within 72 hours of payment
-3. GrantIQ organization profile created and populated
+3. GrantAQ organization profile created and populated
 4. Readiness Assessment completed and shared with client
 5. First deliverable milestone acknowledged in writing (email or signed SOW milestone)
 
@@ -95,7 +95,7 @@ Activation is segment-specific. A user who completes onboarding but never runs a
 
 ## Part 2: Health Score Model
 
-The GrantIQ Health Score is a 0–100 composite index computed per organization. It runs nightly for paid accounts and weekly for free accounts. It is the primary tool for identifying churn risk and expansion opportunity.
+The GrantAQ Health Score is a 0–100 composite index computed per organization. It runs nightly for paid accounts and weekly for free accounts. It is the primary tool for identifying churn risk and expansion opportunity.
 
 ### Score Architecture
 
@@ -229,7 +229,7 @@ All engagement is segmented by channel: automated email, in-app message, or CSM-
 
 **Condition:** No login in 14 days (Starter), 10 days (Pro), 7 days (Enterprise)
 **Channel:** Email from CSM
-**Subject:** "We noticed you haven't been in GrantIQ lately."
+**Subject:** "We noticed you haven't been in GrantAQ lately."
 **Body:** Acknowledge the gap. Share one relevant insight ("There are 3 new grants in your area this week matching your profile"). CTA: Log Back In. Offer a call if they are stuck.
 **Goal:** Re-engage before the 21-day mark, which is the churn signal threshold.
 
@@ -284,7 +284,7 @@ Every account is reviewed weekly against the Health Score model. Accounts in Ora
 
 **Day 14:** Automated email. Subject: "We miss you — here's what changed." Highlight new grants in their match profile. CTA: View Updates.
 
-**Day 17:** If no login, CSM personal email. Subject: "Quick check-in from GrantIQ." 3 sentences max. Ask one question: "Is there anything getting in the way of your grant work right now?"
+**Day 17:** If no login, CSM personal email. Subject: "Quick check-in from GrantAQ." 3 sentences max. Ask one question: "Is there anything getting in the way of your grant work right now?"
 
 **Day 21:** If still no login, CSM phone call attempt. If no answer, leave voicemail + follow-up email. Offer to pause the account (30-day pause, if product supports it) rather than cancel. This reduces cancellations by approximately 20-30% based on SaaS industry benchmarks.
 
@@ -305,7 +305,7 @@ Every account is reviewed weekly against the Health Score model. Accounts in Ora
 - Feature gap: Escalate to product team. Offer extended trial of needed feature if buildable.
 - No time: Offer account pause (30 days). Offer consulting engagement to do the work for them.
 - Completed objective: Offer downgrade to free. Nurture for reactivation at renewal cycle.
-- Chose competitor: Do not fight. Learn. Send off with goodwill. Ask if they would be willing to try GrantIQ again in 6 months.
+- Chose competitor: Do not fight. Learn. Send off with goodwill. Ask if they would be willing to try GrantAQ again in 6 months.
 - Product not working: Immediate escalation to support. Offer service credit. Do not let this be a churn reason.
 
 **Step 5 (Win-Back):** If they cancel anyway, enter 90-day win-back sequence: email at day 15 ("here's what's new"), day 45 ("we built something you asked for"), day 90 ("ready to come back? here's an offer").
@@ -316,7 +316,7 @@ Every account is reviewed weekly against the Health Score model. Accounts in Ora
 
 **Signal:** Key user deactivated, or user sends goodbye email, or LinkedIn shows they left the org.
 
-**Step 1 (Within 24 hours):** Email the account's billing contact and any remaining admin-level users. Subject: "Checking in on your GrantIQ account." Do not reference the departed person by name unless already in a relationship with remaining contacts.
+**Step 1 (Within 24 hours):** Email the account's billing contact and any remaining admin-level users. Subject: "Checking in on your GrantAQ account." Do not reference the departed person by name unless already in a relationship with remaining contacts.
 
 **Step 2 (Within 3 business days):** Offer onboarding call for the new point of contact. Rebuild the relationship from scratch — do not assume the new person understands the value.
 
@@ -326,7 +326,7 @@ Every account is reviewed weekly against the Health Score model. Accounts in Ora
 
 #### Playbook 4-D: Failed Payment
 
-**Day 0 (Payment fails):** Automated email to billing contact. Subject: "Action required: payment issue on your GrantIQ account." Friendly, not threatening. CTA: Update Payment Method. Account remains fully active.
+**Day 0 (Payment fails):** Automated email to billing contact. Subject: "Action required: payment issue on your GrantAQ account." Friendly, not threatening. CTA: Update Payment Method. Account remains fully active.
 
 **Day 3 (If not resolved):** Second automated email. Same tone, slightly more urgent. Mention account access at risk in 7 days.
 
@@ -526,8 +526,8 @@ Set internal reminder for all renewal steps. Create renewal opportunity in CRM. 
 
 **Day 30 (Post-engagement check-in):**
 - CSM emails: "How are things going?" Ask about grants applied, readiness progress, any obstacles.
-- If GrantIQ SaaS is active: review health score. If below 60, trigger re-engagement.
-- If GrantIQ SaaS is not active: soft pitch to start free tier and discover new matches.
+- If GrantAQ SaaS is active: review health score. If below 60, trigger re-engagement.
+- If GrantAQ SaaS is not active: soft pitch to start free tier and discover new matches.
 
 **Day 90 (Post-engagement follow-up):**
 - CSM email or call: "Checking in at the 90-day mark."
@@ -552,8 +552,8 @@ NPS is not a vanity metric. Every NPS response must result in an action: a thank
 **Free Tier:**
 - Triggered NPS at Day 30 (if activated — scored 60+ on free health model)
 - Survey channel: In-app modal, not email (higher response rate for free users)
-- Question: "How likely are you to recommend GrantIQ to another nonprofit or grant-seeking organization?"
-- Follow-up open text: "What's the one thing that would make GrantIQ more valuable to you?"
+- Question: "How likely are you to recommend GrantAQ to another nonprofit or grant-seeking organization?"
+- Follow-up open text: "What's the one thing that would make GrantAQ more valuable to you?"
 - Do not send NPS to unactivated free users — the score will be artificially low and unactionable.
 
 **Starter:**
@@ -589,7 +589,7 @@ NPS is not a vanity metric. Every NPS response must result in an action: a thank
 
 **Promoters (Score 9-10):**
 1. Automated thank-you email within 24 hours, signed by CSM.
-2. Referral ask: "We'd love to introduce GrantIQ to organizations like yours. Do you know anyone who would benefit?" Include referral link.
+2. Referral ask: "We'd love to introduce GrantAQ to organizations like yours. Do you know anyone who would benefit?" Include referral link.
 3. Advocacy ask 7 days later: "Would you be willing to share a short testimonial or join our customer advisory board?"
 4. Case study invitation for high-revenue accounts (Pro, Enterprise, consulting clients).
 
@@ -644,7 +644,7 @@ Activated when a customer has: NPS score of 9-10, at least one grant awarded, an
 
 **Reference Program:** Customers can opt in as a reference for sales conversations. Compensation: 1 free month of Pro or equivalent credit.
 
-**Case Study Track:** CSM proposes a co-authored case study (GrantIQ writes it, customer approves). Published on website and used in sales. Customer gets featured visibility and a co-branded PDF to share.
+**Case Study Track:** CSM proposes a co-authored case study (GrantAQ writes it, customer approves). Published on website and used in sales. Customer gets featured visibility and a co-branded PDF to share.
 
 **Referral Program:** The existing referral system (built in Phase 6 with `src/lib/referral/index.ts`) handles referral link tracking and rewards. CSM's role is to surface the referral opportunity at the right moment (post-award, post-NPS, post-positive support ticket resolution).
 
@@ -670,7 +670,7 @@ Activated when a customer has: NPS score of 9-10, at least one grant awarded, an
 
 ## Appendix: Email Templates Index
 
-The following templates should be built in Resend (GrantIQ's email provider) and triggered by the event conditions described above.
+The following templates should be built in Resend (GrantAQ's email provider) and triggered by the event conditions described above.
 
 | Template ID | Trigger | Segment | Channel |
 |-------------|---------|---------|---------|

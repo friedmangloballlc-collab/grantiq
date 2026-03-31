@@ -3,7 +3,7 @@ import { getOrgContext } from "@/lib/auth/get-org-context";
 import { FundersDirectoryClient } from "@/components/funders/funders-directory-client";
 
 export const metadata = {
-  title: "Funder Directory — GrantIQ",
+  title: "Funder Directory — GrantAQ",
 };
 
 export default async function FundersPage() {

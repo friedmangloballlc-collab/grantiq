@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/budget-narrative.ts
+// grantaq/src/lib/ai/writing/budget-narrative.ts
 
 import { getAnthropicClient, MODELS } from "@/lib/ai/client";
 import type { BudgetLineItem } from "@/components/budget/budget-builder";

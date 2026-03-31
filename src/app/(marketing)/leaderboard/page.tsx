@@ -5,9 +5,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Funding Leaderboard | GrantIQ",
+  title: "Funding Leaderboard | GrantAQ",
   description:
-    "See how much grant funding GrantIQ users have secured across all 50 states.",
+    "See how much grant funding GrantAQ users have secured across all 50 states.",
 };
 
 export const revalidate = 3600;
@@ -33,14 +33,14 @@ export default async function LeaderboardPage() {
           Funding Leaderboard
         </h1>
         <p className="text-warm-500 mt-2">
-          Real results from real organizations using GrantIQ.
+          Real results from real organizations using GrantAQ.
         </p>
       </div>
 
       <Card className="border-brand-teal/30 bg-brand-teal/5 mb-8">
         <CardContent className="p-8 text-center">
           <p className="text-sm text-warm-500">
-            Total funding secured through GrantIQ
+            Total funding secured through GrantAQ
           </p>
           <p className="text-5xl font-bold text-brand-teal mt-2">
             {totalFunding >= 1_000_000

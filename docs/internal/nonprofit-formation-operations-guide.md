@@ -1,6 +1,6 @@
 # Nonprofit Formation Operations Guide
 
-## Internal Use Only — GrantIQ Nonprofit Formation Service
+## Internal Use Only — GrantAQ Nonprofit Formation Service
 
 This is the step-by-step operations manual for processing nonprofit formation clients. When a client submits the intake form, follow this guide based on their selected package.
 
@@ -269,8 +269,8 @@ This is the step-by-step operations manual for processing nonprofit formation cl
 **Warning:** Submit applications 48-72 hours before deadlines — system overloads cause failures.
 
 ### Step 17: Grant Readiness Assessment
-- [ ] Run GrantIQ Readiness Engine on client's profile
-- [ ] Generate first 3 grant matches via GrantIQ Match Engine
+- [ ] Run GrantAQ Readiness Engine on client's profile
+- [ ] Generate first 3 grant matches via GrantAQ Match Engine
 - [ ] Prepare Grant Readiness Report for client including:
   - Readiness score (A-J criteria)
   - Top 3 matched grants with match scores
@@ -325,7 +325,7 @@ This is the step-by-step operations manual for processing nonprofit formation cl
 - [ ] UEI confirmed
 - [ ] Grants.gov account active with 2+ AORs
 - [ ] Annual SAM.gov renewal reminder set
-- [ ] GrantIQ profile complete
+- [ ] GrantAQ profile complete
 - [ ] 3 grant matches generated and reviewed
 
 ---

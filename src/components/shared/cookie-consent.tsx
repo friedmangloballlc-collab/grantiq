@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY = "grantiq_cookie_consent";
+const STORAGE_KEY = "grantaq_cookie_consent";
 
 type ConsentState = "accepted" | "declined" | null;
 

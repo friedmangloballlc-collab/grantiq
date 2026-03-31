@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .limit(50000);
 
   const grantPages = (grants ?? []).map((g) => ({
-    url: `https://grantiq.com/grant-directory/${g.id}`,
+    url: `https://grantaq.com/grant-directory/${g.id}`,
     lastModified: g.last_verified ?? new Date().toISOString(),
     changeFrequency: "weekly" as const,
     priority: 0.7,
@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Industry hub pages
   // ---------------------------------------------------------------------------
   const industryPages = TOP_30_INDUSTRIES.map((industry) => ({
-    url: `https://grantiq.com/grants/industry/${industry}`,
+    url: `https://grantaq.com/grants/industry/${industry}`,
     lastModified: new Date(),
     changeFrequency: "daily" as const,
     priority: 0.85,
@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // State pages
   // ---------------------------------------------------------------------------
   const statePages = ALL_STATE_CODES.map((code) => ({
-    url: `https://grantiq.com/grants/state/${code.toLowerCase()}`,
+    url: `https://grantaq.com/grants/state/${code.toLowerCase()}`,
     lastModified: new Date(),
     changeFrequency: "daily" as const,
     priority: 0.8,
@@ -66,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       if ((count ?? 0) >= 3) {
         crossRefPages.push({
-          url: `https://grantiq.com/grants/industry/${industry}/${stateCode.toLowerCase()}`,
+          url: `https://grantaq.com/grants/industry/${industry}/${stateCode.toLowerCase()}`,
           lastModified: new Date(),
           changeFrequency: "daily" as const,
           priority: 0.75,
@@ -80,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ---------------------------------------------------------------------------
   const blogIndexPage: MetadataRoute.Sitemap = [
     {
-      url: "https://grantiq.com/blog",
+      url: "https://grantaq.com/blog",
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.85,
@@ -88,7 +88,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const blogPostPages: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
-    url: `https://grantiq.com/blog/${post.slug}`,
+    url: `https://grantaq.com/blog/${post.slug}`,
     lastModified: new Date(post.publishedAt),
     changeFrequency: "monthly" as const,
     priority: 0.8,
@@ -97,37 +97,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     // Core pages
     {
-      url: "https://grantiq.com",
+      url: "https://grantaq.com",
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
-      url: "https://grantiq.com/grant-directory",
+      url: "https://grantaq.com/grant-directory",
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: "https://grantiq.com/grants/states",
+      url: "https://grantaq.com/grants/states",
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.85,
     },
     {
-      url: "https://grantiq.com/pricing",
+      url: "https://grantaq.com/pricing",
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
-      url: "https://grantiq.com/leaderboard",
+      url: "https://grantaq.com/leaderboard",
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.6,
     },
     {
-      url: "https://grantiq.com/tools/funding-gap",
+      url: "https://grantaq.com/tools/funding-gap",
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,

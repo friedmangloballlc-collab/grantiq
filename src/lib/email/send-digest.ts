@@ -8,7 +8,7 @@ import type {
   ActionItem,
 } from "@/emails/weekly-digest";
 
-const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.grantiq.com";
+const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.grantaq.com";
 
 function formatAmount(min: number | null, max: number | null): string {
   if (!min && !max) return "Amount varies";
@@ -251,11 +251,11 @@ export async function sendWeeklyDigest(orgId: string, userEmail: string, userId:
   if (matchCount > 0) subjectParts.push(`${matchCount} new match${matchCount > 1 ? "es" : ""}`);
   if (deadlineCount > 0) subjectParts.push(`${deadlineCount} deadline${deadlineCount > 1 ? "s" : ""} coming up`);
   const subject = subjectParts.length > 0
-    ? `GrantIQ Digest: ${subjectParts.join(" · ")}`
-    : "Your GrantIQ Weekly Digest";
+    ? `GrantAQ Digest: ${subjectParts.join(" · ")}`
+    : "Your GrantAQ Weekly Digest";
 
   await resend.emails.send({
-    from: "GrantIQ <digest@mail.grantiq.com>",
+    from: "GrantAQ <digest@mail.grantaq.com>",
     to: userEmail,
     subject,
     html,

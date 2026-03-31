@@ -33,21 +33,21 @@ export async function generateMetadata({ params }: ShareResultsPageProps): Promi
   const { token } = await params;
   const payload = parseToken(token);
   if (!payload) {
-    return { title: "Grant Match Results | GrantIQ" };
+    return { title: "Grant Match Results | GrantAQ" };
   }
-  const desc = `GrantIQ found ${payload.count} grants worth ${formatValue(payload.value)} for ${payload.org}. Get your own AI-powered grant matches — free.`;
+  const desc = `GrantAQ found ${payload.count} grants worth ${formatValue(payload.value)} for ${payload.org}. Get your own AI-powered grant matches — free.`;
   const imageUrl = `/api/share/match-card?count=${payload.count}&value=${payload.value}&org=${encodeURIComponent(payload.org)}`;
   return {
-    title: `${payload.count} Grants Found for ${payload.org} | GrantIQ`,
+    title: `${payload.count} Grants Found for ${payload.org} | GrantAQ`,
     description: desc,
     openGraph: {
-      title: `GrantIQ found ${payload.count} grants for ${payload.org}`,
+      title: `GrantAQ found ${payload.count} grants for ${payload.org}`,
       description: desc,
       images: [{ url: imageUrl, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
-      title: `GrantIQ found ${payload.count} grants for ${payload.org}`,
+      title: `GrantAQ found ${payload.count} grants for ${payload.org}`,
       description: desc,
       images: [imageUrl],
     },
@@ -89,7 +89,7 @@ export default async function ShareResultsPage({ params }: ShareResultsPageProps
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
-            alt={`GrantIQ found ${payload.count} grants for ${payload.org}`}
+            alt={`GrantAQ found ${payload.count} grants for ${payload.org}`}
             className="w-full"
             width={1200}
             height={630}
@@ -99,7 +99,7 @@ export default async function ShareResultsPage({ params }: ShareResultsPageProps
         {/* Headline */}
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50 tracking-tight">
-            GrantIQ found{" "}
+            GrantAQ found{" "}
             <span className="text-brand-teal">{payload.count} grants</span> worth{" "}
             <span className="text-brand-teal">{formatValue(payload.value)}</span>
           </h1>

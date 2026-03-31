@@ -1,7 +1,7 @@
 /**
  * Partner referral tracking.
  *
- * Partners embed the GrantIQ widget on their websites using a `data-partner`
+ * Partners embed the GrantAQ widget on their websites using a `data-partner`
  * attribute (e.g. `data-partner="SCORE"`). The embed script forwards this as a
  * `?partner=` query param to the widget page, which in turn appends it to the
  * /signup URL as `?ref=<partner>`.

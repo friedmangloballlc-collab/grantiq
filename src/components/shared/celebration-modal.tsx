@@ -40,7 +40,7 @@ const CELEBRATION_CONFIG: Record<
   },
 };
 
-const STORAGE_KEY = "grantiq_celebrations_seen";
+const STORAGE_KEY = "grantaq_celebrations_seen";
 
 function getSeenCelebrations(): Set<CelebrationEvent> {
   if (typeof window === "undefined") return new Set();

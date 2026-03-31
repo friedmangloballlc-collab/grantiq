@@ -84,7 +84,7 @@ export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
           className="h-5 w-5 text-[var(--color-brand-teal)]"
           aria-hidden="true"
         />
-        <span className="text-lg font-bold tracking-tight">GrantIQ</span>
+        <span className="text-lg font-bold tracking-tight">GrantAQ</span>
       </div>
 
       {/* Navigation */}
@@ -152,7 +152,7 @@ export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
         {certCriteria && (
           <ReadinessBadgeMini criteria={certCriteria} />
         )}
-        <p className="text-xs text-muted-foreground px-2">GrantIQ &copy; 2026</p>
+        <p className="text-xs text-muted-foreground px-2">GrantAQ &copy; 2026</p>
       </div>
     </aside>
   );

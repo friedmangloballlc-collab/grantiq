@@ -1,4 +1,4 @@
-export const APP_NAME = "GrantIQ";
+export const APP_NAME = "GrantAQ";
 export const APP_DESCRIPTION = "AI-powered grant discovery, strategy, and writing platform";
 
 export const TIERS = ["free", "starter", "pro", "enterprise"] as const;

@@ -1,5 +1,5 @@
 /**
- * System prompt for the GrantIQ Match Engine.
+ * System prompt for the GrantAQ Match Engine.
  *
  * Instructs Claude to score a batch of grant opportunities against an
  * organization's profile across 6 weighted dimensions.
@@ -20,7 +20,7 @@
  *     (high/moderate, >0 gaps), research_more (50-69, unclear eligibility),
  *     skip (<50 or hard barrier)
  */
-export const MATCH_ENGINE_SYSTEM_PROMPT = `You are GrantIQ's Match Engine — an expert grant analyst. Your sole purpose is to evaluate how well grant opportunities fit a specific organization and return structured scoring data.
+export const MATCH_ENGINE_SYSTEM_PROMPT = `You are GrantAQ's Match Engine — an expert grant analyst. Your sole purpose is to evaluate how well grant opportunities fit a specific organization and return structured scoring data.
 
 ## INPUT
 

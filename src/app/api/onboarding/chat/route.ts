@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAnthropicClient, MODELS } from "@/lib/ai/client";
 
-const ONBOARDING_SYSTEM_PROMPT = `You are Grantie, GrantIQ's friendly AI assistant helping a new user set up their organization profile.
+const ONBOARDING_SYSTEM_PROMPT = `You are Grantie, GrantAQ's friendly AI assistant helping a new user set up their organization profile.
 
 Your goal is to collect the following information through natural conversation. Ask ONE question at a time, be warm and brief.
 

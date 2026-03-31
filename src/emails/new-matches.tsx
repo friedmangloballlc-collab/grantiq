@@ -51,7 +51,7 @@ export function NewMatches({
   orgName,
   newMatchCount,
   topMatches,
-  appBaseUrl = "https://app.grantiq.com",
+  appBaseUrl = "https://app.grantaq.com",
   unsubscribeUrl,
 }: NewMatchesProps) {
   const resolvedUnsubscribeUrl = unsubscribeUrl ?? `${appBaseUrl}/settings#notifications`;
@@ -68,7 +68,7 @@ export function NewMatches({
           {/* Header */}
           <Section style={{ backgroundColor: TEAL, padding: "28px 40px" }}>
             <Text style={{ color: "#ffffff", fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 6px" }}>
-              GrantIQ
+              GrantAQ
             </Text>
             <Heading style={{ color: "#ffffff", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: "1.3" }}>
               {newMatchCount} new grant match{newMatchCount !== 1 ? "es" : ""} since your last visit
@@ -151,12 +151,12 @@ export function NewMatches({
           <Section style={{ padding: "28px 40px 32px" }}>
             <Hr style={{ borderColor: WARM_200, margin: "0 0 20px" }} />
             <Text style={{ color: WARM_500, fontSize: 12, margin: 0 }}>
-              You&apos;re receiving this because you haven&apos;t logged in to GrantIQ recently.
+              You&apos;re receiving this because you haven&apos;t logged in to GrantAQ recently.
             </Text>
             <Text style={{ color: WARM_500, fontSize: 12, margin: "6px 0 0" }}>
               <Link href={resolvedUnsubscribeUrl} style={{ color: WARM_500 }}>Unsubscribe</Link>
               {" · "}
-              <Link href="https://grantiq.com" style={{ color: WARM_500 }}>GrantIQ</Link>
+              <Link href="https://grantaq.com" style={{ color: WARM_500 }}>GrantAQ</Link>
             </Text>
           </Section>
 

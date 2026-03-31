@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 // GET /api/engagements — list active service engagements for the user's org
 export async function GET() {
@@ -39,7 +40,7 @@ export async function GET() {
 
     return NextResponse.json({ engagements: data ?? [] });
   } catch (err) {
-    console.error("GET /api/engagements error:", err);
+    logger.error("GET /api/engagements error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ engagement: data }, { status: 201 });
   } catch (err) {
-    console.error("POST /api/engagements error:", err);
+    logger.error("POST /api/engagements error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

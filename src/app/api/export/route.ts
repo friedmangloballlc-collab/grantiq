@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
         break;
     }
 
-    const filename = `grantiq-${type}-${new Date().toISOString().split("T")[0]}.csv`;
+    const filename = `grantaq-${type}-${new Date().toISOString().split("T")[0]}.csv`;
 
     return new NextResponse(csv, {
       status: 200,

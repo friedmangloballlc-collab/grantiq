@@ -39,7 +39,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="h-6 w-6" style={{ color: "var(--color-brand-teal)" }} />
-            <span className="text-xl font-bold">GrantIQ</span>
+            <span className="text-xl font-bold">GrantAQ</span>
           </div>
           <CardTitle>Welcome back</CardTitle>
         </CardHeader>

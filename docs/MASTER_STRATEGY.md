@@ -1,4 +1,4 @@
-# GrantIQ Master Strategy Document
+# GrantAQ Master Strategy Document
 
 ## Status: Compiling — agents still reporting
 

@@ -77,13 +77,13 @@ export default function PartnersPage() {
       if (!res.ok) throw new Error("Submission failed");
       setSubmitted(true);
     } catch {
-      setError("Something went wrong. Please email partners@grantiq.com directly.");
+      setError("Something went wrong. Please email partners@grantaq.com directly.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const embedCode = `<script src="https://grantiq-gold.vercel.app/embed.js" data-partner="YOUR_PARTNER_ID"></script>`;
+  const embedCode = `<script src="https://grantaq.com/embed.js" data-partner="YOUR_PARTNER_ID"></script>`;
 
   return (
     <div className="bg-white dark:bg-warm-900">
@@ -98,7 +98,7 @@ export default function PartnersPage() {
             <span className="text-brand-teal">Earn $25 Per Signup.</span>
           </h1>
           <p className="text-lg text-warm-500 max-w-2xl mx-auto mb-8">
-            Embed the GrantIQ Grant Finder widget on your website. Your clients get instant access to
+            Embed the GrantAQ Grant Finder widget on your website. Your clients get instant access to
             5,000+ funding opportunities — and you earn a commission for every one who signs up.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -146,7 +146,7 @@ export default function PartnersPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-warm-900 dark:text-warm-50 mb-3">
-              Why Partner with GrantIQ?
+              Why Partner with GrantAQ?
             </h2>
             <p className="text-warm-500 max-w-xl mx-auto">
               A no-brainer way to add value for your clients — and a new revenue stream for your organization.
@@ -195,7 +195,7 @@ export default function PartnersPage() {
               {
                 step: "3",
                 title: "Earn on Every Signup",
-                desc: "Every visitor who signs up for GrantIQ through your widget earns you $25. We pay monthly.",
+                desc: "Every visitor who signs up for GrantAQ through your widget earns you $25. We pay monthly.",
               },
             ].map((item) => (
               <div key={item.step} className="text-center">
@@ -228,7 +228,7 @@ export default function PartnersPage() {
               <iframe
                 src="/embed/finder?partner=preview"
                 style={{ width: "100%", height: "420px", border: "none", display: "block" }}
-                title="GrantIQ Grant Finder Widget Preview"
+                title="GrantAQ Grant Finder Widget Preview"
               />
             </div>
 
@@ -255,7 +255,7 @@ export default function PartnersPage() {
                   {[
                     "data-partner — your unique partner ID (required)",
                     "Responsive: fits 300px–600px width",
-                    "No branding conflicts — minimal GrantIQ logo only",
+                    "No branding conflicts — minimal GrantAQ logo only",
                     "Works on WordPress, Wix, Squarespace, custom sites",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2 text-sm text-warm-600 dark:text-warm-400">
@@ -396,8 +396,8 @@ export default function PartnersPage() {
 
                   <p className="text-xs text-center text-warm-400">
                     Questions? Email{" "}
-                    <a href="mailto:partners@grantiq.com" className="text-brand-teal hover:underline">
-                      partners@grantiq.com
+                    <a href="mailto:partners@grantaq.com" className="text-brand-teal hover:underline">
+                      partners@grantaq.com
                     </a>
                   </p>
                 </form>
@@ -411,10 +411,10 @@ export default function PartnersPage() {
       <section className="py-16 px-4 text-center">
         <Sparkles className="h-8 w-8 text-brand-teal mx-auto mb-3" />
         <h2 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-2">
-          Already a GrantIQ user?
+          Already a GrantAQ user?
         </h2>
         <p className="text-warm-500 mb-6">
-          Check out our referral program — earn credit for every friend you bring to GrantIQ.
+          Check out our referral program — earn credit for every friend you bring to GrantAQ.
         </p>
         <Button
           className="bg-brand-teal hover:bg-brand-teal-dark text-white"

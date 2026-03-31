@@ -1,4 +1,4 @@
-# GrantIQ Sales Operational Playbook
+# GrantAQ Sales Operational Playbook
 
 **Quick-Reference Guide for Sales Team Execution**
 **Date:** March 29, 2026
@@ -68,7 +68,7 @@ FINAL CHECK
 ├─ [ ] Email reads naturally (not too salesy)
 ├─ [ ] One clear CTA (answer question, click link, or reply)
 ├─ [ ] Under 150 words (short = better response)
-├─ [ ] Signature includes: Name, Title, GrantIQ Consulting, Phone, Website
+├─ [ ] Signature includes: Name, Title, GrantAQ Consulting, Phone, Website
 └─ [ ] Manager reviews before send (first 10 emails from new SDR)
 ```
 

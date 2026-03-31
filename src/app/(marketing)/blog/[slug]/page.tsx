@@ -26,16 +26,16 @@ export async function generateMetadata({
     title: post.seoTitle,
     description: post.seoDescription,
     alternates: {
-      canonical: `https://grantiq.com/blog/${post.slug}`,
+      canonical: `https://grantaq.com/blog/${post.slug}`,
     },
     openGraph: {
       title: post.seoTitle,
       description: post.seoDescription,
-      url: `https://grantiq.com/blog/${post.slug}`,
-      siteName: "GrantIQ",
+      url: `https://grantaq.com/blog/${post.slug}`,
+      siteName: "GrantAQ",
       type: "article",
       publishedTime: post.publishedAt,
-      authors: ["GrantIQ Team"],
+      authors: ["GrantAQ Team"],
     },
     twitter: {
       card: "summary_large_image",
@@ -80,7 +80,7 @@ export default async function BlogPostPage({
 
   const related = getRelatedPosts(slug, 3);
 
-  const postUrl = `https://grantiq.com/blog/${post.slug}`;
+  const postUrl = `https://grantaq.com/blog/${post.slug}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -89,13 +89,13 @@ export default async function BlogPostPage({
     description: post.seoDescription,
     author: {
       "@type": "Organization",
-      name: "GrantIQ Team",
-      url: "https://grantiq.com",
+      name: "GrantAQ Team",
+      url: "https://grantaq.com",
     },
     publisher: {
       "@type": "Organization",
-      name: "GrantIQ",
-      url: "https://grantiq.com",
+      name: "GrantAQ",
+      url: "https://grantaq.com",
     },
     datePublished: post.publishedAt,
     mainEntityOfPage: {
@@ -152,7 +152,7 @@ export default async function BlogPostPage({
               <Clock className="h-4 w-4" />
               {post.readingTime} min read
             </span>
-            <span className="text-warm-400">By GrantIQ Team</span>
+            <span className="text-warm-400">By GrantAQ Team</span>
           </div>
         </header>
 
@@ -181,7 +181,7 @@ export default async function BlogPostPage({
             Find grants that match YOUR organization
           </h2>
           <p className="text-warm-500 mt-2 max-w-xl mx-auto">
-            GrantIQ&apos;s AI matches your nonprofit to 5,000+ active grants — federal, foundation,
+            GrantAQ&apos;s AI matches your nonprofit to 5,000+ active grants — federal, foundation,
             state, and corporate — ranked by how well you qualify.
           </p>
           <Link

@@ -22,7 +22,7 @@ export function ShareMatchCard({
 
   const getShareUrl = () => {
     const base =
-      typeof window !== "undefined" ? window.location.origin : "https://grantiq.com";
+      typeof window !== "undefined" ? window.location.origin : "https://grantaq.com";
     const token = btoa(
       JSON.stringify({ count: matchCount, value: totalValue, org: orgName, ref: referralCode ?? "" })
     );
@@ -32,7 +32,7 @@ export function ShareMatchCard({
   const handleShare = async () => {
     setIsGenerating(true);
     const shareUrl = getShareUrl();
-    const text = `GrantIQ found ${matchCount} grants worth $${
+    const text = `GrantAQ found ${matchCount} grants worth $${
       totalValue >= 1_000_000
         ? (totalValue / 1_000_000).toFixed(1) + "M"
         : totalValue >= 1_000
@@ -42,7 +42,7 @@ export function ShareMatchCard({
 
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title: "GrantIQ Grant Matches", text, url: shareUrl });
+        await navigator.share({ title: "GrantAQ Grant Matches", text, url: shareUrl });
       } catch {
         // User cancelled or share not supported — fall through to copy
         await navigator.clipboard.writeText(`${text} ${shareUrl}`);

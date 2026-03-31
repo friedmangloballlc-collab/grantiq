@@ -1,4 +1,4 @@
-# GrantIQ Sales Automation System - Complete Documentation
+# GrantAQ Sales Automation System - Complete Documentation
 
 **Status:** Ready to implement
 **Created:** March 29, 2026
@@ -311,7 +311,7 @@ Sales manager should listen to discovery calls, review proposals, coach on objec
 ## File Structure
 
 ```
-/Users/poweredbyexcellence/grantiq/docs/
+/Users/poweredbyexcellence/grantaq/docs/
 
 ├── README-SALES-SYSTEM.md ← You are here
 │   Quick navigation and getting started guide
@@ -367,7 +367,7 @@ Each document has a specific purpose:
 
 **Version:** 1.0
 **Date:** March 29, 2026
-**Author:** GrantIQ Sales Strategy
+**Author:** GrantAQ Sales Strategy
 **Status:** Production-ready
 
 **Last updated:** March 29, 2026

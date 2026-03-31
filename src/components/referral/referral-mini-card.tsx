@@ -14,7 +14,7 @@ export function ReferralMiniCard({ referralCode }: ReferralMiniCardProps) {
   const url =
     typeof window !== "undefined"
       ? `${window.location.origin}/ref/${referralCode}`
-      : `https://grantiq.com/ref/${referralCode}`;
+      : `https://grantaq.com/ref/${referralCode}`;
 
   const copy = () => {
     navigator.clipboard.writeText(url);

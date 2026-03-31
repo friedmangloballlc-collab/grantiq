@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Grant Directory — 5,000+ Funding Opportunities | GrantIQ",
+  title: "Grant Directory — 5,000+ Funding Opportunities | GrantAQ",
   description:
     "Browse thousands of federal, state, foundation, and corporate grants. Filter by type, amount, and eligibility to find funding that fits your organization.",
 };

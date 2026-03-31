@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/review-simulator.ts
+// grantaq/src/lib/ai/writing/review-simulator.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 import {

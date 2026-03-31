@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GrantIQ — AI-Powered Grant Discovery",
+  title: "GrantAQ — AI-Powered Grant Discovery",
   description: "Find, track, and win grants with AI-powered matching and writing assistance.",
 };
 

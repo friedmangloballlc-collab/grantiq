@@ -1,4 +1,4 @@
-# GrantIQ Sales System: Quick-Start Checklist
+# GrantAQ Sales System: Quick-Start Checklist
 
 **Print this out. Check boxes as you complete tasks.**
 **Target completion: 14 days**

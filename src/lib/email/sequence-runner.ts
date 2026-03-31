@@ -18,8 +18,8 @@ import { DeadlineWarning } from "@/emails/deadline-warning";
 import { HonestCheck } from "@/emails/honest-check";
 import { FinalOffer } from "@/emails/final-offer";
 
-const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.grantiq.com";
-const FROM_ADDRESS = "GrantIQ <hello@mail.grantiq.com>";
+const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.grantaq.com";
+const FROM_ADDRESS = "GrantAQ <hello@mail.grantaq.com>";
 
 function daysSince(dateStr: string): number {
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
@@ -199,7 +199,7 @@ async function renderTemplate(template: string, ctx: UserContext): Promise<{ htm
   switch (template) {
     case "welcome":
       return {
-        subject: "Your GrantIQ account is ready — start here",
+        subject: "Your GrantAQ account is ready — start here",
         html: await render(Welcome({ userName: ctx.displayName, orgName: ctx.orgName, ...base })),
       };
 
@@ -376,7 +376,7 @@ async function renderTemplate(template: string, ctx: UserContext): Promise<{ htm
 
     case "honest_check":
       return {
-        subject: "Is GrantIQ a fit for where you are right now?",
+        subject: "Is GrantAQ a fit for where you are right now?",
         html: await render(HonestCheck({ userName: ctx.displayName, orgName: ctx.orgName, ...base })),
       };
 

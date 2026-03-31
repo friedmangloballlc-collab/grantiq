@@ -25,7 +25,7 @@ export function ReferralDashboard({
   const url =
     typeof window !== "undefined"
       ? `${window.location.origin}/ref/${code}`
-      : `https://grantiq.com/ref/${code}`;
+      : `https://grantaq.com/ref/${code}`;
 
   const copy = () => {
     navigator.clipboard.writeText(url);
@@ -38,14 +38,14 @@ export function ReferralDashboard({
   const remaining = nextReward ? nextReward.count - signedUp : 0;
 
   const emailBody = encodeURIComponent(
-    `Hey! I've been using GrantIQ to find grants for my organization and it's been great. Sign up with my link and get a free 14-day Strategist trial: ${url}`
+    `Hey! I've been using GrantAQ to find grants for my organization and it's been great. Sign up with my link and get a free 14-day Strategist trial: ${url}`
   );
-  const emailSubject = encodeURIComponent("Get a free 14-day GrantIQ trial");
+  const emailSubject = encodeURIComponent("Get a free 14-day GrantAQ trial");
   const tweetText = encodeURIComponent(
-    `I've been using @GrantIQ to find AI-matched grants. Get a free 14-day Strategist trial here: ${url}`
+    `I've been using @GrantAQ to find AI-matched grants. Get a free 14-day Strategist trial here: ${url}`
   );
   const linkedinText = encodeURIComponent(
-    `I've been using GrantIQ — an AI-powered grant discovery platform. Sign up with my link for a free 14-day Strategist trial: ${url}`
+    `I've been using GrantAQ — an AI-powered grant discovery platform. Sign up with my link for a free 14-day Strategist trial: ${url}`
   );
 
   return (

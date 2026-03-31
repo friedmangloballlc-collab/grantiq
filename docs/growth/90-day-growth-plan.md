@@ -1,9 +1,9 @@
-# GrantIQ 90-Day Growth Plan
+# GrantAQ 90-Day Growth Plan
 ## From 0 to 100 Paying Users
 
 **Prepared:** 2026-03-29
 **Target:** 100 paying subscribers by Day 90 (June 27, 2026)
-**Baseline:** 0 paying users, 1,203 grants in database, live at grantiq-gold.vercel.app
+**Baseline:** 0 paying users, 1,203 grants in database, live at grantaq-gold.vercel.app
 **CRITICAL ISSUE:** Site is NOT indexed by Google. Zero organic visibility today.
 
 ---
@@ -19,7 +19,7 @@ Before tactics, understand the battlefield:
 | GrantStation     | $99/mo      | 150K+     | Curated, consultant-friendly      |
 | Candid           | $199-999/yr | Huge      | Foundation Directory, 990 data    |
 
-**GrantIQ's edge:** AI-powered matching + readiness scoring + writing engine + strategy generation + success-fee model. No competitor bundles all five. The "Full Confidence Package" ($0 upfront, 10% success fee) is a category-disrupting offer that eliminates buyer risk entirely.
+**GrantAQ's edge:** AI-powered matching + readiness scoring + writing engine + strategy generation + success-fee model. No competitor bundles all five. The "Full Confidence Package" ($0 upfront, 10% success fee) is a category-disrupting offer that eliminates buyer risk entirely.
 
 ---
 
@@ -62,12 +62,12 @@ No pitch, just thought it might be useful for your next board meeting.
 
 ### Channel 2: Friedman Global Client Base + Referral Network (Expected: 25-30 users)
 
-**Why:** Friedman Global already consults with organizations seeking grants. Every current and past client is a warm lead for GrantIQ. Every client who has been through the qualification process and did NOT become a consulting client (too small, wrong timing) is a perfect SaaS lead.
+**Why:** Friedman Global already consults with organizations seeking grants. Every current and past client is a warm lead for GrantAQ. Every client who has been through the qualification process and did NOT become a consulting client (too small, wrong timing) is a perfect SaaS lead.
 
 **Execution:**
 - Week 1: Export entire Friedman Global CRM/contact list
 - Segment into: (A) Active consulting clients, (B) Past clients, (C) Qualified leads who did not convert, (D) Inbound inquiries
-- Segment C is GOLD -- these are people who wanted grant help but could not afford consulting. GrantIQ at $49-149/mo is their answer.
+- Segment C is GOLD -- these are people who wanted grant help but could not afford consulting. GrantAQ at $49-149/mo is their answer.
 - Send personalized email to each segment with different positioning:
   - Segment A: "We built the tools we use internally -- now you can access them directly"
   - Segment B: "Stay grant-ready between engagements"
@@ -76,7 +76,7 @@ No pitch, just thought it might be useful for your next board meeting.
 
 **Referral amplifier:**
 - Offer existing Friedman Global clients 1 month free consulting credit for every 3 referrals who sign up
-- This stacks with the $50 GrantIQ referral credit
+- This stacks with the $50 GrantAQ referral credit
 
 **Metrics:**
 - Friedman Global contact list: estimate 200-500 contacts
@@ -94,7 +94,7 @@ No pitch, just thought it might be useful for your next board meeting.
 1. Submit sitemap.xml to Google Search Console immediately
 2. Submit to Bing Webmaster Tools
 3. Add robots.txt allowing full crawl
-4. Ensure each of the 1,203 grant pages has unique title tags: "[Grant Name] - [Amount] | [Industry] Grants | GrantIQ"
+4. Ensure each of the 1,203 grant pages has unique title tags: "[Grant Name] - [Amount] | [Industry] Grants | GrantAQ"
 5. Ensure each grant page has unique meta descriptions with grant amount, deadline, and eligibility
 6. Add structured data (JSON-LD) for each grant: Organization schema, Offer schema
 7. Internal linking: every grant page links to related grants in same industry
@@ -164,7 +164,7 @@ Create "Grants for [Industry]" hub pages for each of the top 20 industries by se
 
 **On-Page SEO for each grant page:**
 ```
-Title: [Grant Name] -- Up to $[Amount] for [Industry] | GrantIQ
+Title: [Grant Name] -- Up to $[Amount] for [Industry] | GrantAQ
 Meta: Apply for [Grant Name] offering $[Amount] for [eligible orgs].
       Deadline: [Date]. Eligibility: [key criteria]. Find more [industry] grants.
 H1: [Grant Name]
@@ -174,7 +174,7 @@ H2s: Overview | Eligibility | Funding Amount | Deadline | How to Apply | Similar
 **Link Building Strategy:**
 - Create embeddable "Grant Widget" that nonprofit blogs can embed showing relevant grants
 - Guest post on nonprofit-focused publications: Nonprofit Quarterly, Chronicle of Philanthropy, NonProfit PRO
-- Submit GrantIQ to directories: Capterra, G2, Software Advice, GetApp (competitors are listed there)
+- Submit GrantAQ to directories: Capterra, G2, Software Advice, GetApp (competitors are listed there)
 - HARO/Connectively responses for grant-related journalist queries
 - Partner with SCORE mentors (SBA program) who advise small businesses on funding
 
@@ -222,7 +222,7 @@ H2s: Overview | Eligibility | Funding Amount | Deadline | How to Apply | Similar
 1. User gets matched with grants
 2. "Share this grant with a colleague" button on each grant match
 3. Shared link shows the grant details but requires signup to see full matches
-4. "Found via [User's Org] on GrantIQ" attribution
+4. "Found via [User's Org] on GrantAQ" attribution
 
 **Expected K-factor: 0.2-0.3**
 
@@ -245,7 +245,7 @@ H2s: Overview | Eligibility | Funding Amount | Deadline | How to Apply | Similar
 
 ## 4. LEAD QUALIFICATION TO SAAS CONVERSION FUNNEL
 
-### Google Form (Intake) --> Friedman Global Qualification --> GrantIQ SaaS
+### Google Form (Intake) --> Friedman Global Qualification --> GrantAQ SaaS
 
 **Current state:** The Friedman Global playbook has A-Z qualification criteria and a Google Form intake. This needs to become a seamless pipeline.
 
@@ -315,7 +315,7 @@ STAGE 6: EXPANSION (Upsell + Referral)
 1. Add hidden UTM fields to the Google Form
 2. Zapier/Make automation: Form submission triggers Supabase lead creation
 3. Auto-score the lead using the A-Z criteria fields
-4. High-score leads get immediate GrantIQ trial invite email
+4. High-score leads get immediate GrantAQ trial invite email
 5. Medium-score leads get nurture sequence ending with trial offer
 6. All leads get tagged with source for attribution tracking
 
@@ -339,7 +339,7 @@ STAGE 6: EXPANSION (Upsell + Referral)
 4. "Federal Grants vs Foundation Grants: Which Should You Apply For?"
 5. "Grant Writing 101: The Complete Beginner's Guide"
 6. "How to Write a Grant Proposal That Actually Wins (With Examples)"
-7. "Best Grant Databases Compared: Instrumentl vs GrantWatch vs GrantIQ"
+7. "Best Grant Databases Compared: Instrumentl vs GrantWatch vs GrantAQ"
 
 **Tier 2: Thought Leadership (build authority)**
 8. "Why 73% of Grant Applications Fail (And How AI Changes That)"
@@ -349,10 +349,10 @@ STAGE 6: EXPANSION (Upsell + Referral)
 12. "The Grant Readiness Framework: 10 Things Funders Actually Look For"
 
 **Tier 3: Conversion Content (nurture leads)**
-13. "GrantIQ vs Hiring a Grant Writer: Cost Comparison"
+13. "GrantAQ vs Hiring a Grant Writer: Cost Comparison"
 14. "How [Customer Name] Found $200K in Grants They Didn't Know Existed"
 15. "What is a Grant Readiness Score and Why Does It Matter?"
-16. "Inside GrantIQ: How Our AI Matches You With the Right Grants"
+16. "Inside GrantAQ: How Our AI Matches You With the Right Grants"
 
 ### Free Tools (Build 1 per month)
 
@@ -444,7 +444,7 @@ $49/mo                     $149/mo (MOST POPULAR)      $0/mo + 10% success fee
 
 | Day | Email Subject | Content | Goal |
 |-----|--------------|---------|------|
-| 0 | "Welcome to GrantIQ -- Your first matches are ready" | Top 5 grant matches based on signup profile | Deliver value instantly |
+| 0 | "Welcome to GrantAQ -- Your first matches are ready" | Top 5 grant matches based on signup profile | Deliver value instantly |
 | 1 | "Your Grant Readiness Score: [X]%" | Readiness assessment results + 3 things to improve | Create engagement |
 | 3 | "[Number] grants closing this month you qualify for" | Urgency around deadlines | Drive logins |
 | 5 | "How [similar org] found $200K in grants" | Case study/social proof | Build trust |
@@ -510,7 +510,7 @@ $49/mo                     $149/mo (MOST POPULAR)      $0/mo + 10% success fee
 - [ ] Publish first 2 "Grants for [Industry]" hub pages
 - [ ] Publish first 2 blog posts
 - [ ] Set up post-signup email sequence in Resend
-- [ ] Submit GrantIQ to Capterra, G2, Software Advice
+- [ ] Submit GrantAQ to Capterra, G2, Software Advice
 
 **Week 3 (Days 15-21): Optimization**
 - [ ] Analyze first LinkedIn response data -- adjust messaging
@@ -554,7 +554,7 @@ $49/mo                     $149/mo (MOST POPULAR)      $0/mo + 10% success fee
 **Week 7-8:**
 - [ ] A/B test referral reward amounts
 - [ ] Launch "Refer 3, Get 2 Months Free" campaign
-- [ ] Publish comparison content: "GrantIQ vs Instrumentl"
+- [ ] Publish comparison content: "GrantAQ vs Instrumentl"
 - [ ] Create first case study from paying customer
 - [ ] Start retargeting ads for pricing page visitors ($500 budget)
 - [ ] Launch exit-intent popup on pricing page
@@ -636,7 +636,7 @@ $49/mo                     $149/mo (MOST POPULAR)      $0/mo + 10% success fee
 
 3. **The "Full Confidence Package" is a nuclear weapon.** No competitor offers $0 upfront with pay-on-success. Lead with this in all messaging, even if the qualification bar is high. It reframes the entire value proposition.
 
-4. **AI Writing is the moat.** Instrumentl has 400K+ grants but no writing engine. GrantIQ's AI writing + readiness scoring is the long-term differentiator. Every free tool and content piece should funnel toward the AI writing upsell.
+4. **AI Writing is the moat.** Instrumentl has 400K+ grants but no writing engine. GrantAQ's AI writing + readiness scoring is the long-term differentiator. Every free tool and content piece should funnel toward the AI writing upsell.
 
 5. **Weekly digest emails are the retention engine.** Users who receive and open weekly digests churn at 50% lower rates than those who do not. Optimize open rates obsessively.
 

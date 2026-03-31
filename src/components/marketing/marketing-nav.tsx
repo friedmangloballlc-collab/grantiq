@@ -8,7 +8,7 @@ export function MarketingNav() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-brand-teal" />
-          <span className="text-xl font-bold text-warm-900 dark:text-warm-50">GrantIQ</span>
+          <span className="text-xl font-bold text-warm-900 dark:text-warm-50">GrantAQ</span>
         </Link>
         <div className="hidden md:flex items-center gap-6">
           <Link href="/#pricing" className="text-sm text-warm-600 hover:text-warm-900 dark:text-warm-400">Pricing</Link>

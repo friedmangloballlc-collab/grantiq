@@ -65,7 +65,7 @@ export default function UpgradePage() {
       <div className="text-center">
         <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">Choose Your Plan</h1>
         <p className="text-warm-500 mt-2">
-          Unlock the full power of GrantIQ&apos;s AI-driven grant discovery and writing tools.
+          Unlock the full power of GrantAQ&apos;s AI-driven grant discovery and writing tools.
         </p>
 
         {/* Monthly / Annual toggle */}
@@ -106,8 +106,8 @@ export default function UpgradePage() {
           </p>
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
             Reach out at{" "}
-            <a href="mailto:hello@grantiq.com" className="underline">
-              hello@grantiq.com
+            <a href="mailto:hello@grantaq.com" className="underline">
+              hello@grantaq.com
             </a>{" "}
             and we will get you set up.
           </p>

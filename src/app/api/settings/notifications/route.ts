@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/settings/notifications
@@ -37,7 +38,7 @@ export async function GET() {
 
     return NextResponse.json({ prefs: prefs ?? defaults });
   } catch (err) {
-    console.error("GET /api/settings/notifications error:", err);
+    logger.error("GET /api/settings/notifications error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -86,7 +87,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("PATCH /api/settings/notifications error:", err);
+    logger.error("PATCH /api/settings/notifications error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

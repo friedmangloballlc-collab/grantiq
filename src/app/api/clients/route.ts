@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logger } from "@/lib/logger";
 
 // GET /api/clients — list all orgs where the caller is owner or admin
 export async function GET() {
@@ -80,7 +81,7 @@ export async function GET() {
 
     return NextResponse.json({ clients });
   } catch (err) {
-    console.error("GET /api/clients error:", err);
+    logger.error("GET /api/clients error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -189,7 +190,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ orgId: newOrgId }, { status: 201 });
   } catch (err) {
-    console.error("POST /api/clients error:", err);
+    logger.error("POST /api/clients error", { err: String(err) });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

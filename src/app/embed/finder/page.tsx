@@ -76,7 +76,7 @@ function GrantFinderWidget() {
   const [result, setResult] = useState<MatchResult | null>(null);
   const [error, setError] = useState("");
 
-  const signupUrl = `https://grantiq-gold.vercel.app/signup?ref=${partner}`;
+  const signupUrl = `https://grantaq.com/signup?ref=${partner}`;
 
   const canSubmit = form.entityType && form.industry && form.state;
 
@@ -130,7 +130,7 @@ function GrantFinderWidget() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 15l-5 3.2 1.9-5.8L4 9.8h6.1z"/>
             </svg>
-            <span style={{ fontSize: "16px", fontWeight: "700", color: "#1C1917" }}>GrantIQ</span>
+            <span style={{ fontSize: "16px", fontWeight: "700", color: "#1C1917" }}>GrantAQ</span>
           </div>
           <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#1C1917", margin: "0 0 6px" }}>
             Find Grants You Qualify For
@@ -302,8 +302,8 @@ function GrantFinderWidget() {
         {/* Powered by */}
         <p style={{ textAlign: "center", fontSize: "11px", color: "#A8A29E", marginTop: "12px" }}>
           Powered by{" "}
-          <a href="https://grantiq-gold.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: "#0D9488", textDecoration: "none" }}>
-            GrantIQ
+          <a href="https://grantaq.com" target="_blank" rel="noopener noreferrer" style={{ color: "#0D9488", textDecoration: "none" }}>
+            GrantAQ
           </a>
         </p>
       </div>

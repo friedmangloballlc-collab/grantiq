@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/prompts.ts
+// grantaq/src/lib/ai/writing/prompts.ts
 
 // ============================================================
 // PROMPT: LOI Generator (Claude Sonnet — cheaper than Opus)

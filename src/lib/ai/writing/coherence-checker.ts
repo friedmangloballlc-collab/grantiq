@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/coherence-checker.ts
+// grantaq/src/lib/ai/writing/coherence-checker.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 import { CoherenceCheckOutputSchema, type CoherenceCheckOutput } from "./schemas";

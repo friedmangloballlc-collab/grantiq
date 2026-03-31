@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/pipeline.ts
+// grantaq/src/lib/ai/writing/pipeline.ts
 
 import type { WritingTier, WritingContext, DraftResult } from "@/types/writing";
 import { parseRfp } from "./rfp-parser";

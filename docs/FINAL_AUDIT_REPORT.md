@@ -1,4 +1,4 @@
-# GrantIQ Final Audit Report — 6 Agent Comprehensive Review
+# GrantAQ Final Audit Report — 6 Agent Comprehensive Review
 
 ---
 

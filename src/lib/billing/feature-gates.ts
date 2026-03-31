@@ -34,7 +34,7 @@ export const FEATURE_GATES: Record<string, { requiredTier: string; limit?: numbe
   grant_library_basic: { requiredTier: "free" },               // Explorer: name, type, amount range only
   grant_library_full: { requiredTier: "starter" },             // Seeker: + description, deadline, eligibility, focus areas
   grant_library_ai_scores: { requiredTier: "pro" },            // Strategist: + AI match score, readiness badge
-  grant_library_apply_button: { requiredTier: "growth" },      // Applicant: + "Apply through GrantIQ" button (no external URL)
+  grant_library_apply_button: { requiredTier: "growth" },      // Applicant: + "Apply through GrantAQ" button (no external URL)
   grant_library_external_url: { requiredTier: "enterprise" },  // Organization only: raw funder URL visible (locked in via team)
   ai_matches_unlimited: { requiredTier: "starter" },           // All paid tiers see unlimited matches
   funder_profiles: { requiredTier: "starter" },

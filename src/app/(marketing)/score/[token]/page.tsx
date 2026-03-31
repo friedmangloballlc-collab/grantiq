@@ -60,11 +60,11 @@ function getTierLabel(score: number): {
 export async function generateMetadata({ params }: ScorePageProps): Promise<Metadata> {
   const { token } = await params;
   const payload = parseToken(token);
-  if (!payload) return { title: "Grant Readiness Score | GrantIQ" };
+  if (!payload) return { title: "Grant Readiness Score | GrantAQ" };
   const { label } = getTierLabel(payload.score);
-  const desc = `${payload.org} scored ${payload.score}/100 for Grant Readiness (${label}). Get your own free Grant Readiness Score from GrantIQ.`;
+  const desc = `${payload.org} scored ${payload.score}/100 for Grant Readiness (${label}). Get your own free Grant Readiness Score from GrantAQ.`;
   return {
-    title: `${payload.org} — ${payload.score}/100 Grant Readiness | GrantIQ`,
+    title: `${payload.org} — ${payload.score}/100 Grant Readiness | GrantAQ`,
     description: desc,
     openGraph: {
       title: `${payload.org} scored ${payload.score}/100 for Grant Readiness`,

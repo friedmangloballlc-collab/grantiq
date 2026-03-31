@@ -16,6 +16,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://grantiq-gold.vercel.app/sitemap.xml",
+    sitemap: "https://grantaq.com/sitemap.xml",
   };
 }

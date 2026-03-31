@@ -103,7 +103,7 @@ export default async function FunderDetailPage({ params }: Props) {
       : "nationwide";
   const topFocus = focusAreas[0] ?? "general funding";
   const strategyBrief = [
-    `${funderName} has ${grants.length} grant${grants.length !== 1 ? "s" : ""} in the GrantIQ database`,
+    `${funderName} has ${grants.length} grant${grants.length !== 1 ? "s" : ""} in the GrantAQ database`,
     totalFunding > 0 ? `, representing up to ${formatAmount(totalFunding)} in total available funding.` : ".",
     focusAreas.length > 0
       ? ` Their primary focus areas include ${focusAreas.slice(0, 3).join(", ")}.`

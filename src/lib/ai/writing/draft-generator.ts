@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/draft-generator.ts
+// grantaq/src/lib/ai/writing/draft-generator.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 import {

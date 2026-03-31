@@ -1,4 +1,4 @@
-# GrantIQ: Complete User Journey, Dashboard & Gap Analysis
+# GrantAQ: Complete User Journey, Dashboard & Gap Analysis
 
 **Author**: Alex (Product Manager)
 **Date**: 2026-03-29
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-GrantIQ has a strong Phase 1 foundation: landing page, signup, chat-style onboarding (15 steps), nonprofit formation wizard (5 phases), AI matching/readiness engines, grant directory, pipeline kanban, roadmap, and Grantie chat. 1,203 grants are seeded. The writing pipeline (3 tiers with compliance sentinel) is architecturally complete.
+GrantAQ has a strong Phase 1 foundation: landing page, signup, chat-style onboarding (15 steps), nonprofit formation wizard (5 phases), AI matching/readiness engines, grant directory, pipeline kanban, roadmap, and Grantie chat. 1,203 grants are seeded. The writing pipeline (3 tiers with compliance sentinel) is architecturally complete.
 
 **The core gap is not missing pages -- it is missing connections between pages.** The app has screens but lacks the operational wiring that turns a collection of features into a product. Users complete onboarding and land on a dashboard showing zeros. They cannot trigger a match run from the dashboard. They cannot move a grant from match card to pipeline with one click. They cannot start a writing flow from the pipeline. Consulting clients complete the nonprofit formation wizard and then... nothing. No status tracking, no next step, no communication loop.
 
@@ -203,7 +203,7 @@ The user arrives for the first time. Their match run is either in progress or ju
 
 ```
 +------------------------------------------------------------------+
-| Welcome to GrantIQ, [Org Name]!                                   |
+| Welcome to GrantAQ, [Org Name]!                                   |
 | Your first grant match is [running... / complete!]                |
 +------------------------------------------------------------------+
 
@@ -427,7 +427,7 @@ Not user-facing, but critical for operating the consulting business. Needed for 
 | 27 | Grant alerts (new grants matching profile) | Cron job + push notifications |
 | 28 | Comparative analytics | How does your org compare to similar orgs |
 | 29 | Multi-org support | Consultants managing multiple nonprofits |
-| 30 | White-label for consulting partners | Other consulting firms using GrantIQ |
+| 30 | White-label for consulting partners | Other consulting firms using GrantAQ |
 | 31 | Public grant profiles (SEO) | Individual grant pages indexed by Google |
 | 32 | API access for Enterprise tier | Programmatic grant data access |
 
@@ -505,7 +505,7 @@ Implementation: Build a `ConsultingUpsellCard` component that appears conditiona
 
 **Rule 3: Consulting services are purchasable from within the app.**
 
-Do NOT send consulting clients to an external intake form or separate website. The entire consulting purchase flow should happen inside GrantIQ:
+Do NOT send consulting clients to an external intake form or separate website. The entire consulting purchase flow should happen inside GrantAQ:
 
 1. User clicks "Get Expert Help" on any relevant screen
 2. Service selection page shows available consulting packages with pricing
@@ -616,9 +616,9 @@ Goal: Production-ready with all critical paths working end-to-end.
 
 **Recommendation**: After their included SaaS access period expires, downgrade to Free tier rather than locking them out entirely. Free tier still gives 1 match run/month and 3 pipeline items. This keeps them engaged and creates natural upgrade moments. A locked-out user never comes back. A free user sees what they are missing.
 
-### Decision 3: Should the admin panel be inside GrantIQ or a separate tool?
+### Decision 3: Should the admin panel be inside GrantAQ or a separate tool?
 
-**Recommendation**: Build it inside GrantIQ at `/admin`. The Friedman Global team needs to see the same data the client sees (engagement status, documents, messages) plus additional context (revenue, pipeline, team assignments). A separate tool creates data synchronization headaches. Role-based access control already exists in `org_members.role`.
+**Recommendation**: Build it inside GrantAQ at `/admin`. The Friedman Global team needs to see the same data the client sees (engagement status, documents, messages) plus additional context (revenue, pipeline, team assignments). A separate tool creates data synchronization headaches. Role-based access control already exists in `org_members.role`.
 
 ### Decision 4: Pricing for the "consulting intake from SaaS" flow
 

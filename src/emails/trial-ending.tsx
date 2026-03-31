@@ -37,7 +37,7 @@ export function TrialEnding({
   matchCount,
   pipelineCount,
   readinessScore,
-  appBaseUrl = "https://app.grantiq.com",
+  appBaseUrl = "https://app.grantaq.com",
   unsubscribeUrl,
 }: TrialEndingProps) {
   const resolvedUnsubscribeUrl = unsubscribeUrl ?? `${appBaseUrl}/settings#notifications`;
@@ -46,7 +46,7 @@ export function TrialEnding({
   return (
     <Html lang="en">
       <Head />
-      <Preview>Your free trial ends in 48 hours — here&apos;s what you&apos;ve built in GrantIQ.</Preview>
+      <Preview>Your free trial ends in 48 hours — here&apos;s what you&apos;ve built in GrantAQ.</Preview>
 
       <Body style={{ backgroundColor: WARM_50, fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", margin: 0, padding: "32px 0" }}>
         <Container style={{ maxWidth: 600, margin: "0 auto", backgroundColor: "#ffffff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
@@ -54,7 +54,7 @@ export function TrialEnding({
           {/* Header */}
           <Section style={{ backgroundColor: TEAL, padding: "28px 40px" }}>
             <Text style={{ color: "#ffffff", fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 6px" }}>
-              GrantIQ
+              GrantAQ
             </Text>
             <Heading style={{ color: "#ffffff", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: "1.3" }}>
               Your free trial ends in 48 hours
@@ -132,7 +132,7 @@ export function TrialEnding({
                 display: "inline-block",
               }}
             >
-              Continue with GrantIQ
+              Continue with GrantAQ
             </Button>
 
             <Text style={{ color: WARM_500, fontSize: 13, margin: "16px 0 0" }}>
@@ -144,12 +144,12 @@ export function TrialEnding({
           <Section style={{ padding: "28px 40px 32px" }}>
             <Hr style={{ borderColor: WARM_200, margin: "0 0 20px" }} />
             <Text style={{ color: WARM_500, fontSize: 12, margin: 0 }}>
-              You&apos;re receiving this because your GrantIQ trial for {orgName} is ending soon.
+              You&apos;re receiving this because your GrantAQ trial for {orgName} is ending soon.
             </Text>
             <Text style={{ color: WARM_500, fontSize: 12, margin: "6px 0 0" }}>
               <Link href={resolvedUnsubscribeUrl} style={{ color: WARM_500 }}>Unsubscribe</Link>
               {" · "}
-              <Link href="https://grantiq.com" style={{ color: WARM_500 }}>GrantIQ</Link>
+              <Link href="https://grantaq.com" style={{ color: WARM_500 }}>GrantAQ</Link>
             </Text>
           </Section>
 

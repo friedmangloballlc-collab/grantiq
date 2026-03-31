@@ -1,4 +1,4 @@
-// grantiq/src/app/api/writing/compliance-check/[id]/route.ts
+// grantaq/src/app/api/writing/compliance-check/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";

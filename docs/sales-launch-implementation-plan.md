@@ -1,4 +1,4 @@
-# GrantIQ Sales Launch: 90-Day Implementation Plan
+# GrantAQ Sales Launch: 90-Day Implementation Plan
 
 **Timeline:** 0-90 days from start
 **Goal:** Build a repeatable sales machine that generates 50+ cold emails/week, 10+ discovery calls/week, and closes $50K+/month in consulting revenue
@@ -683,7 +683,7 @@ Once you've proven the sales motion (hitting KPIs), expand:
 - [ ] Launch group workshops (lower-ticket, higher margin)
 - [ ] Expand into adjacent services (grant audit, compliance support)
 - [ ] Build referral program with grantwriting organizations
-- [ ] Create affiliate program for GrantIQ SaaS users who refer consulting
+- [ ] Create affiliate program for GrantAQ SaaS users who refer consulting
 - [ ] Target: $150K+/month recurring consulting revenue + $50K/month SaaS
 
 ---

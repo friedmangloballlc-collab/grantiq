@@ -19,7 +19,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: "Grant Strategy",
     publishedAt: "2026-03-01",
     readingTime: 7,
-    seoTitle: "How to Find Grants for Nonprofits You Actually Qualify For | GrantIQ",
+    seoTitle: "How to Find Grants for Nonprofits You Actually Qualify For | GrantAQ",
     seoDescription:
       "Stop wasting time on grants you can't win. Learn the strategic approach to nonprofit grant discovery — from eligibility filtering to AI-powered matching — and find funding you actually qualify for.",
     content: `
@@ -74,7 +74,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <p>This approach flips the discovery process. Instead of starting with "what grants are available," you start with "who is already funding work like mine, and why." That's the difference between chasing grants and building a sustainable funding strategy.</p>
 
 <h2>Start With the Right Tool</h2>
-<p>Grant discovery doesn't have to be a full-time job. GrantIQ's AI matching engine analyzes your organization profile against 5,000+ active funding sources — federal, foundation, state, and corporate — and surfaces the opportunities you actually qualify for, ranked by match strength.</p>
+<p>Grant discovery doesn't have to be a full-time job. GrantAQ's AI matching engine analyzes your organization profile against 5,000+ active funding sources — federal, foundation, state, and corporate — and surfaces the opportunities you actually qualify for, ranked by match strength.</p>
 <p>Stop browsing. Start matching.</p>
     `.trim(),
   },
@@ -86,7 +86,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: "Nonprofit Operations",
     publishedAt: "2026-03-06",
     readingTime: 8,
-    seoTitle: "Grant Readiness Checklist: 10 Things Funders Check First | GrantIQ",
+    seoTitle: "Grant Readiness Checklist: 10 Things Funders Check First | GrantAQ",
     seoDescription:
       "Is your nonprofit ready for grant funding? Use this grant readiness checklist to assess the 10 organizational signals funders evaluate before even reading your proposal.",
     content: `
@@ -143,7 +143,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2>How Ready Are You?</h2>
 <p>Run your organization against this checklist honestly. If you're missing more than three items, focus on organizational readiness before investing heavily in proposal development. Each item you shore up expands your fundable universe and improves your odds across every application you submit.</p>
-<p>GrantIQ's Grant Readiness Score analyzes your organization profile across all 10 dimensions and gives you a personalized remediation roadmap — so you know exactly what to fix before your next deadline.</p>
+<p>GrantAQ's Grant Readiness Score analyzes your organization profile across all 10 dimensions and gives you a personalized remediation roadmap — so you know exactly what to fix before your next deadline.</p>
     `.trim(),
   },
   {
@@ -154,7 +154,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: "Grant Strategy",
     publishedAt: "2026-03-11",
     readingTime: 8,
-    seoTitle: "Types of Grants for Nonprofits: Federal vs Foundation vs Corporate | GrantIQ",
+    seoTitle: "Types of Grants for Nonprofits: Federal vs Foundation vs Corporate | GrantAQ",
     seoDescription:
       "Federal, foundation, and corporate grants each have different timelines, eligibility rules, and success factors. Learn which types of grants for nonprofits fit your stage — and which to pursue first.",
     content: `
@@ -225,7 +225,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2>Building a Balanced Portfolio</h2>
 <p>The healthiest grant portfolios aren't one-type-heavy — they blend federal stability, foundation relationships, and corporate diversification. A practical target for a mid-stage nonprofit: 30–40% federal, 40–50% foundation, 15–25% corporate and individual. This mix provides both scale and flexibility.</p>
-<p>GrantIQ's grant library helps you visualize your current portfolio mix and identify gaps across all three funding types. See which segment you're underweight in — and find the specific opportunities worth pursuing to balance your portfolio.</p>
+<p>GrantAQ's grant library helps you visualize your current portfolio mix and identify gaps across all three funding types. See which segment you're underweight in — and find the specific opportunities worth pursuing to balance your portfolio.</p>
     `.trim(),
   },
   {
@@ -236,7 +236,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: "Grant Writing",
     publishedAt: "2026-03-17",
     readingTime: 9,
-    seoTitle: "Why Grant Applications Get Rejected — and How to Fix It | GrantIQ",
+    seoTitle: "Why Grant Applications Get Rejected — and How to Fix It | GrantAQ",
     seoDescription:
       "Most grant application rejections come down to the same fixable mistakes. Learn why grant applications get rejected and what winning applicants do differently — from proposal structure to funder alignment.",
     content: `
@@ -290,7 +290,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <p>None of this requires exceptional writing talent. It requires preparation, research, and discipline. The good news is that all of it is learnable — and all of it gets easier with each application cycle.</p>
 
 <h2>Let AI Help You Avoid These Mistakes</h2>
-<p>GrantIQ's AI writing engine is built specifically around these failure patterns. It helps you build stronger problem statements with local data, structure outcomes to match scoring rubrics, align your narrative to specific funder priorities, and review applications for compliance before submission.</p>
+<p>GrantAQ's AI writing engine is built specifically around these failure patterns. It helps you build stronger problem statements with local data, structure outcomes to match scoring rubrics, align your narrative to specific funder priorities, and review applications for compliance before submission.</p>
 <p>Your next application can be in that 27%. Start with the right tools.</p>
     `.trim(),
   },
@@ -302,7 +302,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: "Grant Strategy",
     publishedAt: "2026-03-22",
     readingTime: 8,
-    seoTitle: "Grant Calendar Template: Plan a Full Year of Grant Applications | GrantIQ",
+    seoTitle: "Grant Calendar Template: Plan a Full Year of Grant Applications | GrantAQ",
     seoDescription:
       "Use this grant calendar framework to plan an entire year of grant applications. Covers federal fiscal cycles, foundation deadlines, seasonal patterns, and work-back timelines for competitive submissions.",
     content: `
@@ -387,7 +387,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2>Start With Your Calendar, Not Your Applications</h2>
 <p>The most important thing you can do for your grant program right now isn't writing a better proposal. It's building the infrastructure that ensures you're never caught unprepared by a deadline again.</p>
-<p>GrantIQ's grant calendar feature pulls deadline data from across your matched grant portfolio and automatically builds work-back timelines for every opportunity in your pipeline. You see what's due, what needs to start, and what's in progress — all in one view.</p>
+<p>GrantAQ's grant calendar feature pulls deadline data from across your matched grant portfolio and automatically builds work-back timelines for every opportunity in your pipeline. You see what's due, what needs to start, and what's in progress — all in one view.</p>
 <p>Stop missing deadlines. Start building your calendar.</p>
     `.trim(),
   },

@@ -31,7 +31,7 @@ const WARM_50 = "#FAFAF9";
 export function WritingIntro({
   userName,
   orgName,
-  appBaseUrl = "https://app.grantiq.com",
+  appBaseUrl = "https://app.grantaq.com",
   unsubscribeUrl,
 }: WritingIntroProps) {
   const resolvedUnsubscribeUrl = unsubscribeUrl ?? `${appBaseUrl}/settings#notifications`;
@@ -66,7 +66,7 @@ export function WritingIntro({
           {/* Header */}
           <Section style={{ backgroundColor: TEAL, padding: "28px 40px" }}>
             <Text style={{ color: "#ffffff", fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 6px" }}>
-              GrantIQ
+              GrantAQ
             </Text>
             <Heading style={{ color: "#ffffff", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: "1.3" }}>
               Ready to write? Here&apos;s how the AI Writing Engine works
@@ -79,7 +79,7 @@ export function WritingIntro({
               Hi {userName},
             </Text>
             <Text style={{ color: WARM_700, fontSize: 15, margin: "0 0 16px" }}>
-              Writing a grant application from scratch takes an average of 40 hours for a competitive federal proposal. The GrantIQ Writing Engine cuts that to a fraction — by using your organization&apos;s own profile, mission, and program data as the foundation.
+              Writing a grant application from scratch takes an average of 40 hours for a competitive federal proposal. The GrantAQ Writing Engine cuts that to a fraction — by using your organization&apos;s own profile, mission, and program data as the foundation.
             </Text>
             <Text style={{ color: WARM_700, fontSize: 15, margin: "0 0 24px" }}>
               There are three ways to use it, depending on your needs:
@@ -137,12 +137,12 @@ export function WritingIntro({
           <Section style={{ padding: "28px 40px 32px" }}>
             <Hr style={{ borderColor: WARM_200, margin: "0 0 20px" }} />
             <Text style={{ color: WARM_500, fontSize: 12, margin: 0 }}>
-              You&apos;re receiving this as part of your GrantIQ onboarding for {orgName}.
+              You&apos;re receiving this as part of your GrantAQ onboarding for {orgName}.
             </Text>
             <Text style={{ color: WARM_500, fontSize: 12, margin: "6px 0 0" }}>
               <Link href={resolvedUnsubscribeUrl} style={{ color: WARM_500 }}>Unsubscribe</Link>
               {" · "}
-              <Link href="https://grantiq.com" style={{ color: WARM_500 }}>GrantIQ</Link>
+              <Link href="https://grantaq.com" style={{ color: WARM_500 }}>GrantAQ</Link>
             </Text>
           </Section>
 

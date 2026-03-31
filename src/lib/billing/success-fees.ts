@@ -1,4 +1,4 @@
-// grantiq/src/lib/billing/success-fees.ts
+// grantaq/src/lib/billing/success-fees.ts
 //
 // Success fee calculation for the Full Confidence tier.
 // Fee is 10% of the awarded amount, subject to minimums.

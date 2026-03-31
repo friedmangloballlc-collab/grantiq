@@ -1,6 +1,6 @@
 (function() {
   var iframe = document.createElement('iframe');
-  iframe.src = 'https://grantiq-gold.vercel.app/embed/finder?partner=' +
+  iframe.src = 'https://grantaq-gold.vercel.app/embed/finder?partner=' +
     (document.currentScript.getAttribute('data-partner') || 'direct');
   iframe.style.width = '100%';
   iframe.style.maxWidth = '500px';

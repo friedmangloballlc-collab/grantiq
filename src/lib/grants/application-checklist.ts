@@ -1,4 +1,4 @@
-// grantiq/src/lib/grants/application-checklist.ts
+// grantaq/src/lib/grants/application-checklist.ts
 
 export interface ChecklistItem {
   id: string;

@@ -327,7 +327,7 @@ Step 9: If specific trigger occurs (e.g., "Grant deadline mentioned" in a reply)
 
 ### Workflow 6: "SaaS User Conversion Automation"
 
-**Trigger:** GrantIQ SaaS user signs up (webhook integration)
+**Trigger:** GrantAQ SaaS user signs up (webhook integration)
 
 ```
 Step 1: Create Contact in CRM (Automatic)
@@ -336,7 +336,7 @@ Step 1: Create Contact in CRM (Automatic)
 └─ Set tag: "Days_Since_Signup" = 0
 
 Step 2: Send Welcome Email (Immediate)
-├─ Email: "Welcome to GrantIQ"
+├─ Email: "Welcome to GrantAQ"
 ├─ Include: Quick start guide, feature tour
 └─ Track: Opens, clicks
 

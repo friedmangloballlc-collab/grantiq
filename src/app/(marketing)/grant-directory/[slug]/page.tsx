@@ -28,12 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single();
   if (!grant) return { title: "Grant Not Found" };
   return {
-    title: `${grant.name} | ${grant.funder_name} | GrantIQ`,
+    title: `${grant.name} | ${grant.funder_name} | GrantAQ`,
     description:
       grant.description?.slice(0, 160) ??
       `Learn about ${grant.name} from ${grant.funder_name}.`,
     openGraph: {
-      title: `${grant.name} | GrantIQ`,
+      title: `${grant.name} | GrantAQ`,
       description: grant.description?.slice(0, 160),
     },
   };
@@ -140,7 +140,7 @@ export default async function PublicGrantPage({ params }: Props) {
             Does this grant match your organization?
           </h3>
           <p className="text-sm text-warm-500 mt-1">
-            Create a free GrantIQ account to see your match score and readiness assessment.
+            Create a free GrantAQ account to see your match score and readiness assessment.
           </p>
           <Button
             className="mt-4 bg-brand-teal hover:bg-brand-teal-dark text-white"

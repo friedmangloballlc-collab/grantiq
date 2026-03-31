@@ -93,7 +93,7 @@ export function WeeklyDigest({
   newMatches,
   upcomingDeadlines,
   actionItem,
-  appBaseUrl = "https://app.grantiq.com",
+  appBaseUrl = "https://app.grantaq.com",
   settingsUrl,
   unsubscribeUrl,
 }: WeeklyDigestProps) {
@@ -107,8 +107,8 @@ export function WeeklyDigest({
       <Head />
       <Preview>
         {hasContent
-          ? `${newMatches.length > 0 ? `${newMatches.length} new grant match${newMatches.length > 1 ? "es" : ""}` : ""}${newMatches.length > 0 && upcomingDeadlines.length > 0 ? " · " : ""}${upcomingDeadlines.length > 0 ? `${upcomingDeadlines.length} upcoming deadline${upcomingDeadlines.length > 1 ? "s" : ""}` : ""} — GrantIQ Weekly Digest`
-          : "Your weekly grant update from GrantIQ"}
+          ? `${newMatches.length > 0 ? `${newMatches.length} new grant match${newMatches.length > 1 ? "es" : ""}` : ""}${newMatches.length > 0 && upcomingDeadlines.length > 0 ? " · " : ""}${upcomingDeadlines.length > 0 ? `${upcomingDeadlines.length} upcoming deadline${upcomingDeadlines.length > 1 ? "s" : ""}` : ""} — GrantAQ Weekly Digest`
+          : "Your weekly grant update from GrantAQ"}
       </Preview>
 
       <Body style={{ backgroundColor: WARM_50, fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", margin: 0, padding: "32px 0" }}>
@@ -117,7 +117,7 @@ export function WeeklyDigest({
           {/* Header */}
           <Section style={{ backgroundColor: TEAL, padding: "28px 40px" }}>
             <Text style={{ color: "#ffffff", fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 6px" }}>
-              GrantIQ
+              GrantAQ
             </Text>
             <Heading style={{ color: "#ffffff", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: "1.3" }}>
               Your Weekly Grant Digest
@@ -384,8 +384,8 @@ export function WeeklyDigest({
                     Unsubscribe
                   </Link>
                   {" · "}
-                  <Link href="https://grantiq.com" style={{ color: WARM_500 }}>
-                    GrantIQ
+                  <Link href="https://grantaq.com" style={{ color: WARM_500 }}>
+                    GrantAQ
                   </Link>
                 </Text>
               </Column>

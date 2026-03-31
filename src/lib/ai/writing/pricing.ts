@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/pricing.ts
+// grantaq/src/lib/ai/writing/pricing.ts
 
 import type { WritingTier, GrantType } from "@/types/writing";
 import { createAdminClient } from "@/lib/supabase/admin";

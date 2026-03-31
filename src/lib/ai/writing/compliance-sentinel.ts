@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/compliance-sentinel.ts
+// grantaq/src/lib/ai/writing/compliance-sentinel.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 import {

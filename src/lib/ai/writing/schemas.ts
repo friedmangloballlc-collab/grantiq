@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/schemas.ts
+// grantaq/src/lib/ai/writing/schemas.ts
 
 import { z } from "zod";
 

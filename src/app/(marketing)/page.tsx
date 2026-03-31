@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "GrantIQ — AI-Powered Grant Discovery, Strategy & Writing",
+  title: "GrantAQ — AI-Powered Grant Discovery, Strategy & Writing",
   description:
     "Find grants you actually qualify for. AI matches your organization to 5,000+ funding sources, builds your strategy, and helps write winning applications.",
 };
@@ -137,7 +137,7 @@ export default function LandingPage() {
           Ready to find grants you&apos;re missing?
         </h2>
         <p className="text-warm-500 mt-2 max-w-xl mx-auto">
-          Join organizations already using GrantIQ to discover funding, build strategy, and write winning applications faster.
+          Join organizations already using GrantAQ to discover funding, build strategy, and write winning applications faster.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
           <Button

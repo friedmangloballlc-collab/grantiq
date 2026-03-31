@@ -37,11 +37,11 @@ const STATE_FAQS: (stateName: string) => Array<{ q: string; a: string }> = (stat
   },
   {
     q: `How do I find ${stateName} state grant opportunities?`,
-    a: `${stateName} state agency grants are published through the state grants portal, individual agency websites (health department, arts commission, housing finance agency, etc.), and GrantIQ's aggregated database. GrantIQ pulls all active state grants alongside federal and foundation opportunities so you see everything in one place.`,
+    a: `${stateName} state agency grants are published through the state grants portal, individual agency websites (health department, arts commission, housing finance agency, etc.), and GrantAQ's aggregated database. GrantAQ pulls all active state grants alongside federal and foundation opportunities so you see everything in one place.`,
   },
   {
     q: `What is the deadline cycle for ${stateName} grants?`,
-    a: `${stateName} state grant deadlines vary widely by agency. Many education and health grants align with the state fiscal year (often July 1). Community development grants may have spring deadlines. Federal grants follow agency-specific cycles. GrantIQ tracks all deadlines and sends alerts before they close.`,
+    a: `${stateName} state grant deadlines vary widely by agency. Many education and health grants align with the state fiscal year (often July 1). Community development grants may have spring deadlines. Federal grants follow agency-specific cycles. GrantAQ tracks all deadlines and sends alerts before they close.`,
   },
 ];
 
@@ -74,16 +74,16 @@ export async function generateMetadata({
   if (!stateName) return {};
 
   return {
-    title: `Grants in ${stateName} — ${stateCode} Funding Opportunities | GrantIQ`,
+    title: `Grants in ${stateName} — ${stateCode} Funding Opportunities | GrantAQ`,
     description: `Browse active grants available to organizations in ${stateName}. Find federal, state, and foundation funding with AI-powered matching for your ${stateName} nonprofit or business.`,
     alternates: {
-      canonical: `https://grantiq.com/grants/state/${stateCode.toLowerCase()}`,
+      canonical: `https://grantaq.com/grants/state/${stateCode.toLowerCase()}`,
     },
     openGraph: {
-      title: `Grants in ${stateName} | GrantIQ`,
+      title: `Grants in ${stateName} | GrantAQ`,
       description: `Find grants available to ${stateName} organizations. AI-matched to your specific mission and eligibility.`,
-      url: `https://grantiq.com/grants/state/${stateCode.toLowerCase()}`,
-      siteName: "GrantIQ",
+      url: `https://grantaq.com/grants/state/${stateCode.toLowerCase()}`,
+      siteName: "GrantAQ",
       type: "website",
     },
   };
@@ -145,18 +145,18 @@ export default async function StateGrantPage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://grantiq.com" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://grantaq.com" },
       {
         "@type": "ListItem",
         position: 2,
         name: "Grant Directory",
-        item: "https://grantiq.com/grant-directory",
+        item: "https://grantaq.com/grant-directory",
       },
       {
         "@type": "ListItem",
         position: 3,
         name: `Grants in ${stateName}`,
-        item: `https://grantiq.com/grants/state/${stateCode.toLowerCase()}`,
+        item: `https://grantaq.com/grants/state/${stateCode.toLowerCase()}`,
       },
     ],
   };
@@ -215,7 +215,7 @@ export default async function StateGrantPage({
           <p className="text-warm-600 dark:text-warm-400 mt-4 max-w-3xl leading-relaxed">
             Organizations in {stateName} can access federal grants open to all states, {stateName}
             -specific state agency funding, regional foundation awards, and corporate giving
-            programs. GrantIQ tracks every active grant available to {stateName} nonprofits,
+            programs. GrantAQ tracks every active grant available to {stateName} nonprofits,
             schools, municipalities, and small businesses — and uses AI to match your organization
             to the funding you actually qualify for.
           </p>
@@ -369,7 +369,7 @@ export default async function StateGrantPage({
             Find {stateName} grants that match YOUR organization
           </h2>
           <p className="text-warm-500 mt-2 max-w-xl mx-auto">
-            Answer a few questions about your organization and GrantIQ&apos;s AI instantly shows
+            Answer a few questions about your organization and GrantAQ&apos;s AI instantly shows
             every grant in {stateName} — and nationwide — that you qualify for.
           </p>
           <Button

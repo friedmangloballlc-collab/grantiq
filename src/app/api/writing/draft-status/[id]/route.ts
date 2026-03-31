@@ -1,4 +1,4 @@
-// grantiq/src/app/api/writing/draft-status/[id]/route.ts
+// grantaq/src/app/api/writing/draft-status/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";

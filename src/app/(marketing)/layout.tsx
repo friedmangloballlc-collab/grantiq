@@ -87,7 +87,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           {/* Bottom bar */}
           <div className="border-t border-warm-200 dark:border-warm-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-warm-500">
-              &copy; {new Date().getFullYear()} GrantIQ &mdash; Friedman Global LLC. All rights
+              &copy; {new Date().getFullYear()} GrantAQ &mdash; Friedman Global LLC. All rights
               reserved.
             </p>
             <div className="flex items-center gap-6">

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const ACTIVE_ORG_COOKIE = "grantiq_active_org";
+const ACTIVE_ORG_COOKIE = "grantaq_active_org";
 
 export async function switchOrg(userId: string, orgId: string): Promise<boolean> {
   const admin = createAdminClient();

@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/funder-analyzer.ts
+// grantaq/src/lib/ai/writing/funder-analyzer.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 import { FunderAnalysisOutputSchema, type FunderAnalysisOutput } from "./schemas";

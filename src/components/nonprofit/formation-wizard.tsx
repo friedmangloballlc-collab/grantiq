@@ -223,7 +223,7 @@ const PACKAGES: PackageOption[] = [
       "SAM.gov registration",
       "Grants.gov registration",
       "Grant readiness assessment",
-      "First 3 grant matches via GrantIQ",
+      "First 3 grant matches via GrantAQ",
       "30-day advisory support",
     ],
   },
@@ -480,7 +480,7 @@ export function FormationWizard() {
           </div>
           <p className="text-xs text-muted-foreground">
             Powered by{" "}
-            <span className="font-semibold text-teal-600">GrantIQ</span>
+            <span className="font-semibold text-teal-600">GrantAQ</span>
           </p>
         </div>
       </div>
@@ -499,7 +499,7 @@ export function FormationWizard() {
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
             Nonprofit Formation
           </p>
-          <p className="text-sm font-bold text-teal-600">GrantIQ</p>
+          <p className="text-sm font-bold text-teal-600">GrantAQ</p>
         </div>
         <nav className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
           {PHASES.map((phase) => {

@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Grants by State — Find Funding in Your State | GrantIQ",
+  title: "Grants by State — Find Funding in Your State | GrantAQ",
   description:
     "Browse grants available in every US state. Find federal, state, and foundation funding opportunities for nonprofits, schools, and small businesses in your state.",
   alternates: {
-    canonical: "https://grantiq.com/grants/states",
+    canonical: "https://grantaq.com/grants/states",
   },
 };
 
@@ -88,7 +88,7 @@ export default function AllStatesPage() {
           Get matched to grants in YOUR state — instantly
         </h2>
         <p className="text-warm-500 mt-2">
-          GrantIQ&apos;s AI finds every grant your organization qualifies for, in your state and
+          GrantAQ&apos;s AI finds every grant your organization qualifies for, in your state and
           nationwide.
         </p>
         <Button

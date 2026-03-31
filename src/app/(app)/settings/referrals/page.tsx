@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Referrals | GrantIQ",
+  title: "Referrals | GrantAQ",
 };
 
 export default async function ReferralsPage() {

@@ -1,4 +1,4 @@
-# GrantIQ Sales Automation System: Executive Summary
+# GrantAQ Sales Automation System: Executive Summary
 
 **Status:** Ready to implement
 **Investment:** $20K-$30K (team + tools, first 90 days)
@@ -9,7 +9,7 @@
 
 ## What This System Does
 
-This is a complete, repeatable sales machine designed to convert GrantIQ SaaS free users and cold prospects into high-value consulting clients ($750-$15K per deal).
+This is a complete, repeatable sales machine designed to convert GrantAQ SaaS free users and cold prospects into high-value consulting clients ($750-$15K per deal).
 
 **The motion:**
 - Cold email to 50+ prospects/week (or warm leads from SaaS)
@@ -156,7 +156,7 @@ Every lead gets a score (0-100) based on:
 
 ### 7. SaaS-to-Consulting Pipeline (Free Users → Paid Consulting)
 
-GrantIQ free SaaS users are a warm lead source.
+GrantAQ free SaaS users are a warm lead source.
 
 **Triggers for consulting outreach:**
 - Logged in 5+ times in first 7 days (engaged)
@@ -415,7 +415,7 @@ This system includes 4 comprehensive operational documents:
 
 ## Bottom Line
 
-This is a **proven, repeatable sales motion** designed specifically for GrantIQ's consulting services.
+This is a **proven, repeatable sales motion** designed specifically for GrantAQ's consulting services.
 
 **Investment:** $60K-$80K (90 days)
 **Expected return:** $75K-$125K (90 days)

@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/rfp-parser.ts
+// grantaq/src/lib/ai/writing/rfp-parser.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 // Dynamic import to avoid build-time DOM polyfill issues

@@ -1,4 +1,4 @@
-# GrantIQ Sales Automation System
+# GrantAQ Sales Automation System
 
 **Version:** 1.0
 **Date:** March 29, 2026
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This sales automation system converts GrantIQ SaaS free users into qualified consulting leads. It targets executive directors, development directors, grant managers, CFOs, and program directors with a 120+ industry pain point database mapped to service tiers ($750-$15K).
+This sales automation system converts GrantAQ SaaS free users into qualified consulting leads. It targets executive directors, development directors, grant managers, CFOs, and program directors with a 120+ industry pain point database mapped to service tiers ($750-$15K).
 
 **KPI Targets:**
 - 50 cold emails/week
@@ -55,7 +55,7 @@ Quick question: Do you have a dedicated grant strategy, or is it managed ad-hoc 
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Questions don't require commitment. Low-friction opener. Demonstrates research.
@@ -94,7 +94,7 @@ If you're curious how we'd approach [Organization Name]'s situation, happy to sp
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Specific numbers build credibility. Case studies reduce perceived risk. Removes "what does this cost?" from recipient's mind by mentioning price point early.
@@ -133,7 +133,7 @@ Respond with yes/no or a time that works. I'll send a calendar link.
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Scarcity (2 slots), urgency (Q2/Q3 deadlines), low friction (yes/no questions), high CTA conversion (calendar link = commitment).
@@ -163,7 +163,7 @@ Quick question: Do you have SAM.gov registration active today, or is that still 
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Taps into compliance anxiety (CFOs care about regulatory risk). Opens door for higher-ticket services.
@@ -201,7 +201,7 @@ Worth 20 minutes?
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** ROI data removes emotion. Shows you understand their sector's constraints. Qualifies them (saves everyone's time).
@@ -223,13 +223,13 @@ It takes 45 minutes and gives you a roadmap for the next 12 months (and honestly
 
 I have availability Tuesday 2-4pm or Wednesday 9-11am this week.
 
-[Calendar link: Calendly.com/GrantIQ/Discovery]
+[Calendar link: Calendly.com/GrantAQ/Discovery]
 
 If neither works, reply with your timezone and preferred times.
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Removes friction with specific times + calendar link. Assumes yes.
@@ -243,18 +243,18 @@ GrantIQ Consulting
 #### Email 1: Usage-Triggered (Day 0, after 3+ days logged in)
 ```
 Subject Line A: [VARIATION 1] Your AI grant draft is ready (almost)
-Subject Line B: [VARIATION 2] Why your GrantIQ drafts need human review
+Subject Line B: [VARIATION 2] Why your GrantAQ drafts need human review
 
 ---
 
 Hi [First Name],
 
-I noticed you've been exploring grant sources in GrantIQ (nice work finding [X sources]).
+I noticed you've been exploring grant sources in GrantAQ (nice work finding [X sources]).
 
 Here's the thing: AI-generated grant proposals are a great starting point, but federal reviewers can spot AI writing. If you move to the writing stage, you'll want human expertise behind your positioning.
 
 We offer two paths:
-1. **DIY with AI:** Use GrantIQ writing engine ($149-$299 per proposal)
+1. **DIY with AI:** Use GrantAQ writing engine ($149-$299 per proposal)
 2. **Full Confidence:** We handle sourcing + writing + strategy ($5K-$15K, usually 4-6 proposals)
 
 Most of our best clients start with #1, see the difference quality makes, then upgrade to #2.
@@ -263,7 +263,7 @@ What's your timeline for your next grant proposal?
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Taps into in-app behavior (warm lead signal). Acknowledges their progress. Offers both DIY and premium paths.
@@ -296,7 +296,7 @@ Interested?
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Positions human expertise as risk mitigation, not luxury. Offers lower-ticket audit as gateway to full service.
@@ -310,13 +310,13 @@ GrantIQ Consulting
 #### Email 1: Win-Back (Day 0)
 ```
 Subject Line A: [VARIATION 1] [First Name], how's the grant search going?
-Subject Line B: [VARIATION 2] We added something useful to GrantIQ
+Subject Line B: [VARIATION 2] We added something useful to GrantAQ
 
 ---
 
 Hi [First Name],
 
-You signed up for GrantIQ a few weeks back. I'm curious: Did you find what you were looking for, or did something get in the way?
+You signed up for GrantAQ a few weeks back. I'm curious: Did you find what you were looking for, or did something get in the way?
 
 We recently added:
 - Better funder filtering (by deadline, program type, match score)
@@ -329,7 +329,7 @@ If there's something blocking your grant search, let me know. We can probably so
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Acknowledges their absence without judgment. Adds new value to entice return visit. Opens door for feedback (often reveals hidden objections).
@@ -338,8 +338,8 @@ GrantIQ Consulting
 
 #### Email 2: "We Miss You" + Offer (Day 5)
 ```
-Subject Line A: [VARIATION 1] Come back to GrantIQ (+ 50% off offer)
-Subject Line B: [VARIATION 2] One-time offer for GrantIQ users
+Subject Line A: [VARIATION 1] Come back to GrantAQ (+ 50% off offer)
+Subject Line B: [VARIATION 2] One-time offer for GrantAQ users
 
 ---
 
@@ -347,7 +347,7 @@ Hi [First Name],
 
 Since you haven't logged in recently, I wanted to make a personal offer:
 
-**For the next 7 days, all consulting services are 50% off for previous GrantIQ users.**
+**For the next 7 days, all consulting services are 50% off for previous GrantAQ users.**
 
 This includes:
 - Grant Sourcing ($750 → $375)
@@ -362,7 +362,7 @@ Interested in a quick call to see which service fits your situation?
 
 Best,
 [Your Name]
-GrantIQ Consulting
+GrantAQ Consulting
 ```
 
 **Logic:** Time-limited offer creates urgency. Discount makes premium services accessible. Acknowledges their past engagement without product attachment.
@@ -403,7 +403,7 @@ If email opened 2+ times but no reply:
 LinkedIn connection request (personalized):
 "Hi [First Name], I sent an email about federal grant strategy
 for [Organization]. Worth a 15-min call if you're exploring
-funding this quarter. —[Your Name], GrantIQ"
+funding this quarter. —[Your Name], GrantAQ"
 
 Then: Direct message if they accept
 "Thanks for connecting. Two quick questions:
@@ -422,7 +422,7 @@ Best times to call:
 - Avoid Mondays (email noise) and Fridays (check-out mentality)
 
 Script (see Section 3):
-"Hi [First Name], this is [Your Name] from GrantIQ.
+"Hi [First Name], this is [Your Name] from GrantAQ.
 Did you get my email about [specific topic]?
 I know you're busy—this will take 2 minutes."
 
@@ -710,7 +710,7 @@ Service Interest:
 Channel Source:
 - COLD_EMAIL: From cold sequence
 - LINKEDIN: Found via LinkedIn
-- SAAS_USER: From GrantIQ free signup
+- SAAS_USER: From GrantAQ free signup
 - REFERRAL: From existing client
 - INBOUND: Organic request
 
@@ -923,7 +923,7 @@ Action: 45-day drip focusing on compliance urgency + deadline risk
 #### Automation Layer 1: Inbound Workflow
 
 ```
-TRIGGER: New email signup in GrantIQ (SaaS)
+TRIGGER: New email signup in GrantAQ (SaaS)
 ACTION (Automated):
   1. Add contact to CRM, tag "SAAS_USER"
   2. Send welcome email immediately
@@ -1112,13 +1112,13 @@ HUMAN INTERVENTION:
 
 ---
 
-## 7. SaaS-to-Consulting Pipeline: How GrantIQ Product Feeds Sales
+## 7. SaaS-to-Consulting Pipeline: How GrantAQ Product Feeds Sales
 
 ### The Funnel: Free SaaS → Consulting Qualified Lead
 
 ```
 ┌─ AWARENESS ─────────────────────┐
-│  GrantIQ SaaS Free Signup       │
+│  GrantAQ SaaS Free Signup       │
 │  (User discovers on Google,     │
 │   through marketing, referral)  │
 └────────────┬────────────────────┘
@@ -1201,7 +1201,7 @@ Subject: You found [X] grants in [category]—next step?
 
 Hi [First Name],
 
-I noticed you've explored GrantIQ pretty thoroughly. You found
+I noticed you've explored GrantAQ pretty thoroughly. You found
 [X] sources in [sector] that match [Organization Name].
 
 Here's the thing: Finding grants is Step 1.
@@ -1271,11 +1271,11 @@ Best,
 **Email 3: Time-Limited Offer (Day 7, if still no engagement)**
 
 ```
-Subject: $750 grant audit (free for GrantIQ users this week)
+Subject: $750 grant audit (free for GrantAQ users this week)
 
 Hi [First Name],
 
-One last note: We're running a special offer for GrantIQ free users
+One last note: We're running a special offer for GrantAQ free users
 through [DATE]: Free grant audit (normally $750) if you're curious.
 
 An audit takes 1 hour, and we deliver it within 2 days.
@@ -1536,7 +1536,7 @@ QUALIFICATION (Toward end of call):
 
 ## Key Principles (Read These)
 
-1. **Lead with value, not features.** Don't mention GrantIQ features until they ask. Start with their pain.
+1. **Lead with value, not features.** Don't mention GrantAQ features until they ask. Start with their pain.
 
 2. **Personalize using research.** Spend 5 min per prospect researching org size, recent grants, sector trends. It shows and increases response rates 3-5x.
 

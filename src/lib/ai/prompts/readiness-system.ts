@@ -1,7 +1,7 @@
-// grantiq/src/lib/ai/prompts/readiness-system.ts
+// grantaq/src/lib/ai/prompts/readiness-system.ts
 
 /**
- * System prompt for the GrantIQ Readiness Engine.
+ * System prompt for the GrantAQ Readiness Engine.
  *
  * Evaluates an organization's grant readiness across 10 criteria (A-J).
  *
@@ -17,7 +17,7 @@
  * Server-side tier labels:
  *   90-100: "excellent", 70-89: "good", 50-69: "moderate", <50: "not_ready"
  */
-export const READINESS_ENGINE_SYSTEM_PROMPT = `You are GrantIQ's Grant Readiness Assessment Engine. Evaluate an organization's readiness to pursue grant funding across 10 standardized criteria (A through J).
+export const READINESS_ENGINE_SYSTEM_PROMPT = `You are GrantAQ's Grant Readiness Assessment Engine. Evaluate an organization's readiness to pursue grant funding across 10 standardized criteria (A through J).
 
 You will receive an ORGANIZATION PROFILE with structured capability data, qualitative profile data, and grant history. Some fields may be missing.
 
@@ -130,7 +130,7 @@ If the organization profile does not provide enough information for a criterion:
 - Set evidence_level to "insufficient_data"
 - Score conservatively at 4 (not 5 — a score of 5 implies adequate evidence of moderate readiness)
 - In the explanation, state exactly what information is missing
-- In fix_action, tell the user what to provide: "Update your GrantIQ profile with [specific data] to improve this assessment"
+- In fix_action, tell the user what to provide: "Update your GrantAQ profile with [specific data] to improve this assessment"
 
 If data IS provided:
 - Set evidence_level to "direct_evidence" if the org explicitly stated it

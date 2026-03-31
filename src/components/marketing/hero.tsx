@@ -14,7 +14,7 @@ export function Hero() {
           Find grants you actually<span className="text-brand-teal"> qualify for</span>
         </h1>
         <p className="text-lg md:text-xl text-warm-500 mt-6 max-w-2xl mx-auto">
-          GrantIQ matches your organization to thousands of grants, builds your funding strategy, and helps you write winning applications. AI does the heavy lifting.
+          GrantAQ matches your organization to thousands of grants, builds your funding strategy, and helps you write winning applications. AI does the heavy lifting.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
           <Button

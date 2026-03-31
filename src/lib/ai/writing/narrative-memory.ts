@@ -1,4 +1,4 @@
-// grantiq/src/lib/ai/writing/narrative-memory.ts
+// grantaq/src/lib/ai/writing/narrative-memory.ts
 
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";

@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
               letterSpacing: "-0.02em",
             }}
           >
-            GrantIQ
+            GrantAQ
           </span>
         </div>
 
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
               borderRadius: "99px",
             }}
           >
-            grantiq.com — Get your free matches
+            grantaq.com — Get your free matches
           </span>
         </div>
       </div>

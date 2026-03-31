@@ -24,7 +24,7 @@ const VARIANT_COPY: Record<
 > = {
   first_match: {
     heading: "Know someone who needs grants?",
-    body: "Share GrantIQ and earn $50 in account credit for every person who signs up.",
+    body: "Share GrantAQ and earn $50 in account credit for every person who signs up.",
     cta: "Share & Earn $50",
   },
   scorecard: {
@@ -34,7 +34,7 @@ const VARIANT_COPY: Record<
   },
   pipeline_saved: {
     heading: "Invite a colleague to collaborate",
-    body: "Working on grants with a team? Invite them to GrantIQ and earn $50 credit when they sign up.",
+    body: "Working on grants with a team? Invite them to GrantAQ and earn $50 credit when they sign up.",
     cta: "Invite a Colleague",
   },
 };
@@ -61,14 +61,14 @@ export function InvitePrompt({
 
   const handleCta = () => {
     const base =
-      typeof window !== "undefined" ? window.location.origin : "https://grantiq.com";
+      typeof window !== "undefined" ? window.location.origin : "https://grantaq.com";
     const refUrl = `${base}/ref/${referralCode}`;
 
     if (variant === "scorecard" && score != null && orgName) {
       const token = btoa(JSON.stringify({ score, org: orgName, ref: referralCode }));
       const shareUrl = `${base}/score/${encodeURIComponent(token)}`;
       const text = encodeURIComponent(
-        `My organization scored ${score}/100 for Grant Readiness on GrantIQ. See how your organization compares: ${shareUrl}`
+        `My organization scored ${score}/100 for Grant Readiness on GrantAQ. See how your organization compares: ${shareUrl}`
       );
       window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${text}`, "_blank");
     } else {

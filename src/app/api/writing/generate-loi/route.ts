@@ -1,4 +1,4 @@
-// grantiq/src/app/api/writing/generate-loi/route.ts
+// grantaq/src/app/api/writing/generate-loi/route.ts
 //
 // POST /api/writing/generate-loi
 // Generates a Letter of Intent for a given grant + org.

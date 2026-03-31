@@ -25,7 +25,7 @@ export const INDUSTRY_META: Record<
     label: "Healthcare",
     categories: ["healthcare", "health", "medical", "mental health", "public health", "behavioral health"],
     intro:
-      "Healthcare grants represent one of the largest pools of philanthropic and government funding in the United States. Federal agencies like HRSA, NIH, and the CDC allocate billions annually to organizations improving patient outcomes, expanding access to care, and addressing health disparities in underserved communities. State health departments, major foundations such as the Robert Wood Johnson Foundation and Kresge Foundation, and corporate philanthropies from hospital systems also fund a wide array of healthcare initiatives. Whether your organization delivers direct clinical services, trains healthcare workers, conducts community health outreach, conducts behavioral health programming, or builds health infrastructure in rural areas, there are dedicated grant programs designed to support your mission. Navigating this landscape requires understanding eligibility requirements—many federal awards require 501(c)(3) status or public entity classification—as well as the nuances of matching funds, indirect cost rates, and performance reporting. GrantIQ's AI matching engine analyzes your organization profile against all active healthcare funding opportunities so you spend time applying, not searching.",
+      "Healthcare grants represent one of the largest pools of philanthropic and government funding in the United States. Federal agencies like HRSA, NIH, and the CDC allocate billions annually to organizations improving patient outcomes, expanding access to care, and addressing health disparities in underserved communities. State health departments, major foundations such as the Robert Wood Johnson Foundation and Kresge Foundation, and corporate philanthropies from hospital systems also fund a wide array of healthcare initiatives. Whether your organization delivers direct clinical services, trains healthcare workers, conducts community health outreach, conducts behavioral health programming, or builds health infrastructure in rural areas, there are dedicated grant programs designed to support your mission. Navigating this landscape requires understanding eligibility requirements—many federal awards require 501(c)(3) status or public entity classification—as well as the nuances of matching funds, indirect cost rates, and performance reporting. GrantAQ's AI matching engine analyzes your organization profile against all active healthcare funding opportunities so you spend time applying, not searching.",
     faqs: [
       {
         q: "What types of organizations are eligible for healthcare grants?",
@@ -50,7 +50,7 @@ export const INDUSTRY_META: Record<
     label: "Education",
     categories: ["education", "literacy", "stem", "workforce", "tutoring", "after school", "k-12", "higher education"],
     intro:
-      "Education grants encompass an enormous funding landscape that includes federal Title programs, state education agency grants, private foundations, and corporate giving programs. The U.S. Department of Education alone distributes more than $70 billion annually through formula grants and competitive awards targeting everything from early childhood literacy to STEM college pathways. Foundations like Bill & Melinda Gates, Walton Family, and Carnegie Corporation invest heavily in educational innovation, teacher effectiveness, and college access. Local community foundations often prioritize workforce-aligned education initiatives such as apprenticeship programs, adult basic education, and digital literacy. Successful education grant proposals typically demonstrate measurable learning outcomes, ties to evidence-based curricula, sustainable program models, and partnerships with school districts or higher education institutions. GrantIQ helps education nonprofits and schools identify every relevant opportunity in their region and category, generate match scores, and build winning proposals using AI trained on successful education grant narratives.",
+      "Education grants encompass an enormous funding landscape that includes federal Title programs, state education agency grants, private foundations, and corporate giving programs. The U.S. Department of Education alone distributes more than $70 billion annually through formula grants and competitive awards targeting everything from early childhood literacy to STEM college pathways. Foundations like Bill & Melinda Gates, Walton Family, and Carnegie Corporation invest heavily in educational innovation, teacher effectiveness, and college access. Local community foundations often prioritize workforce-aligned education initiatives such as apprenticeship programs, adult basic education, and digital literacy. Successful education grant proposals typically demonstrate measurable learning outcomes, ties to evidence-based curricula, sustainable program models, and partnerships with school districts or higher education institutions. GrantAQ helps education nonprofits and schools identify every relevant opportunity in their region and category, generate match scores, and build winning proposals using AI trained on successful education grant narratives.",
     faqs: [
       {
         q: "Can K-12 public schools apply for education grants?",
@@ -75,7 +75,7 @@ export const INDUSTRY_META: Record<
     label: "Arts & Culture",
     categories: ["arts", "culture", "music", "theater", "visual arts", "performing arts", "humanities", "museums"],
     intro:
-      "Arts and culture grants support a vibrant ecosystem of organizations that enrich communities, preserve heritage, and foster creative expression. The National Endowment for the Arts (NEA) and National Endowment for the Humanities (NEH) distribute federal funds through state arts agencies and direct grants. State arts councils provide critical infrastructure funding to regional organizations. Private foundations including the Mellon Foundation, Ford Foundation, Doris Duke Charitable Foundation, and hundreds of local community foundations invest in artists, arts organizations, cultural preservation, and arts education. Corporate sponsors—banks, media companies, luxury brands—often fund high-visibility cultural programming. Arts grants are available to individual artists, arts organizations, museums, cultural centers, and schools. Proposal success depends on articulating artistic quality, community impact, audience engagement metrics, and financial sustainability. GrantIQ tracks every active arts funding opportunity and helps your organization cut through the noise to find grants you actually qualify for.",
+      "Arts and culture grants support a vibrant ecosystem of organizations that enrich communities, preserve heritage, and foster creative expression. The National Endowment for the Arts (NEA) and National Endowment for the Humanities (NEH) distribute federal funds through state arts agencies and direct grants. State arts councils provide critical infrastructure funding to regional organizations. Private foundations including the Mellon Foundation, Ford Foundation, Doris Duke Charitable Foundation, and hundreds of local community foundations invest in artists, arts organizations, cultural preservation, and arts education. Corporate sponsors—banks, media companies, luxury brands—often fund high-visibility cultural programming. Arts grants are available to individual artists, arts organizations, museums, cultural centers, and schools. Proposal success depends on articulating artistic quality, community impact, audience engagement metrics, and financial sustainability. GrantAQ tracks every active arts funding opportunity and helps your organization cut through the noise to find grants you actually qualify for.",
     faqs: [
       {
         q: "Can individual artists apply for arts grants?",
@@ -100,7 +100,7 @@ export const INDUSTRY_META: Record<
     label: "Environment",
     categories: ["environment", "conservation", "climate", "sustainability", "wildlife", "land", "water", "energy"],
     intro:
-      "Environmental grants fund conservation, climate resilience, clean energy, environmental justice, and natural resource protection initiatives across all 50 states. Federal programs from the EPA, USDA, and Department of Energy channel billions into environmental projects through competitive grants and cooperative agreements. The Inflation Reduction Act created billions in new grant and rebate programs for clean energy, climate-smart agriculture, and environmental justice communities. Major foundations including Moore, Packard, Wilburforce, and Patagonia Environmental Grants support conservation science, policy advocacy, and community-based environmental work. Corporate ESG commitments have also generated new corporate grant programs tied to environmental impact. Environmental grant applicants typically include nonprofits, tribal governments, municipalities, academic institutions, and agricultural cooperatives. Proposals must demonstrate measurable ecological outcomes, community benefit, and sound scientific methodology. GrantIQ helps environmental organizations map funding to their specific geography, ecosystem focus, and organizational capacity.",
+      "Environmental grants fund conservation, climate resilience, clean energy, environmental justice, and natural resource protection initiatives across all 50 states. Federal programs from the EPA, USDA, and Department of Energy channel billions into environmental projects through competitive grants and cooperative agreements. The Inflation Reduction Act created billions in new grant and rebate programs for clean energy, climate-smart agriculture, and environmental justice communities. Major foundations including Moore, Packard, Wilburforce, and Patagonia Environmental Grants support conservation science, policy advocacy, and community-based environmental work. Corporate ESG commitments have also generated new corporate grant programs tied to environmental impact. Environmental grant applicants typically include nonprofits, tribal governments, municipalities, academic institutions, and agricultural cooperatives. Proposals must demonstrate measurable ecological outcomes, community benefit, and sound scientific methodology. GrantAQ helps environmental organizations map funding to their specific geography, ecosystem focus, and organizational capacity.",
     faqs: [
       {
         q: "What federal agencies fund environmental grants?",
@@ -428,16 +428,16 @@ export async function generateMetadata({
   if (!meta) return {};
 
   return {
-    title: `${meta.label} Grants — Funding Opportunities | GrantIQ`,
+    title: `${meta.label} Grants — Funding Opportunities | GrantAQ`,
     description: `Find ${meta.label.toLowerCase()} grants for your organization. Browse active funding opportunities, see award amounts and deadlines, and get AI-matched to grants you qualify for.`,
     alternates: {
-      canonical: `https://grantiq.com/grants/${industry}`,
+      canonical: `https://grantaq.com/grants/${industry}`,
     },
     openGraph: {
-      title: `${meta.label} Grants — Funding Opportunities | GrantIQ`,
+      title: `${meta.label} Grants — Funding Opportunities | GrantAQ`,
       description: `Browse ${meta.label.toLowerCase()} grants and get matched to funding your organization qualifies for.`,
-      url: `https://grantiq.com/grants/${industry}`,
-      siteName: "GrantIQ",
+      url: `https://grantaq.com/grants/${industry}`,
+      siteName: "GrantAQ",
       type: "website",
     },
   };
@@ -488,18 +488,18 @@ export default async function IndustryHubPage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://grantiq.com" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://grantaq.com" },
       {
         "@type": "ListItem",
         position: 2,
         name: "Grant Directory",
-        item: "https://grantiq.com/grant-directory",
+        item: "https://grantaq.com/grant-directory",
       },
       {
         "@type": "ListItem",
         position: 3,
         name: `${meta.label} Grants`,
-        item: `https://grantiq.com/grants/${industry}`,
+        item: `https://grantaq.com/grants/${industry}`,
       },
     ],
   };
@@ -692,7 +692,7 @@ export default async function IndustryHubPage({
             Find {meta.label} grants that match YOUR organization
           </h2>
           <p className="text-warm-500 mt-2 max-w-xl mx-auto">
-            GrantIQ&apos;s AI matches your organization profile to every active{" "}
+            GrantAQ&apos;s AI matches your organization profile to every active{" "}
             {meta.label.toLowerCase()} grant you qualify for — in seconds.
           </p>
           <Button
