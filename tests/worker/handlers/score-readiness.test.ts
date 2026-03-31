@@ -62,6 +62,15 @@ function buildMockDb(orgOverride?: Partial<typeof mockOrg> | null, insertError?:
     ? { data: null, error: { message: "Not found" } }
     : { data: { ...mockOrg, ...orgOverride }, error: null };
 
+  // Cache-check query chain: select().eq().order().limit().single()
+  const cacheCheckChain: any = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: null, error: null }),
+  };
+
   const db: any = {
     from: vi.fn().mockImplementation((table: string) => {
       if (table === "organizations") {
@@ -73,6 +82,7 @@ function buildMockDb(orgOverride?: Partial<typeof mockOrg> | null, insertError?:
       }
       if (table === "readiness_scores") {
         return {
+          ...cacheCheckChain,
           insert: vi.fn().mockResolvedValue({ error: insertError ?? null }),
         };
       }

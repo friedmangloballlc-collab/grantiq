@@ -44,6 +44,28 @@ function buildMockDb(orgOverride?: Partial<typeof mockOrg> | null) {
     ? { data: null, error: { message: "Not found" } }
     : { data: { ...mockOrg, ...orgOverride }, error: null };
 
+  // Cache-check query chain: select().eq().order().limit().single()
+  // Returns null data so cache is always a miss and full pipeline runs.
+  const cacheCheckChain: any = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    // count query (select("*", { count: "exact", head: true })) also uses eq
+    in: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockResolvedValue({ data: [], error: null }),
+  };
+
+  // match_cache table: select chain + upsert
+  const matchCacheChain: any = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockResolvedValue({ data: [], error: null }),
+    upsert: vi.fn().mockResolvedValue({ error: null }),
+  };
+
   const db: any = {
     from: vi.fn().mockImplementation((table: string) => {
       if (table === "organizations") {
@@ -55,9 +77,13 @@ function buildMockDb(orgOverride?: Partial<typeof mockOrg> | null) {
       }
       if (table === "grant_matches") {
         return {
+          ...cacheCheckChain,
           delete: vi.fn().mockReturnValue(deleteChain),
           insert: insertChain,
         };
+      }
+      if (table === "match_cache") {
+        return matchCacheChain;
       }
       return db;
     }),
@@ -135,7 +161,7 @@ describe("handleMatchGrants", () => {
         grant_id: "grant-1",
         match_score: 88,
         score_breakdown: {},
-        why_it_matches: "Strong mission alignment",
+        why_it_matches: ["Strong mission alignment"],
         missing_requirements: [],
         win_probability: "high",
         recommended_action: "apply",
