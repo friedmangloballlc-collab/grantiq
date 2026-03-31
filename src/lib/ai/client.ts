@@ -32,7 +32,8 @@ export function estimateCostCents(
 ): number {
   const rates = COST_PER_1K_TOKENS[model as keyof typeof COST_PER_1K_TOKENS];
   if (!rates) return 0;
+  // rates are in dollars per 1K tokens — multiply by 100 to return cents
   return Math.ceil(
-    (inputTokens / 1000) * rates.input + (outputTokens / 1000) * rates.output
+    ((inputTokens / 1000) * rates.input + (outputTokens / 1000) * rates.output) * 100
   );
 }

@@ -76,16 +76,9 @@ export async function POST(req: NextRequest) {
       cancelUrl: `${appUrl}/upgrade?canceled=true`,
     });
 
-    // Optimistically record pending subscription (will be confirmed via webhook)
-    await admin.from("subscriptions").upsert(
-      {
-        org_id: orgId,
-        user_id: user.id,
-        tier,
-        status: "active",
-      },
-      { onConflict: "org_id" }
-    );
+    // DO NOT upgrade tier here — only the Stripe webhook should set the tier
+    // after payment is confirmed. This prevents users from getting paid features
+    // without actually paying.
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
