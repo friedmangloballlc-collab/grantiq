@@ -26,7 +26,9 @@ interface Step {
   showIf?: (answers: Record<string, string | string[]>) => boolean;
 }
 
-const ONBOARDING_STEPS: Step[] = [
+// ─── Core Steps (required — minimum for AI matching) ─────────────────────────
+
+const CORE_STEPS: Step[] = [
   {
     id: "entity_type",
     question: "What type of organization are you?",
@@ -204,50 +206,24 @@ const ONBOARDING_STEPS: Step[] = [
     ],
   },
   {
-    id: "grant_history",
-    question: "Have you received grants or incentives before?",
-    type: "single_select",
-    options: [
-      { label: "Yes, I have received grants", value: "experienced" },
-      { label: "No, this would be my first time", value: "none" },
-    ],
-  },
-  {
     id: "location",
     question: "Where is your business located?",
     subtitle: "Enter your city and state",
     type: "text",
     placeholder: "e.g. Miami, FL",
   },
+];
+
+// ─── Deferred Steps (shown as dashboard "Strengthen Your Profile" card) ───────
+
+export const DEFERRED_STEPS: Step[] = [
   {
-    id: "business_model",
-    question: "Tell us about your business setup",
-    subtitle: "This helps identify specialized grant opportunities",
+    id: "grant_history",
+    question: "Have you received grants or incentives before?",
     type: "single_select",
     options: [
-      { label: "Remote/Virtual Business", value: "remote" },
-      { label: "Home Based Business", value: "home_based" },
-      { label: "Online Business", value: "online" },
-      { label: "Physical Location", value: "physical" },
-      { label: "No Physical Location Yet", value: "no_location" },
-    ],
-  },
-  {
-    id: "phone",
-    question: "What's your phone number?",
-    subtitle: "So our advisory team can reach you if needed",
-    type: "text",
-    placeholder: "e.g. (305) 555-1234",
-  },
-  {
-    id: "contact_method",
-    question: "How would you prefer to be contacted?",
-    subtitle: "Your information is confidential",
-    type: "single_select",
-    options: [
-      { label: "Email", value: "email" },
-      { label: "Phone Call", value: "phone" },
-      { label: "Text Message", value: "text" },
+      { label: "Yes, I have received grants", value: "experienced" },
+      { label: "No, this would be my first time", value: "none" },
     ],
   },
   {
@@ -299,6 +275,37 @@ const ONBOARDING_STEPS: Step[] = [
       "e.g. We provide affordable legal services to low-income families in South Florida...",
   },
   {
+    id: "business_model",
+    question: "Tell us about your business setup",
+    subtitle: "This helps identify specialized grant opportunities",
+    type: "single_select",
+    options: [
+      { label: "Remote/Virtual Business", value: "remote" },
+      { label: "Home Based Business", value: "home_based" },
+      { label: "Online Business", value: "online" },
+      { label: "Physical Location", value: "physical" },
+      { label: "No Physical Location Yet", value: "no_location" },
+    ],
+  },
+  {
+    id: "phone",
+    question: "What's your phone number?",
+    subtitle: "So our advisory team can reach you if needed",
+    type: "text",
+    placeholder: "e.g. (305) 555-1234",
+  },
+  {
+    id: "contact_method",
+    question: "How would you prefer to be contacted?",
+    subtitle: "Your information is confidential",
+    type: "single_select",
+    options: [
+      { label: "Email", value: "email" },
+      { label: "Phone Call", value: "phone" },
+      { label: "Text Message", value: "text" },
+    ],
+  },
+  {
     id: "documents",
     question: "Which documents do you have ready?",
     subtitle: "Select all that apply",
@@ -342,6 +349,9 @@ const ONBOARDING_STEPS: Step[] = [
   },
 ];
 
+// Export Step type for use in profile-completion card
+export type { Step };
+
 const ENCOURAGEMENTS = [
   "Great choice!",
   "Perfect, got it!",
@@ -358,7 +368,7 @@ const ENCOURAGEMENTS = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getVisibleSteps(answers: Record<string, string | string[]>): Step[] {
-  return ONBOARDING_STEPS.filter(
+  return CORE_STEPS.filter(
     (step) => !step.showIf || step.showIf(answers)
   );
 }
@@ -541,8 +551,9 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
           You&apos;re all set!
         </h3>
         <p className="text-warm-500 max-w-sm">
-          Your profile is complete. Head to your dashboard to see your grant
-          matches!
+          Your profile is ready for matching. Head to your dashboard to see
+          your grant matches — you can strengthen your profile there to get
+          even better results.
         </p>
         <Button
           className="bg-brand-teal hover:bg-brand-teal-dark text-white px-8 py-3 text-base"

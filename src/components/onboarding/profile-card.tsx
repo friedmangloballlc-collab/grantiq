@@ -45,7 +45,8 @@ export function ProfileCard({
   data: ProfileData;
   completedFields: number;
 }) {
-  const totalFields = 15;
+  // Core steps only — 5 required fields
+  const totalFields = 5;
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
@@ -54,21 +55,6 @@ export function ProfileCard({
     { label: "Funding Purpose", value: data.funding_use ?? data.fundingUse },
     { label: "Business Stage", value: data.business_stage ?? data.businessStage },
     { label: "Location", value: data.location ?? (data.city && data.state ? `${data.city}, ${data.state}` : data.state) },
-    { label: "Business Setup", value: data.business_model },
-    { label: "Phone", value: data.phone },
-    { label: "Contact Preference", value: data.contact_method },
-    { label: "Employees", value: data.employee_count ?? data.employeeCount },
-    { label: "Annual Revenue", value: data.annual_revenue ?? data.annualBudget },
-    { label: "Mission", value: data.mission },
-    { label: "Ownership", value: data.ownership ?? data.ownershipDemographics },
-    { label: "Grant History", value: data.grant_history ?? data.grantHistory },
-    { label: "Documents Ready", value: data.documents ? (data.documents === "none" ? "None yet" : data.documents) : (data.documentsMissing === "none" ? "All ready" : data.documentsMissing ? `Missing: ${data.documentsMissing}` : undefined) },
-    {
-      label: "501(c)(3) / SAM.gov",
-      value: data.has501c3 != null || data.samGov != null
-        ? [data.has501c3 ? "501(c)(3)" : null, data.samGov ? "SAM.gov" : null].filter(Boolean).join(", ") || "Not yet"
-        : undefined,
-    },
   ];
 
   return (

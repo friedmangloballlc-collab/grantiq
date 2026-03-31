@@ -51,7 +51,9 @@ export default async function MatchesPage() {
 
   const { data: matches } = await db
     .from("grant_matches")
-    .select("*, grant_sources(*)")
+    .select(
+      "id, grant_source_id, match_score, scores, score_breakdown, missing_requirements, grant_sources(id, name, funder_name, source_type, amount_max, deadline)"
+    )
     .eq("org_id", orgId)
     .order("match_score", { ascending: false })
     .limit(50);
