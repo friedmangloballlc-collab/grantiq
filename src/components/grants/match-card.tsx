@@ -131,6 +131,16 @@ export function MatchCard(props: MatchCardProps) {
           />
         )}
 
+        {props.uploadedDocs && (
+          <div className="mt-3">
+            <GrantReadinessBadge
+              sourceType={props.sourceType}
+              uploadedDocs={props.uploadedDocs}
+              showMissing
+            />
+          </div>
+        )}
+
         {saveError && (
           <p className="mt-2 text-xs text-red-500">{saveError}</p>
         )}
