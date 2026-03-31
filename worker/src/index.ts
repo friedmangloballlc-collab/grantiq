@@ -1,5 +1,13 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
+
+// Register @/ path alias for module resolution
+import { resolve } from "path";
+import { register } from "tsconfig-paths";
+register({
+  baseUrl: resolve(import.meta.dirname ?? __dirname, "../.."),
+  paths: { "@/*": ["src/*"] },
+});
 import { createClient } from "@supabase/supabase-js";
 import { parseJob } from "./queue";
 import { handleJob } from "./handlers/index";
