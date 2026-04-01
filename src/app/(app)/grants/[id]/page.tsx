@@ -24,8 +24,10 @@ interface Props {
 export default async function GrantDetailPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
+  const admin = createAdminClient();
 
-  const { data: grant } = await supabase
+  // Use admin client for grant_sources (public catalog, no RLS)
+  const { data: grant } = await admin
     .from("grant_sources")
     .select("*")
     .eq("id", id)
@@ -39,7 +41,6 @@ export default async function GrantDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
   let tier = "free";
   if (user) {
-    const admin = createAdminClient();
     const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
