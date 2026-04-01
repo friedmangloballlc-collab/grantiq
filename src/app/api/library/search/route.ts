@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
@@ -22,7 +23,9 @@ export async function GET(req: NextRequest) {
     const page = Math.max(0, Number(searchParams.get("page") ?? 0));
     const limit = 24;
 
-    const { data, error } = await supabase.rpc("search_grants", {
+    // Use admin client for catalog queries — grant_sources is a public catalog
+    const db = createAdminClient();
+    const { data, error } = await db.rpc("search_grants", {
       query: q && q.trim() !== "" ? q.trim() : null,
       p_type: type && type !== "all" ? type : null,
       p_state: state && state !== "all" ? state : null,
