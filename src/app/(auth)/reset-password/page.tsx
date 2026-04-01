@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles className="h-6 w-6" style={{ color: "var(--color-brand-teal)" }} />
+            <Image src="/grantaq-icon.svg" alt="GrantAQ" width={28} height={28} className="h-7 w-7" />
             <span className="text-xl font-bold">GrantAQ</span>
           </div>
           <CardTitle>Reset your password</CardTitle>
