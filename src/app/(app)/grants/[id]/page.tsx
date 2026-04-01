@@ -109,8 +109,50 @@ export default async function GrantDetailPage({ params }: Props) {
     sourceTypeColors[sourceType.toLowerCase()] ??
     "bg-warm-100 text-warm-700 dark:bg-warm-800 dark:text-warm-300";
 
+  // Fetch requirements from grant_requirements table
+  const { data: requirements } = await admin
+    .from("grant_requirements")
+    .select("*")
+    .eq("grant_source_id", id);
+
+  // Check if grant is already in user's pipeline
+  let inPipeline = false;
+  let pipelineStage = "";
+  if (user) {
+    const { data: membership } = await admin
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .single();
+    if (membership?.org_id) {
+      const { data: pipelineItem } = await admin
+        .from("grant_pipeline")
+        .select("stage")
+        .eq("org_id", membership.org_id)
+        .eq("grant_source_id", id)
+        .limit(1)
+        .single();
+      if (pipelineItem) {
+        inPipeline = true;
+        pipelineStage = pipelineItem.stage;
+      }
+    }
+  }
+
+  const requirementLabels: Record<string, string> = {
+    "501c3": "501(c)(3) Tax-Exempt Status",
+    "budget_threshold": "Budget Threshold",
+    "geographic": "Geographic Requirement",
+    "years_operating": "Minimum Years Operating",
+    "audit_required": "Financial Audit Required",
+    "matching_funds": "Matching Funds Required",
+    "sam_registration": "SAM.gov Registration",
+  };
+
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="max-w-4xl space-y-8 px-4 md:px-6 py-6">
       {/* Layer 1: Summary — always visible */}
       <div>
         <span
@@ -203,13 +245,48 @@ export default async function GrantDetailPage({ params }: Props) {
         </Link>
       </div>
 
+      {/* Apply Through GrantAQ */}
+      <Card className="border-brand-teal/30 bg-brand-teal/5 dark:bg-brand-teal/10">
+        <CardContent className="p-6">
+          <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-2">
+            {inPipeline ? "Application In Progress" : "Ready to Apply?"}
+          </h2>
+          {inPipeline ? (
+            <div>
+              <p className="text-sm text-warm-600 dark:text-warm-400 mb-4">
+                This grant is in your pipeline (stage: <span className="font-medium capitalize">{pipelineStage.replace(/_/g, " ")}</span>).
+                Track your progress and submit through GrantAQ to log your outcome.
+              </p>
+              <div className="flex gap-3">
+                <Link
+                  href="/pipeline"
+                  className="inline-flex items-center px-4 py-2 rounded-lg bg-brand-teal text-white text-sm font-medium hover:bg-brand-teal-dark transition-colors"
+                >
+                  Go to Pipeline
+                </Link>
+                <Link
+                  href={`/grants/${id}/write`}
+                  className="inline-flex items-center px-4 py-2 rounded-lg border border-brand-teal text-brand-teal text-sm font-medium hover:bg-brand-teal/10 transition-colors"
+                >
+                  Write Application
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-warm-600 dark:text-warm-400 mb-4">
+                Apply through GrantAQ so we can track your application, manage deadlines, and log your outcome. This helps us improve your match accuracy over time.
+              </p>
+              <div className="flex gap-3">
+                <GrantActionButtons grantId={id} />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Action Paths */}
-      <div>
-        <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-3">
-          Ready to Apply?
-        </h2>
-        <ActionPaths grantId={id} />
-      </div>
+      <ActionPaths grantId={id} />
 
       {/* Build Budget CTA */}
       <div className="flex items-center gap-3 p-4 bg-warm-50 dark:bg-warm-800/30 border border-warm-200 dark:border-warm-700 rounded-lg">
@@ -342,15 +419,87 @@ export default async function GrantDetailPage({ params }: Props) {
             Application Requirements
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm text-warm-500">
-              Requirements will be populated from grant_requirements table.
-            </p>
+            {requirements && requirements.length > 0 ? (
+              <div className="space-y-3">
+                {requirements.map((req: { id: string; requirement_type: string; requirement_value: unknown; is_hard_requirement: boolean }) => {
+                  const value = (req.requirement_value ?? {}) as Record<string, string>;
+                  return (
+                    <div key={req.id} className="flex items-start gap-3 text-sm">
+                      <span className={`mt-0.5 shrink-0 w-2 h-2 rounded-full ${req.is_hard_requirement ? "bg-red-500" : "bg-amber-500"}`} />
+                      <div>
+                        <p className="font-medium text-warm-900 dark:text-warm-50">
+                          {requirementLabels[req.requirement_type] || req.requirement_type}
+                          {req.is_hard_requirement && (
+                            <span className="ml-2 text-xs text-red-500 font-normal">Required</span>
+                          )}
+                        </p>
+                        {value.description && (
+                          <p className="text-warm-500 text-xs mt-0.5">{value.description}</p>
+                        )}
+                        {value.minimum && (
+                          <p className="text-warm-500 text-xs mt-0.5">Minimum: {value.minimum}</p>
+                        )}
+                        {value.states && (
+                          <p className="text-warm-500 text-xs mt-0.5">States: {value.states}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-warm-500">
+                  Common requirements for <span className="font-medium">{grant.source_type}</span> grants:
+                </p>
+                <ul className="space-y-2 text-sm text-warm-600 dark:text-warm-400">
+                  {grant.source_type === "federal" && (
+                    <>
+                      <li className="flex items-start gap-2"><span className="text-red-500 mt-1">&#x2022;</span> SAM.gov registration (required)</li>
+                      <li className="flex items-start gap-2"><span className="text-red-500 mt-1">&#x2022;</span> UEI number (required)</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Audited financial statements (if budget &gt; $750K)</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Project narrative and work plan</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Budget and budget justification</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Letters of support / commitment</li>
+                    </>
+                  )}
+                  {grant.source_type === "foundation" && (
+                    <>
+                      <li className="flex items-start gap-2"><span className="text-red-500 mt-1">&#x2022;</span> 501(c)(3) determination letter (usually required)</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Organization budget (current year)</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Board of directors list</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Project description and goals</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Most recent annual report or Form 990</li>
+                    </>
+                  )}
+                  {grant.source_type === "state" && (
+                    <>
+                      <li className="flex items-start gap-2"><span className="text-red-500 mt-1">&#x2022;</span> State registration / good standing certificate</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Proof of operation in the state</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Project budget with state match (if applicable)</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Organizational capacity statement</li>
+                    </>
+                  )}
+                  {grant.source_type === "corporate" && (
+                    <>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Organization overview and mission</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Impact metrics and outcomes data</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Project proposal and timeline</li>
+                      <li className="flex items-start gap-2"><span className="text-amber-500 mt-1">&#x2022;</span> Budget summary</li>
+                    </>
+                  )}
+                </ul>
+                <p className="text-xs text-warm-400 italic">
+                  Specific requirements for this grant will be shown once extracted from the funder&apos;s website.
+                </p>
+              </div>
+            )}
           </AccordionContent>
         </AccordionItem>
       </Accordion>
 
-      {/* Sticky bottom actions */}
-      <GrantActionButtons grantId={id} />
+      {/* Bottom action — add to pipeline if not already */}
+      {!inPipeline && <GrantActionButtons grantId={id} />}
     </div>
   );
 }

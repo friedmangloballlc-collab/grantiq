@@ -115,17 +115,11 @@ export function GrantLibraryCard({ grant }: { grant: GrantLibraryItem }) {
             className="flex-1 text-xs"
             render={<Link href={`/grants/${grant.id}`}>View Details</Link>}
           />
-          {grant.url && (
-            <Button
-              size="sm"
-              className="flex-1 text-xs bg-brand-teal hover:bg-brand-teal-dark text-white"
-              render={
-                <a href={grant.url} target="_blank" rel="noopener noreferrer">
-                  Apply Now
-                </a>
-              }
-            />
-          )}
+          <Button
+            size="sm"
+            className="flex-1 text-xs bg-brand-teal hover:bg-brand-teal-dark text-white"
+            render={<Link href={`/grants/${grant.id}`}>Start Application</Link>}
+          />
         </div>
       </CardContent>
     </Card>
