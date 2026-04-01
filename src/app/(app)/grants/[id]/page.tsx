@@ -16,6 +16,7 @@ import Link from "next/link";
 import { ClipboardList, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApplicationChecklist } from "@/components/pipeline/application-checklist";
+import { ReportIssueButton } from "@/components/grants/report-issue-button";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -500,6 +501,11 @@ export default async function GrantDetailPage({ params }: Props) {
 
       {/* Bottom action — add to pipeline if not already */}
       {!inPipeline && <GrantActionButtons grantId={id} />}
+
+      {/* Report incorrect info */}
+      <div className="flex justify-center pt-4">
+        <ReportIssueButton grantId={id} />
+      </div>
     </div>
   );
 }
