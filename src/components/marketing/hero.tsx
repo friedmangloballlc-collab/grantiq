@@ -1,13 +1,14 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 export function Hero() {
   return (
     <section className="py-20 md:py-32 px-4">
       <div className="max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-50 dark:bg-teal-950/30 text-brand-teal text-sm font-medium mb-6">
-          <Sparkles className="h-4 w-4" />
+          <Image src="/grantaq-icon.svg" alt="" width={18} height={18} className="h-4.5 w-4.5" />
           AI-Powered Grant Discovery
         </div>
         <h1 className="text-4xl md:text-6xl font-bold text-warm-900 dark:text-warm-50 leading-tight">

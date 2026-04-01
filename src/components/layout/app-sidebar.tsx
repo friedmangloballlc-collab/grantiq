@@ -9,7 +9,6 @@ import {
   CalendarDays,
   Map,
   Settings,
-  Sparkles,
   PenLine,
   BookOpen,
   FolderLock,
@@ -17,6 +16,7 @@ import {
   BarChart3,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useOrg } from "@/hooks/use-org";
 import { ReadinessBadgeMini } from "@/components/shared/readiness-certification";
@@ -80,10 +80,7 @@ export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-background shrink-0 h-full">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5 border-b border-border">
-        <Sparkles
-          className="h-5 w-5 text-[var(--color-brand-teal)]"
-          aria-hidden="true"
-        />
+        <Image src="/grantaq-icon.svg" alt="GrantAQ" width={24} height={24} className="h-6 w-6" />
         <span className="text-lg font-bold tracking-tight">GrantAQ</span>
       </div>
 

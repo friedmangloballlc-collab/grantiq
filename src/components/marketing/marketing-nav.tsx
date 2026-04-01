@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, Menu, X } from "lucide-react";
+import Image from "next/image";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
@@ -21,7 +22,7 @@ export function MarketingNav() {
     <nav className="border-b border-warm-200 dark:border-warm-800 bg-white dark:bg-warm-900 relative z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-brand-teal" />
+          <Image src="/grantaq-icon.svg" alt="GrantAQ" width={32} height={32} className="h-8 w-8" />
           <span className="text-xl font-bold text-warm-900 dark:text-warm-50">GrantAQ</span>
         </Link>
 
