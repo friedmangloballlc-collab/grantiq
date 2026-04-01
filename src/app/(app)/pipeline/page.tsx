@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { type PipelineItem } from "@/components/pipeline/kanban-board";
 import { PipelineBoardWrapper } from "@/components/pipeline/pipeline-board-wrapper";
 import { PipelineSummary } from "@/components/pipeline/pipeline-summary";
+import { StageGuide } from "@/components/pipeline/stage-guide";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export default async function PipelinePage() {
@@ -95,11 +96,16 @@ export default async function PipelinePage() {
   });
 
   return (
-    <div className="p-6 max-w-full">
+    <div className="px-4 md:px-6 py-6 max-w-full">
       <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-4">Pipeline</h1>
       <PipelineSummary items={pipelineItems} />
-      <div className="mt-6">
-        <PipelineBoardWrapper items={pipelineItems} />
+      <div className="mt-6 flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 min-w-0">
+          <PipelineBoardWrapper items={pipelineItems} />
+        </div>
+        <div className="lg:w-80 shrink-0">
+          <StageGuide />
+        </div>
       </div>
     </div>
   );
