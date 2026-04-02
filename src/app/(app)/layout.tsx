@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
+import { CrispChat } from "@/components/shared/crisp-chat";
 import { getOrgContext } from "@/lib/auth/get-org-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { OrgContext } from "@/hooks/use-org";
@@ -59,16 +60,20 @@ export default async function AppLayout({
     role: ctx.role as OrgContext["role"],
     tier: ctx.tier as OrgContext["tier"],
     userId: ctx.userId,
+    email: ctx.email,
     allOrgs,
   };
 
   return (
-    <AppShell
-      orgContext={orgContext}
-      pipelineCount={pipelineCountResult.count ?? 0}
-      vaultDocCount={vaultCountResult.count ?? 0}
-    >
-      {children}
-    </AppShell>
+    <>
+      <AppShell
+        orgContext={orgContext}
+        pipelineCount={pipelineCountResult.count ?? 0}
+        vaultDocCount={vaultCountResult.count ?? 0}
+      >
+        {children}
+      </AppShell>
+      <CrispChat />
+    </>
   );
 }

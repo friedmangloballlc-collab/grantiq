@@ -13,6 +13,8 @@ export interface OrgContext {
   role: "owner" | "admin" | "editor" | "viewer";
   tier: "free" | "starter" | "pro" | "growth" | "enterprise";
   userId: string;
+  /** Authenticated user's email — used for admin gate */
+  email?: string;
   /** All orgs the user belongs to — used by the org switcher */
   allOrgs: OrgOption[];
 }

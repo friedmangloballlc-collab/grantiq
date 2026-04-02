@@ -49,6 +49,7 @@ export const getOrgContext = cache(async () => {
 
   return {
     userId: user.id,
+    email: user.email ?? undefined,
     orgId: membership.org_id,
     orgName: (membership.organizations as any)?.name ?? "My Organization",
     role: membership.role,

@@ -1,5 +1,6 @@
 import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { CookieConsent } from "@/components/shared/cookie-consent";
+import { CrispChat } from "@/components/shared/crisp-chat";
 import Link from "next/link";
 
 const TOP_INDUSTRIES = [
@@ -108,6 +109,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         </div>
       </footer>
       <CookieConsent />
+      <CrispChat />
     </div>
   );
 }

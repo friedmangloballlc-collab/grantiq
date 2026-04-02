@@ -15,6 +15,7 @@ import {
   Building2,
   BarChart3,
   Users,
+  ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -66,10 +67,13 @@ interface AppSidebarProps {
   certCriteria?: CertCriteria;
 }
 
+const ADMIN_EMAIL = "getreachmediallc@gmail.com";
+
 export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
   const pathname = usePathname();
-  const { tier } = useOrg();
+  const { tier, email } = useOrg();
   const isEnterprise = tier === "enterprise";
+  const isAdmin = email === ADMIN_EMAIL;
 
   // Enterprise always sees all items
   const effectivePhase: 1 | 2 | 3 = isEnterprise ? 3 : userPhase;
@@ -139,6 +143,35 @@ export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
             >
               <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
               Clients
+            </Link>
+          </>
+        )}
+
+        {/* Admin — only for platform admin */}
+        {isAdmin && (
+          <>
+            <div className="pt-2 pb-1">
+              <p className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Platform
+              </p>
+            </div>
+            <Link
+              href="/admin"
+              aria-current={
+                pathname === "/admin" || pathname.startsWith("/admin/")
+                  ? "page"
+                  : undefined
+              }
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                "focus-visible:ring-2 focus-visible:ring-brand-teal focus-visible:ring-offset-2 focus-visible:outline-none",
+                pathname === "/admin" || pathname.startsWith("/admin/")
+                  ? "bg-[var(--color-brand-teal)] text-white"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+              Admin
             </Link>
           </>
         )}
