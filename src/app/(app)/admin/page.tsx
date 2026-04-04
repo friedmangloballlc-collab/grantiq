@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const ADMIN_EMAIL = "getreachmediallc@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "getreachmediallc@gmail.com";
 
 const QUICK_LINKS = [
   { href: "/admin/corrections", label: "Review Corrections", description: "Approve or reject user-submitted grant data fixes" },

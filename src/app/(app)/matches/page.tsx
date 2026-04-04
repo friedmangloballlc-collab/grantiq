@@ -122,7 +122,7 @@ export default async function MatchesPage() {
 
   if (!matches?.length) {
     return (
-      <div className="max-w-6xl">
+      <div className="max-w-6xl px-4 md:px-6 py-6">
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
           Grant Matches
         </h1>

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { TierSelect } from "@/components/admin/tier-select";
 
-const ADMIN_EMAIL = "getreachmediallc@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "getreachmediallc@gmail.com";
 
 interface UserRow {
   userId: string;

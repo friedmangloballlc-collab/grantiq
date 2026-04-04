@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       logger.error(`Onboarding save error [${field}]`, { message: error.message });
-      // Return success anyway — UI should not block on DB errors
+      return NextResponse.json({ success: false, error: "Failed to save" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

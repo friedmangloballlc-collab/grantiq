@@ -58,7 +58,7 @@ export default async function EvaluateGrantPage({ params }: Props) {
   // Gate: Free users blocked entirely
   if (tier === "free") {
     return (
-      <div className="max-w-3xl space-y-6">
+      <div className="max-w-3xl px-4 md:px-6 py-6 space-y-6">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link href={`/grants/${id}`} className="flex items-center gap-1 hover:text-foreground">
             <ChevronLeft className="h-4 w-4" />
@@ -96,7 +96,7 @@ export default async function EvaluateGrantPage({ params }: Props) {
     const limit = SCORECARD_MONTHLY_LIMIT["starter"]!;
     if ((usedThisMonth ?? 0) >= limit) {
       return (
-        <div className="max-w-3xl space-y-6">
+        <div className="max-w-3xl px-4 md:px-6 py-6 space-y-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Link href={`/grants/${id}`} className="flex items-center gap-1 hover:text-foreground">
               <ChevronLeft className="h-4 w-4" />
@@ -219,7 +219,7 @@ export default async function EvaluateGrantPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl px-4 md:px-6 py-6 space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link

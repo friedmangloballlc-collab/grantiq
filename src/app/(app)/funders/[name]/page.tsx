@@ -79,13 +79,13 @@ export default async function FunderDetailPage({ params }: Props) {
   if (ctx?.orgId) {
     const { data: matchRows } = await db
       .from("grant_matches")
-      .select("grant_id, match_score")
+      .select("grant_source_id, match_score")
       .eq("org_id", ctx.orgId)
-      .in("grant_id", grantIds);
+      .in("grant_source_id", grantIds);
 
     if (matchRows && matchRows.length > 0) {
       for (const m of matchRows) {
-        matchScores[String(m.grant_id)] = Math.round(m.match_score ?? 0);
+        matchScores[String(m.grant_source_id)] = Math.round(m.match_score ?? 0);
       }
       const scores = matchRows.map((m) => m.match_score ?? 0);
       avgMatchScore = Math.round(
@@ -128,7 +128,7 @@ export default async function FunderDetailPage({ params }: Props) {
   });
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="max-w-4xl px-4 md:px-6 py-6 space-y-8">
       {/* Header */}
       <div>
         <nav className="text-xs text-warm-400 mb-3">

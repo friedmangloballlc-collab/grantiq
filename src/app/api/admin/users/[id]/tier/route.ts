@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
-const ADMIN_EMAIL = "getreachmediallc@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "getreachmediallc@gmail.com";
 
 const VALID_TIERS = ["free", "starter", "pro", "growth", "enterprise"] as const;
 type Tier = (typeof VALID_TIERS)[number];

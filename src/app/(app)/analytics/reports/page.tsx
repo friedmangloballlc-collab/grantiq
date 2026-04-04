@@ -36,7 +36,7 @@ export default async function ReportsPage() {
 
   if (!canAccess) {
     return (
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 max-w-4xl px-4 md:px-6 py-6">
         <div>
           <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Reports</h1>
           <p className="text-sm text-warm-500 mt-1">
@@ -110,7 +110,7 @@ export default async function ReportsPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
-      <div className="space-y-8 max-w-5xl">
+      <div className="space-y-8 max-w-5xl px-4 md:px-6 py-6">
         {/* Page header */}
         <div className="no-print">
           <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Reports</h1>

@@ -4,17 +4,19 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 const TIER_LABELS: Record<string, string> = {
-  free: "Free",
-  starter: "Starter",
-  pro: "Pro",
-  enterprise: "Enterprise",
+  free: "Explorer",
+  starter: "Seeker",
+  pro: "Strategist",
+  growth: "Applicant",
+  enterprise: "Organization",
 };
 
 const TIER_PRICES: Record<string, string> = {
   free: "$0/mo",
-  starter: "$79/mo",
-  pro: "$199/mo",
-  enterprise: "$499/mo",
+  starter: "$49/mo",
+  pro: "$99/mo",
+  growth: "$199/mo",
+  enterprise: "$399/mo",
 };
 
 const TIER_LIMITS: Record<string, { matches: number; roadmaps: number; readiness: number }> = {

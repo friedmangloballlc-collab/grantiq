@@ -100,7 +100,7 @@ export default async function FundersPage() {
   });
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="max-w-6xl px-4 md:px-6 py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
           Funder Directory

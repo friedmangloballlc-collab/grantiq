@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
-const ADMIN_EMAIL = "getreachmediallc@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "getreachmediallc@gmail.com";
 
 export async function PATCH(
   req: NextRequest,
@@ -38,7 +38,7 @@ export async function PATCH(
     // Fetch the correction record
     const { data: correction, error: fetchError } = await admin
       .from("grant_corrections")
-      .select("id, grant_id, field_name, suggested_value, status")
+      .select("id, grant_source_id, field, suggested_value, status")
       .eq("id", id)
       .single();
 
@@ -58,14 +58,14 @@ export async function PATCH(
     // If approving, apply the suggested value to grant_sources
     if (body.action === "approve") {
       const updatePayload: Record<string, unknown> = {
-        [correction.field_name]: correction.suggested_value,
+        [correction.field]: correction.suggested_value,
         updated_at: now,
       };
 
       const { error: grantUpdateError } = await admin
         .from("grant_sources")
         .update(updatePayload)
-        .eq("id", correction.grant_id);
+        .eq("id", correction.grant_source_id);
 
       if (grantUpdateError) {
         logger.error("Failed to apply correction to grant_sources", {

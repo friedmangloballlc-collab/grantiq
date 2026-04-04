@@ -26,25 +26,24 @@ function buildCsv(headers: string[], rows: (string | number | null | undefined)[
 async function exportMatches(orgId: string, admin: ReturnType<typeof createAdminClient>): Promise<string> {
   const { data } = await admin
     .from("grant_matches")
-    .select("id, match_score, status, matched_at, grant_sources(title, funder_name, grant_type, deadline, award_min, award_max)")
+    .select("id, match_score, last_computed, grant_sources(name, funder_name, source_type, deadline, amount_min, amount_max)")
     .eq("org_id", orgId)
     .order("match_score", { ascending: false })
     .limit(5000);
 
-  const headers = ["ID", "Title", "Funder", "Type", "Match Score", "Status", "Deadline", "Award Min", "Award Max", "Matched At"];
+  const headers = ["ID", "Name", "Funder", "Type", "Match Score", "Deadline", "Amount Min", "Amount Max", "Last Computed"];
   const rows = (data ?? []).map((r) => {
     const gs = r.grant_sources as unknown as Record<string, unknown> | null;
     return [
       r.id,
-      gs?.title as string ?? "",
+      gs?.name as string ?? "",
       gs?.funder_name as string ?? "",
-      gs?.grant_type as string ?? "",
+      gs?.source_type as string ?? "",
       r.match_score,
-      r.status,
       gs?.deadline as string ?? "",
-      gs?.award_min as number ?? "",
-      gs?.award_max as number ?? "",
-      r.matched_at,
+      gs?.amount_min as number ?? "",
+      gs?.amount_max as number ?? "",
+      r.last_computed,
     ];
   });
 
@@ -54,26 +53,25 @@ async function exportMatches(orgId: string, admin: ReturnType<typeof createAdmin
 async function exportPipeline(orgId: string, admin: ReturnType<typeof createAdminClient>): Promise<string> {
   const { data } = await admin
     .from("grant_pipeline")
-    .select("id, stage, match_score, notes, added_at, grant_sources(title, funder_name, grant_type, deadline, award_min, award_max)")
+    .select("id, stage, notes, created_at, grant_sources(name, funder_name, source_type, deadline, amount_min, amount_max)")
     .eq("org_id", orgId)
-    .order("added_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(5000);
 
-  const headers = ["ID", "Title", "Funder", "Type", "Stage", "Match Score", "Notes", "Deadline", "Award Min", "Award Max", "Added At"];
+  const headers = ["ID", "Name", "Funder", "Type", "Stage", "Notes", "Deadline", "Amount Min", "Amount Max", "Created At"];
   const rows = (data ?? []).map((r) => {
     const gs = r.grant_sources as unknown as Record<string, unknown> | null;
     return [
       r.id,
-      gs?.title as string ?? "",
+      gs?.name as string ?? "",
       gs?.funder_name as string ?? "",
-      gs?.grant_type as string ?? "",
+      gs?.source_type as string ?? "",
       r.stage,
-      r.match_score,
       r.notes as string ?? "",
       gs?.deadline as string ?? "",
-      gs?.award_min as number ?? "",
-      gs?.award_max as number ?? "",
-      r.added_at,
+      gs?.amount_min as number ?? "",
+      gs?.amount_max as number ?? "",
+      r.created_at,
     ];
   });
 
@@ -83,22 +81,22 @@ async function exportPipeline(orgId: string, admin: ReturnType<typeof createAdmi
 async function exportScorecards(orgId: string, admin: ReturnType<typeof createAdminClient>): Promise<string> {
   const { data } = await admin
     .from("grant_scorecards")
-    .select("id, score, strengths, weaknesses, recommendation, created_at, grant_sources(title, funder_name)")
+    .select("id, total_score, priority, auto_disqualified, disqualify_reason, created_at, grant_sources(name, funder_name)")
     .eq("org_id", orgId)
     .order("created_at", { ascending: false })
     .limit(5000);
 
-  const headers = ["ID", "Grant Title", "Funder", "Score", "Strengths", "Weaknesses", "Recommendation", "Created At"];
+  const headers = ["ID", "Grant Name", "Funder", "Total Score", "Priority", "Auto Disqualified", "Disqualify Reason", "Created At"];
   const rows = (data ?? []).map((r) => {
     const gs = r.grant_sources as unknown as Record<string, unknown> | null;
     return [
       r.id,
-      gs?.title as string ?? "",
+      gs?.name as string ?? "",
       gs?.funder_name as string ?? "",
-      r.score,
-      Array.isArray(r.strengths) ? (r.strengths as string[]).join("; ") : (r.strengths as string ?? ""),
-      Array.isArray(r.weaknesses) ? (r.weaknesses as string[]).join("; ") : (r.weaknesses as string ?? ""),
-      r.recommendation as string ?? "",
+      r.total_score,
+      r.priority as string ?? "",
+      r.auto_disqualified ? "Yes" : "No",
+      r.disqualify_reason as string ?? "",
       r.created_at,
     ];
   });
@@ -109,7 +107,7 @@ async function exportScorecards(orgId: string, admin: ReturnType<typeof createAd
 async function exportAnalytics(orgId: string, admin: ReturnType<typeof createAdminClient>): Promise<string> {
   const { data } = await admin
     .from("grant_outcomes")
-    .select("id, outcome, amount_awarded, rejection_reason, funder_feedback, logged_at, grant_pipeline_id")
+    .select("id, outcome, amount_awarded, rejection_reason, funder_feedback, logged_at, pipeline_id")
     .eq("org_id", orgId)
     .order("logged_at", { ascending: false })
     .limit(5000);
@@ -117,7 +115,7 @@ async function exportAnalytics(orgId: string, admin: ReturnType<typeof createAdm
   const headers = ["ID", "Pipeline ID", "Outcome", "Amount Awarded", "Rejection Reason", "Funder Feedback", "Logged At"];
   const rows = (data ?? []).map((r) => [
     r.id,
-    r.grant_pipeline_id,
+    r.pipeline_id,
     r.outcome,
     r.amount_awarded ?? "",
     r.rejection_reason ?? "",

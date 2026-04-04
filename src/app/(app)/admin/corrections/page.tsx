@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { CorrectionsTable, type Correction } from "@/components/admin/corrections-table";
 
-const ADMIN_EMAIL = "getreachmediallc@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "getreachmediallc@gmail.com";
 
 export default async function AdminCorrectionsPage() {
   const supabase = await createServerSupabaseClient();

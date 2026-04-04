@@ -122,6 +122,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "org_id and grant_source_id required" }, { status: 400 });
   }
 
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("org_id", orgId)
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+  if (!membership) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+
   const eligibility = await checkFullConfidenceEligibility(orgId, grantSourceId);
   return NextResponse.json(eligibility);
 }

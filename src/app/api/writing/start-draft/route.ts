@@ -31,6 +31,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Draft not found" }, { status: 404 });
   }
 
+  // Verify the authenticated user belongs to the draft's org
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("org_id", draft.org_id)
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+  if (!membership) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+
   if (draft.status !== "rfp_parsed" && draft.status !== "funder_analyzed") {
     return NextResponse.json({ error: `Draft is already in status: ${draft.status}` }, { status: 400 });
   }

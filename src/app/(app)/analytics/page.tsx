@@ -22,7 +22,7 @@ export default async function AnalyticsPage() {
   // Fully locked out (free tier)
   if (!hasBasicAnalytics) {
     return (
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 max-w-4xl px-4 md:px-6 py-6">
         <div>
           <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Analytics</h1>
           <p className="text-sm text-warm-500 mt-1">

@@ -126,8 +126,8 @@ export default function UpgradePage() {
               : formatPrice(product.monthlyPrice);
           const isCurrentPlan = currentTier === tierKey;
           const isDowngrade =
-            ["free", "starter", "pro", "enterprise"].indexOf(currentTier) >
-            ["free", "starter", "pro", "enterprise"].indexOf(tierKey);
+            ["free", "starter", "pro", "growth", "enterprise"].indexOf(currentTier) >
+            ["free", "starter", "pro", "growth", "enterprise"].indexOf(tierKey);
 
           return (
             <Card

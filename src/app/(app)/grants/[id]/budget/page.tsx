@@ -41,7 +41,7 @@ export default async function GrantBudgetPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl px-4 md:px-6 py-6 space-y-6">
       {/* Back link */}
       <Link
         href={`/grants/${id}`}

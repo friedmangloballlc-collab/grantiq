@@ -32,18 +32,20 @@ export async function GET(
 
     // Verify user has access to this job's org
     const orgId = (job.payload as Record<string, unknown>)?.org_id as string | undefined;
-    if (orgId) {
-      const { data: membership } = await supabase
-        .from("org_members")
-        .select("role")
-        .eq("org_id", orgId)
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .single();
+    if (!orgId) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
 
-      if (!membership) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-      }
+    const { data: membership } = await supabase
+      .from("org_members")
+      .select("role")
+      .eq("org_id", orgId)
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single();
+
+    if (!membership) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     return NextResponse.json({
