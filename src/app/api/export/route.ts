@@ -159,7 +159,7 @@ export async function GET(req: NextRequest) {
       .single();
 
     const tier = sub?.tier ?? "free";
-    const canExport = tier === "applicant" || tier === "growth" || tier === "enterprise";
+    const canExport = tier === "growth" || tier === "enterprise";
 
     if (!canExport) {
       return NextResponse.json(
