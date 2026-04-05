@@ -9,13 +9,13 @@ export function Hero() {
       <div className="max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-50 dark:bg-teal-950/30 text-brand-teal text-sm font-medium mb-6">
           <Image src="/grantaq-icon.svg" alt="" width={18} height={18} className="h-4.5 w-4.5" />
-          AI-Powered Grant Discovery
+          AI + Expert Grant Writers
         </div>
         <h1 className="text-4xl md:text-6xl font-bold text-warm-900 dark:text-warm-50 leading-tight">
           Find grants you actually<span className="text-brand-teal"> qualify for</span>
         </h1>
         <p className="text-lg md:text-xl text-warm-500 mt-6 max-w-2xl mx-auto">
-          GrantAQ matches your organization to thousands of grants, builds your funding strategy, and helps you write winning applications. AI does the heavy lifting.
+          GrantAQ matches your organization to thousands of grants, then our AI and expert grant writers work together to prepare winning applications. Technology does the heavy lifting — humans ensure quality.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
           <Button

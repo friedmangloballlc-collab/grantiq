@@ -56,6 +56,7 @@ const TIERS = [
     period: "/month",
     features: [
       "AI writing + compliance",
+      "Expert grant writer review",
       "Unlimited pipeline",
       "Budget narratives",
       "Full Confidence eligible",
@@ -71,6 +72,7 @@ const TIERS = [
     period: "/month",
     features: [
       "Everything in Applicant",
+      "Dedicated grant writer assigned to your team",
       "Unlimited team members",
       "5 AI drafts/month",
       "API access",

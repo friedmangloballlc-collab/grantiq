@@ -14,7 +14,7 @@ const STEPS = [
   {
     icon: FileText,
     title: "Apply with confidence",
-    desc: "AI builds your strategy, writes your application, and checks compliance.",
+    desc: "AI drafts your application, then our expert grant writers review, refine, and finalize it before submission.",
   },
 ];
 

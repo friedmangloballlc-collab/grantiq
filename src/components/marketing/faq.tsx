@@ -31,7 +31,11 @@ const FAQS = [
   },
   {
     q: "Does GrantAQ write my grant application?",
-    a: "On the Applicant plan ($199/mo) and above, our AI Writing Engine generates full grant drafts, letters of intent, budget narratives, and compliance checks. All AI-generated content should be reviewed before submission.",
+    a: "Yes. On the Applicant plan ($199/mo) and above, our AI Writing Engine generates full grant drafts, letters of intent, budget narratives, and compliance checks. Every AI-generated application is then reviewed and refined by an experienced grant writer before submission — so you get the speed of AI with the quality of expert oversight.",
+  },
+  {
+    q: "Is everything done by AI?",
+    a: "No. GrantAQ combines AI technology with expert human grant writers. AI handles the initial matching, scoring, and drafting. Then experienced grant writers review every application — checking funder alignment, strengthening narratives, and ensuring compliance. Think of it as having your own grant team: AI does the heavy lifting, humans ensure quality.",
   },
   {
     q: "How is GrantAQ different from free grant databases?",

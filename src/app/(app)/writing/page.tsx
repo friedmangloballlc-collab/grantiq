@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Plus, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, Clock, CheckCircle2, AlertCircle, Loader2, Bot, Users, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { EmptyState } from "@/components/shared/empty-state";
 
@@ -27,6 +27,7 @@ type DraftStatus =
   | "rewrite_complete"
   | "review_simulated"
   | "compliance_checked"
+  | "expert_review"
   | "completed"
   | "failed";
 
@@ -55,6 +56,7 @@ function statusProgress(status: DraftStatus): number {
     "rewrite_complete",
     "review_simulated",
     "compliance_checked",
+    "expert_review",
     "completed",
   ];
   const idx = steps.indexOf(status);
@@ -75,6 +77,7 @@ function statusLabel(status: DraftStatus): string {
     rewrite_complete: "Rewrite Complete",
     review_simulated: "Review Simulated",
     compliance_checked: "Compliance Checked",
+    expert_review: "Expert Review",
     completed: "Complete",
     failed: "Failed",
   };
@@ -144,13 +147,31 @@ export default async function WritingDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">Writing Projects</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Track and view all your AI-generated grant applications.
+            Track your applications through AI drafting, expert review, and final submission.
           </p>
         </div>
         <Button
           className="bg-[var(--color-brand-teal)] text-white hover:bg-[var(--color-brand-teal)]/90"
           render={<Link href="/matches"><Plus className="h-4 w-4" /> New Application</Link>}
         />
+      </div>
+
+      {/* Workflow indicator */}
+      <div className="flex items-center gap-2 p-4 mb-6 rounded-xl border border-border bg-muted/30">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground shrink-0">
+          <Bot className="h-4 w-4 text-[var(--color-brand-teal)]" />
+          <span>AI Draft</span>
+        </div>
+        <div className="flex-1 h-px bg-border" />
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground shrink-0">
+          <Users className="h-4 w-4 text-[var(--color-brand-teal)]" />
+          <span>Expert Review</span>
+        </div>
+        <div className="flex-1 h-px bg-border" />
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground shrink-0">
+          <Send className="h-4 w-4 text-[var(--color-brand-teal)]" />
+          <span>Ready to Submit</span>
+        </div>
       </div>
 
       {/* Empty state */}

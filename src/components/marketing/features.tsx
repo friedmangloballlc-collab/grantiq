@@ -14,7 +14,12 @@ const FEATURES = [
   {
     icon: FileText,
     title: "AI Writing Engine",
-    description: "Generate full grant drafts, letters of intent, and budget narratives tailored to each funder's priorities.",
+    description: "Generate full grant drafts, letters of intent, and budget narratives tailored to each funder's priorities — then our expert writers take it across the finish line.",
+  },
+  {
+    icon: Users,
+    title: "Expert Review",
+    description: "Every AI-generated application is reviewed by an experienced grant writer who refines the narrative, checks funder alignment, and ensures quality before submission.",
   },
   {
     icon: Shield,

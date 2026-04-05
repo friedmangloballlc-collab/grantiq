@@ -581,7 +581,7 @@ export default async function GrantDetailPage({ params }: Props) {
           ) : (
             <div>
               <p className="text-sm text-warm-600 dark:text-warm-400 mb-4">
-                Apply through GrantAQ so we can track your application, manage deadlines, and log your outcome. This helps us improve your match accuracy over time.
+                Apply through GrantAQ — our AI drafts your application, then an expert grant writer reviews and refines it. We track everything so you know exactly where you stand.
               </p>
               <div className="flex gap-3">
                 <GrantActionButtons grantId={id} />
