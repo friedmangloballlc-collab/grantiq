@@ -11,10 +11,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const { email, password, orgName } = await request.json();
+  const { email, password, orgName, termsAccepted } = await request.json();
 
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+  }
+
+  if (!termsAccepted) {
+    return NextResponse.json(
+      { error: "You must accept the Terms of Service and Privacy Policy to create an account." },
+      { status: 400 }
+    );
   }
 
   const supabase = createAdminClient();
@@ -23,6 +30,8 @@ export async function POST(request: NextRequest) {
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     password,
+    // TODO: Change to email_confirm: false once the Resend sending domain is
+    // verified in production. Until then, auto-confirm keeps the flow unblocked.
     email_confirm: true, // Auto-confirm so they can sign in immediately
   });
 
@@ -58,6 +67,7 @@ export async function POST(request: NextRequest) {
     role: "owner",
     status: "active",
     joined_at: new Date().toISOString(),
+    terms_accepted_at: new Date().toISOString(),
   });
 
   if (memberError) {
@@ -68,12 +78,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 4. Create default subscription (free)
+  // 4. Create default subscription (free) with 7-day trial of Strategist (pro) features
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+
   const { error: subError } = await supabase.from("subscriptions").insert({
     org_id: org.id,
     user_id: userId,
     tier: "free",
     status: "active",
+    trial_ends_at: trialEndsAt.toISOString(),
   });
 
   if (subError) {

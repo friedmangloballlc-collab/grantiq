@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -19,12 +20,12 @@ const TIER_PRICES: Record<string, string> = {
   enterprise: "$399/mo",
 };
 
-const TIER_LIMITS: Record<string, { matches: number; roadmaps: number; readiness: number }> = {
-  free: { matches: 1, roadmaps: 1, readiness: 1 },
-  starter: { matches: 5, roadmaps: 5, readiness: 10 },
-  pro: { matches: 20, roadmaps: 20, readiness: 50 },
-  growth: { matches: 50, roadmaps: 50, readiness: 100 },
-  enterprise: { matches: 100, roadmaps: 100, readiness: 200 },
+const TIER_LIMITS: Record<string, { matches: number; chat_messages: number; readiness: number; strategy_reports: number }> = {
+  free: { matches: 1, chat_messages: 5, readiness: 1, strategy_reports: 0 },
+  starter: { matches: 5, chat_messages: 50, readiness: 10, strategy_reports: 5 },
+  pro: { matches: 20, chat_messages: 200, readiness: 50, strategy_reports: 20 },
+  growth: { matches: 50, chat_messages: 500, readiness: 100, strategy_reports: 50 },
+  enterprise: { matches: 100, chat_messages: 9999, readiness: 200, strategy_reports: 100 },
 };
 
 export default async function BillingPage() {
@@ -34,7 +35,7 @@ export default async function BillingPage() {
   } = await supabase.auth.getUser();
 
   let subscription = null;
-  let usageStats = { matches: 0, roadmaps: 0, readiness: 0 };
+  let usageStats = { matches: 0, chat_messages: 0, readiness: 0, strategy_reports: 0 };
 
   if (user) {
     const { data: membership } = await supabase
@@ -52,21 +53,25 @@ export default async function BillingPage() {
         .single();
       subscription = sub;
 
-      // Fetch usage for current period (month)
+      // Fetch usage for current period (month) using admin client for reliable access
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const { data: usage } = await supabase
+      const adminClient = createAdminClient();
+      const { data: usage } = await adminClient
         .from("ai_usage")
         .select("action_type")
         .eq("org_id", membership.org_id)
         .gte("created_at", startOfMonth.toISOString());
 
       if (usage) {
-        usageStats.matches = usage.filter((u: { action_type: string }) => u.action_type === "match").length;
-        usageStats.roadmaps = usage.filter((u: { action_type: string }) => u.action_type === "roadmap").length;
-        usageStats.readiness = usage.filter((u: { action_type: string }) => u.action_type === "readiness_score").length;
+        for (const row of usage as { action_type: string }[]) {
+          if (row.action_type === "match") usageStats.matches++;
+          else if (row.action_type === "chat_message") usageStats.chat_messages++;
+          else if (row.action_type === "readiness_score") usageStats.readiness++;
+          else if (row.action_type === "strategy_report") usageStats.strategy_reports++;
+        }
       }
     }
   }
@@ -146,9 +151,10 @@ export default async function BillingPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {[
-            { label: "Grant Matching Runs", used: usageStats.matches, limit: limits.matches },
-            { label: "Roadmap Generations", used: usageStats.roadmaps, limit: limits.roadmaps },
+            { label: "AI Matches", used: usageStats.matches, limit: limits.matches },
+            { label: "AI Chat Messages", used: usageStats.chat_messages, limit: limits.chat_messages },
             { label: "Readiness Scores", used: usageStats.readiness, limit: limits.readiness },
+            { label: "Strategy Reports", used: usageStats.strategy_reports, limit: limits.strategy_reports },
           ].map(({ label, used, limit }) => {
             const pct = Math.min((used / limit) * 100, 100);
             const isNearLimit = pct >= 80;

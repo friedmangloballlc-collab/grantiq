@@ -30,6 +30,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [orgName, setOrgName] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -43,7 +44,7 @@ export default function SignupPage() {
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, orgName }),
+      body: JSON.stringify({ email, password, orgName, termsAccepted }),
     });
 
     const data = await res.json();
@@ -180,12 +181,43 @@ export default function SignupPage() {
                   required
                 />
               </div>
+              <div className="flex items-start gap-2">
+                <input
+                  id="termsAccepted"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border border-input accent-[var(--color-brand-teal)]"
+                />
+                <label htmlFor="termsAccepted" className="text-sm leading-snug" style={{ color: "var(--color-warm-500)" }}>
+                  I agree to the{" "}
+                  <Link
+                    href="/terms"
+                    className="font-medium underline underline-offset-2"
+                    style={{ color: "var(--color-brand-teal)" }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    className="font-medium underline underline-offset-2"
+                    style={{ color: "var(--color-brand-teal)" }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button
                 type="submit"
                 className="w-full"
                 style={{ backgroundColor: "var(--color-brand-teal)" }}
-                disabled={loading}
+                disabled={loading || !termsAccepted}
               >
                 {loading ? "Creating account..." : "Start Free"}
               </Button>

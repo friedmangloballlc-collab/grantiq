@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgSettingsForm } from "@/components/settings/org-settings-form";
+import { ExportDataButton } from "@/components/settings/export-data-button";
+import { DeleteAccountDialog } from "@/components/settings/delete-account-dialog";
 
 const SETTINGS_NAV = [
   { href: "/settings", label: "Organization", description: "Profile, mission, location" },
@@ -65,6 +67,30 @@ export default async function OrgSettingsPage() {
         </p>
       </div>
       <OrgSettingsForm org={org} />
+
+      {/* ── Data portability ── */}
+      <div className="mt-10 rounded-lg border border-border bg-background p-5">
+        <h2 className="text-base font-semibold text-foreground">Export my data</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Download a copy of all data associated with your account in JSON
+          format. You can request one export per day.
+        </p>
+        <div className="mt-4">
+          <ExportDataButton />
+        </div>
+      </div>
+
+      {/* ── Danger zone ── */}
+      <div className="mt-6 rounded-lg border border-destructive/40 bg-destructive/5 p-5">
+        <h2 className="text-base font-semibold text-destructive">Danger zone</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Permanently delete your account and all associated data. This action
+          cannot be undone and there is no recovery path.
+        </p>
+        <div className="mt-4">
+          <DeleteAccountDialog />
+        </div>
+      </div>
     </div>
   );
 }

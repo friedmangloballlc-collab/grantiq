@@ -118,10 +118,40 @@ export const FEATURE_GATES: Record<string, { requiredTier: string; limit?: numbe
 
 // ─── Helper Functions ─────────────────────────────────────────────────────
 
-export function canAccess(userTier: string, feature: string): boolean {
+/**
+ * Check if a user can access a feature based on their tier.
+ * If trialEndsAt is provided and is in the future, the user is treated as "pro" tier.
+ */
+export function canAccess(userTier: string, feature: string, trialEndsAt?: string | null): boolean {
   const gate = FEATURE_GATES[feature];
   if (!gate) return true;
-  return TIER_ORDER.indexOf(userTier as Tier) >= TIER_ORDER.indexOf(gate.requiredTier as Tier);
+
+  // During active trial, treat user as "pro" (Strategist) tier
+  let effectiveTier = userTier;
+  if (trialEndsAt && new Date(trialEndsAt) > new Date()) {
+    const trialTierIndex = TIER_ORDER.indexOf("pro");
+    const actualTierIndex = TIER_ORDER.indexOf(userTier as Tier);
+    // Trial only elevates — never downgrades a user who already has a higher tier
+    if (trialTierIndex > actualTierIndex) {
+      effectiveTier = "pro";
+    }
+  }
+
+  return TIER_ORDER.indexOf(effectiveTier as Tier) >= TIER_ORDER.indexOf(gate.requiredTier as Tier);
+}
+
+/**
+ * Returns the effective tier, accounting for active trial periods.
+ */
+export function getEffectiveTier(userTier: string, trialEndsAt?: string | null): Tier {
+  if (trialEndsAt && new Date(trialEndsAt) > new Date()) {
+    const trialTierIndex = TIER_ORDER.indexOf("pro");
+    const actualTierIndex = TIER_ORDER.indexOf(userTier as Tier);
+    if (trialTierIndex > actualTierIndex) {
+      return "pro";
+    }
+  }
+  return userTier as Tier;
 }
 
 export function getFeatureLimit(userTier: string, feature: string): number | null {

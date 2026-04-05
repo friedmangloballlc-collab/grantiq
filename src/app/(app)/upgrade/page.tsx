@@ -9,6 +9,13 @@ import { cn } from "@/lib/utils";
 import { useOrg } from "@/hooks/use-org";
 import { SUBSCRIPTION_PRODUCTS, type SubscriptionTierKey } from "@/lib/stripe/products";
 
+const TIER_DISPLAY_NAMES: Record<SubscriptionTierKey, string> = {
+  starter: "Seeker",
+  pro: "Strategist",
+  growth: "Applicant",
+  enterprise: "Organization",
+};
+
 const TIER_KEYS: SubscriptionTierKey[] = ["starter", "pro", "growth", "enterprise"];
 
 const TIER_DISPLAY: Record<SubscriptionTierKey, { highlighted: boolean; badge?: string }> = {
@@ -28,8 +35,22 @@ export default function UpgradePage() {
   const [interval, setInterval] = useState<"month" | "year">("year");
   const [loading, setLoading] = useState<SubscriptionTierKey | null>(null);
   const [isMockMode, setIsMockMode] = useState(false);
+  const [downgradeConfirm, setDowngradeConfirm] = useState<SubscriptionTierKey | null>(null);
+
+  async function handleSelectTier(tier: SubscriptionTierKey) {
+    const tierOrder = ["free", "starter", "pro", "growth", "enterprise"];
+    const currentIndex = tierOrder.indexOf(currentTier);
+    const targetIndex = tierOrder.indexOf(tier);
+
+    if (currentIndex > targetIndex) {
+      setDowngradeConfirm(tier);
+      return;
+    }
+    handleUpgrade(tier);
+  }
 
   async function handleUpgrade(tier: SubscriptionTierKey) {
+    setDowngradeConfirm(null);
     setLoading(tier);
     try {
       const res = await fetch("/api/billing/checkout", {
@@ -206,15 +227,15 @@ export default function UpgradePage() {
                       : ""
                   )}
                   variant={display.highlighted && !isCurrentPlan ? "default" : "outline"}
-                  disabled={isCurrentPlan || isDowngrade || loading !== null}
-                  onClick={() => handleUpgrade(tierKey)}
+                  disabled={isCurrentPlan || loading !== null}
+                  onClick={() => handleSelectTier(tierKey)}
                 >
                   {loading === tierKey
                     ? "Redirecting..."
                     : isCurrentPlan
                     ? "Current Plan"
                     : isDowngrade
-                    ? "Downgrade"
+                    ? `Downgrade to ${product.name}`
                     : `Upgrade to ${product.name}`}
                 </Button>
               </CardContent>
@@ -226,6 +247,37 @@ export default function UpgradePage() {
       <p className="text-center text-xs text-warm-400">
         All plans include a 14-day free trial. Cancel anytime. No hidden fees.
       </p>
+
+      {/* Downgrade confirmation dialog */}
+      {downgradeConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-warm-900 rounded-xl border border-warm-200 dark:border-warm-700 shadow-lg max-w-md w-full mx-4 p-6 space-y-4">
+            <h2 className="text-lg font-bold text-warm-900 dark:text-warm-50">
+              Confirm Plan Change
+            </h2>
+            <p className="text-sm text-warm-600 dark:text-warm-400">
+              Downgrading will limit your access to{" "}
+              <span className="font-semibold text-warm-900 dark:text-warm-50">
+                {TIER_DISPLAY_NAMES[downgradeConfirm]}
+              </span>{" "}
+              features. Your data will be preserved.
+            </p>
+            <div className="flex gap-3 justify-end pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setDowngradeConfirm(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleUpgrade(downgradeConfirm)}
+              >
+                {loading === downgradeConfirm ? "Redirecting..." : "Continue with Downgrade"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

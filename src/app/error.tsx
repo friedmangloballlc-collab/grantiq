@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { reportError } from "@/lib/error-reporter";
 
-export default function AppError({
+export default function GlobalError({
   error,
   reset,
 }: {
@@ -11,18 +11,18 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    reportError(error, { boundary: "app", digest: error.digest });
+    reportError(error, { boundary: "global", digest: error.digest });
   }, [error]);
 
   return (
-    <div className="flex flex-1 items-center justify-center px-4 py-16">
+    <div className="flex min-h-screen items-center justify-center bg-warm-50 dark:bg-warm-950 px-4">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
             Something went wrong
           </h1>
           <p className="text-sm text-warm-500">
-            An unexpected error occurred while loading this page.
+            An unexpected error occurred. Our team has been notified.
           </p>
         </div>
 

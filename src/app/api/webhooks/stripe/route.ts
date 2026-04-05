@@ -71,6 +71,27 @@ export async function POST(req: NextRequest) {
         const priceId = sub.items.data[0]?.price.id;
         const tierInfo = priceId ? getTierForPriceId(priceId) : undefined;
         if (tierInfo) {
+          // Check if this is a downgrade by comparing to current tier
+          const tierOrder = ["free", "starter", "pro", "growth", "enterprise"];
+          const { data: currentSub } = await supabase
+            .from("subscriptions")
+            .select("tier")
+            .eq("stripe_subscription_id", sub.id)
+            .single();
+
+          const currentTierIndex = currentSub ? tierOrder.indexOf(currentSub.tier) : -1;
+          const newTierIndex = tierOrder.indexOf(tierInfo.tier);
+          const isDowngrade = currentTierIndex > newTierIndex && currentTierIndex !== -1;
+
+          if (isDowngrade) {
+            logger.info("Subscription downgrade detected", {
+              stripeSubscriptionId: sub.id,
+              previousTier: currentSub?.tier,
+              newTier: tierInfo.tier,
+            });
+          }
+
+          // Update the tier — user data is preserved; only feature access changes
           await supabase
             .from("subscriptions")
             .update({
