@@ -5,6 +5,7 @@ import { PipelineBoardWrapper } from "@/components/pipeline/pipeline-board-wrapp
 import { PipelineSummary } from "@/components/pipeline/pipeline-summary";
 import { StageGuide } from "@/components/pipeline/stage-guide";
 import { EmptyState } from "@/components/shared/empty-state";
+import { AddGrantDialog } from "@/components/pipeline/add-grant-dialog";
 
 export default async function PipelinePage() {
   const supabase = await createServerSupabaseClient();
@@ -62,12 +63,7 @@ export default async function PipelinePage() {
     return (
       <div className="p-6 max-w-6xl">
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-6">Pipeline</h1>
-        <EmptyState
-          title="No grants in your pipeline"
-          description="Save grants from your matches to start tracking your applications."
-          actionLabel="Browse Matches"
-          actionHref="/matches"
-        />
+        <EmptyState variant="pipeline" />
       </div>
     );
   }
@@ -97,7 +93,10 @@ export default async function PipelinePage() {
 
   return (
     <div className="px-4 md:px-6 py-6 max-w-full">
-      <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50 mb-4">Pipeline</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Pipeline</h1>
+        <AddGrantDialog />
+      </div>
       <PipelineSummary items={pipelineItems} />
       <div className="mt-6 flex flex-col lg:flex-row gap-6">
         <div className="flex-1 min-w-0">

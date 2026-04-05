@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "GrantAQ — AI-Powered Grant Discovery, Strategy & Writing",
@@ -26,7 +27,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LandingPage() {
+function formatGrantCount(count: number | null): string {
+  if (!count) return "5,000+";
+  // Round down to nearest hundred and append "+"
+  const rounded = Math.floor(count / 100) * 100;
+  return `${rounded.toLocaleString()}+`;
+}
+
+export default async function LandingPage() {
+  const admin = createAdminClient();
+  const { count: grantCount } = await admin
+    .from("grant_sources")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", true);
+
   return (
     <>
       <Hero />
@@ -35,7 +49,7 @@ export default function LandingPage() {
       <section className="py-10 px-4 bg-brand-teal/5 dark:bg-brand-teal/10 border-y border-brand-teal/10">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { value: "5,000+", label: "Active Grants" },
+            { value: formatGrantCount(grantCount), label: "Active Grants" },
             { value: "$2.4B+", label: "Tracked Funding" },
             { value: "94%", label: "Match Accuracy" },
             { value: "3 min", label: "Avg. Onboarding" },

@@ -9,12 +9,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 // Upload limits per tier (null = unlimited)
+// Free tier gets 2 uploads as a taste before hitting the paywall
 const VAULT_UPLOAD_LIMITS: Record<string, number | null> = {
-  free: 0,
+  free: 2,
   starter: 5,
   pro: null,
   enterprise: null,
 };
+
+const FREE_TIER_TASTE_LIMIT = 2;
 
 export default async function VaultPage() {
   const supabase = await createServerSupabaseClient();
@@ -100,21 +103,43 @@ export default async function VaultPage() {
         </p>
       </div>
 
-      {/* Tier gate banner — Free users can't upload */}
-      {isFree && (
+      {/* Free tier: paywall once taste limit is reached */}
+      {isFree && uploaded >= FREE_TIER_TASTE_LIMIT && (
         <Card className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30">
           <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
-                Document uploads require a paid plan
+                You&apos;ve used your {FREE_TIER_TASTE_LIMIT} free uploads
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                Starter plan: 5 uploads. Pro+: unlimited. Upgrade to start building your vault.
+                Upgrade to Seeker for unlimited document storage and improved match accuracy.
               </p>
             </div>
             <Button
               className="shrink-0 bg-[var(--color-brand-teal)] text-white"
               render={<Link href="/upgrade">Upgrade Now</Link>}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Free tier: taste banner — uploads remaining */}
+      {isFree && uploaded < FREE_TIER_TASTE_LIMIT && (
+        <Card className="border-brand-teal/30 dark:border-brand-teal/40 bg-brand-teal/5 dark:bg-brand-teal/10">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-warm-900 dark:text-warm-50">
+                Free plan: {FREE_TIER_TASTE_LIMIT - uploaded} of {FREE_TIER_TASTE_LIMIT} document upload{FREE_TIER_TASTE_LIMIT - uploaded !== 1 ? "s" : ""} remaining
+              </p>
+              <p className="text-xs text-warm-600 dark:text-warm-400 mt-0.5">
+                Upgrade to Seeker for unlimited document storage and improved match accuracy.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-brand-teal/50 text-brand-teal hover:bg-brand-teal/10"
+              render={<Link href="/upgrade">Upgrade to Seeker</Link>}
             />
           </CardContent>
         </Card>

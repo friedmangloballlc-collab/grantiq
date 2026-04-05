@@ -16,6 +16,7 @@ import { ReferralMiniCard } from "@/components/referral/referral-mini-card";
 import { generateReferralCode } from "@/lib/referral";
 import { TopFunders } from "@/components/dashboard/top-funders";
 import { MonthlyImpact, type MonthActivity } from "@/components/dashboard/monthly-impact";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -461,11 +462,24 @@ export default async function DashboardPage() {
   // Determine subscription tier for upgrade banner
   const dashboardTier = ctx?.tier ?? "free";
 
+  // Derive profile completeness from filled deferred answers (3+ fields = sufficiently complete)
+  const profileComplete = Object.keys(deferredAnswers).length >= 3;
+
+  // New-user detection: no activity across matches, pipeline, or vault
+  const isNewUser =
+    stats.totalMatches === 0 &&
+    stats.activePipeline === 0 &&
+    vaultUploaded === 0;
+
   return (
     <div className="space-y-6 max-w-6xl px-4 md:px-6 py-6">
       <div>
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Dashboard</h1>
-        <p className="text-sm text-warm-500 mt-1">Welcome back. Here&apos;s what needs your attention.</p>
+        <p className="text-sm text-warm-500 mt-1">
+          {isNewUser
+            ? "Welcome to GrantIQ. Let\u2019s get you set up."
+            : "Welcome back. Here\u2019s what needs your attention."}
+        </p>
       </div>
 
       {/* Free-tier upgrade banner */}
@@ -486,26 +500,42 @@ export default async function DashboardPage() {
 
       {referralCode && <ReferralMiniCard referralCode={referralCode} />}
 
-      <TodaysFocus items={focusItems} />
-      <StatsOverview {...stats} />
-      {monthlyImpact && <MonthlyImpact currentMonth={monthlyImpact} />}
-      {topFunders.length > 0 && <TopFunders funders={topFunders} />}
-      <CalendarPreview deadlines={calendarDeadlines} />
-      <ProfileCompletion savedAnswers={deferredAnswers} />
-      <VaultSummary
-        uploaded={vaultUploaded}
-        total={vaultTotal}
-        blockedFederalCount={vaultTotal - vaultUploaded > 0 ? Math.max(0, 47 - vaultUploaded * 5) : 0}
-        nextUploadHint={
-          vaultUploaded < vaultTotal
-            ? "Upload your audited financials to unlock more federal grant matches."
-            : undefined
-        }
-      />
-      {activeEngagement && <ServiceTracker engagement={activeEngagement} />}
-      {azScore && <AZQualification result={azScore} />}
-      <IndustryInsights industryKey={industryKey} />
-      <WhatsChanged items={changeItems} />
+      {isNewUser ? (
+        <>
+          <OnboardingChecklist
+            profileComplete={profileComplete}
+            hasMatches={stats.totalMatches > 0}
+            hasPipeline={stats.activePipeline > 0}
+            hasVault={vaultUploaded > 0}
+            hasCalendar={calendarDeadlines.length > 0}
+          />
+          <TodaysFocus items={focusItems} />
+          <StatsOverview {...stats} />
+        </>
+      ) : (
+        <>
+          <TodaysFocus items={focusItems} />
+          <StatsOverview {...stats} />
+          {monthlyImpact && <MonthlyImpact currentMonth={monthlyImpact} />}
+          {topFunders.length > 0 && <TopFunders funders={topFunders} />}
+          <CalendarPreview deadlines={calendarDeadlines} />
+          <ProfileCompletion savedAnswers={deferredAnswers} />
+          <VaultSummary
+            uploaded={vaultUploaded}
+            total={vaultTotal}
+            blockedFederalCount={vaultTotal - vaultUploaded > 0 ? Math.max(0, 47 - vaultUploaded * 5) : 0}
+            nextUploadHint={
+              vaultUploaded < vaultTotal
+                ? "Upload your audited financials to unlock more federal grant matches."
+                : undefined
+            }
+          />
+          {activeEngagement && <ServiceTracker engagement={activeEngagement} />}
+          {azScore && <AZQualification result={azScore} />}
+          <IndustryInsights industryKey={industryKey} />
+          <WhatsChanged items={changeItems} />
+        </>
+      )}
     </div>
   );
 }

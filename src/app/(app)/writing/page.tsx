@@ -9,8 +9,9 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { PenLine, Plus, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { EmptyState } from "@/components/shared/empty-state";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -154,14 +155,8 @@ export default async function WritingDashboardPage() {
 
       {/* Empty state */}
       {drafts.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border rounded-xl">
-          <PenLine className="h-10 w-10 text-muted-foreground mb-3" />
-          <h2 className="text-lg font-semibold">No writing projects yet</h2>
-          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-            Start an application from any of your grant matches to generate an
-            AI-powered draft.
-          </p>
-          <Button className="mt-5" render={<Link href="/matches">Browse Grant Matches</Link>} />
+        <div className="border border-dashed border-border rounded-xl">
+          <EmptyState variant="writing" />
         </div>
       )}
 

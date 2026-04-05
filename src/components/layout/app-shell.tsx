@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { NAV_ITEMS } from "./app-sidebar";
 import { GrantieButton } from "@/components/grantie/grantie-button";
+import { CommandPalette } from "@/components/shared/command-palette";
 import { cn } from "@/lib/utils";
 
 interface AppShellProps {
@@ -133,6 +134,7 @@ export function AppShell({
         <MobileNav onMoreClick={() => setMobileOpen(true)} />
 
         <GrantieButton />
+        <CommandPalette />
       </div>
     </OrgProvider>
   );
