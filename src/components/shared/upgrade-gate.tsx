@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import Link from "next/link";
 
-export const TIER_ORDER = ["free", "starter", "pro", "enterprise"];
+export const TIER_ORDER = ["free", "starter", "pro", "growth", "enterprise"];
 
 interface UpgradeGateProps {
   /** The feature identifier shown in the upgrade prompt, e.g. "AI Writing" */
   feature: string;
   /** The minimum tier required to access this feature */
-  requiredTier: "starter" | "pro" | "enterprise";
+  requiredTier: "starter" | "pro" | "growth" | "enterprise";
   /** Content to render when access is granted */
   children: React.ReactNode;
   /**

@@ -4,6 +4,9 @@ export const metadata: Metadata = {
   title: "Partner Program — GrantAQ",
   description:
     "Embed the GrantAQ Grant Finder widget on your website and earn $25 per signup. Built for SCORE chapters, SBDCs, nonprofit associations, and accounting firms.",
+  alternates: {
+    canonical: "https://grantaq.com/partners",
+  },
   openGraph: {
     title: "Partner with GrantAQ — Earn $25 Per Signup",
     description:

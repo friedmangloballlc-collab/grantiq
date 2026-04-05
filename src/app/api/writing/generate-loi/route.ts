@@ -10,6 +10,8 @@ import { generateLOI } from "@/lib/ai/writing/loi-generator";
 import type { OrgProfile, GrantDetails } from "@/lib/ai/writing/loi-generator";
 import { logger } from "@/lib/logger";
 
+export const maxDuration = 30;
+
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
 

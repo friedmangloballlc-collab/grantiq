@@ -65,10 +65,10 @@ export function OnboardingChecklist({
     <Card className="border-warm-200 dark:border-warm-800">
       <CardHeader className="border-b pb-4">
         <CardTitle className="text-base font-semibold text-warm-900 dark:text-warm-50">
-          Get Started with GrantIQ
+          Get Started with GrantAQ
         </CardTitle>
         <p className="text-sm text-warm-500 mt-0.5">
-          Complete these steps to unlock the full power of GrantIQ.
+          Complete these steps to unlock the full power of GrantAQ.
         </p>
       </CardHeader>
 

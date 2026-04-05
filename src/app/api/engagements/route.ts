@@ -81,10 +81,9 @@ export async function POST(request: NextRequest) {
       price_cents: number;
       assigned_advisor?: string;
       notes?: string;
-      org_id?: string;
     };
 
-    const targetOrgId = body.org_id ?? membership.org_id;
+    const targetOrgId = membership.org_id;
 
     const { data, error } = await db
       .from("service_engagements")

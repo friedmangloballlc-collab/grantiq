@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Grant Directory — 5,000+ Funding Opportunities | GrantAQ",
   description:
     "Browse thousands of federal, state, foundation, and corporate grants. Filter by type, amount, and eligibility to find funding that fits your organization.",
+  alternates: {
+    canonical: "https://grantaq.com/grant-directory",
+  },
 };
 
 export const revalidate = 3600;

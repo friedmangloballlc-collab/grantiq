@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { checkUsageLimit } from "@/lib/ai/usage";
 import { logger } from "@/lib/logger";
 
+export const maxDuration = 30;
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();

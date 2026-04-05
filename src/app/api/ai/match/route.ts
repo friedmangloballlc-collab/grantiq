@@ -113,27 +113,28 @@ export async function POST(req: NextRequest) {
       org.entity_type ?? "",
     ].filter(Boolean).join(" ");
 
-    // Get grants via search function (handles full-text search)
-    const { data: searchResults } = await db.rpc("search_grants", {
-      query: searchTerms.length > 3 ? searchTerms : null,
-      p_type: null,
-      p_state: profile.state ?? null,
-      p_amount_min: null,
-      p_amount_max: null,
-      p_limit: 200,
-      p_offset: 0,
-    });
-
-    // Also get a broader set without state filter
-    const { data: broadResults } = await db.rpc("search_grants", {
-      query: null,
-      p_type: null,
-      p_state: null,
-      p_amount_min: null,
-      p_amount_max: null,
-      p_limit: 200,
-      p_offset: 0,
-    });
+    // Get grants via search function (handles full-text search) — run both in parallel
+    const [{ data: searchResults }, { data: broadResults }] = await Promise.all([
+      db.rpc("search_grants", {
+        query: searchTerms.length > 3 ? searchTerms : null,
+        p_type: null,
+        p_state: profile.state ?? null,
+        p_amount_min: null,
+        p_amount_max: null,
+        p_limit: 200,
+        p_offset: 0,
+      }),
+      // Also get a broader set without state filter
+      db.rpc("search_grants", {
+        query: null,
+        p_type: null,
+        p_state: null,
+        p_amount_min: null,
+        p_amount_max: null,
+        p_limit: 200,
+        p_offset: 0,
+      }),
+    ]);
 
     // Combine and deduplicate
     const allCandidates = new Map<string, GrantForScoring>();

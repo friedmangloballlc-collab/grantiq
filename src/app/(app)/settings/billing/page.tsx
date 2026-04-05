@@ -23,6 +23,7 @@ const TIER_LIMITS: Record<string, { matches: number; roadmaps: number; readiness
   free: { matches: 1, roadmaps: 1, readiness: 1 },
   starter: { matches: 5, roadmaps: 5, readiness: 10 },
   pro: { matches: 20, roadmaps: 20, readiness: 50 },
+  growth: { matches: 50, roadmaps: 50, readiness: 100 },
   enterprise: { matches: 100, roadmaps: 100, readiness: 200 },
 };
 

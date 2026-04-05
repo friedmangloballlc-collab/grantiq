@@ -44,6 +44,7 @@ export default async function DashboardPage() {
     const now = new Date();
     const in14Days = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
     // ── Parallel fetch all dashboard data in one round-trip ───────────────────
     const [
@@ -54,11 +55,16 @@ export default async function DashboardPage() {
       recentEventsResult,
       engagementResult,
       azOrgResult,
-      azProfileResult,
       azCapabilitiesResult,
       azSubscriptionResult,
-      deferredProfileResult,
       vaultDocsResult,
+      calPipelineResult,
+      calMatchResult,
+      referralResult,
+      funderMatchResult,
+      monthMatchCountResult,
+      monthEvaluatedCountResult,
+      monthSubmittedCountResult,
     ] = await Promise.all([
       // Stats via RPC (replaces 4 separate queries)
       db.rpc("get_dashboard_stats", { p_org_id: orgId }),
@@ -73,10 +79,10 @@ export default async function DashboardPage() {
         .lte("grant_sources.deadline", in14Days)
         .limit(3),
 
-      // Today's Focus: org profile (docs + industry)
+      // Org profile: single merged query for focus, A-Z score, and deferred profile
       db
         .from("org_profiles")
-        .select("documents_ready, industry")
+        .select("documents_ready, industry, business_stage, grant_history_level, program_areas, mission_statement, business_model, phone, contact_method, ownership_demographics, interested_in_nonprofit")
         .eq("org_id", orgId)
         .single(),
 
@@ -108,21 +114,11 @@ export default async function DashboardPage() {
       // A-Z score: org financials
       db.from("organizations").select("annual_budget, entity_type, employee_count").eq("id", orgId).single(),
 
-      // A-Z score: org profile
-      db.from("org_profiles").select("business_stage, grant_history_level, program_areas, documents_ready, mission_statement").eq("org_id", orgId).single(),
-
       // A-Z score: capabilities
       db.from("org_capabilities").select("has_sam_registration").eq("org_id", orgId).single(),
 
       // A-Z score: subscription
       db.from("subscriptions").select("tier").eq("org_id", orgId).eq("status", "active").limit(1).single(),
-
-      // Deferred profile fields for ProfileCompletion card
-      db
-        .from("org_profiles")
-        .select("grant_history_level, business_model, phone, contact_method, documents_ready, ownership_demographics, interested_in_nonprofit")
-        .eq("org_id", orgId)
-        .single(),
 
       // Document vault count
       db
@@ -130,6 +126,63 @@ export default async function DashboardPage() {
         .select("document_type")
         .eq("org_id", orgId)
         .eq("status", "active"),
+
+      // Calendar Preview: pipeline deadlines
+      db
+        .from("grant_pipeline")
+        .select("id, grant_sources(name, funder_name, deadline)")
+        .eq("org_id", orgId)
+        .not("stage", "in", '("awarded","declined")')
+        .gte("grant_sources.deadline", now.toISOString())
+        .order("grant_sources(deadline)", { ascending: true })
+        .limit(3),
+
+      // Calendar Preview: match deadlines
+      db
+        .from("grant_matches")
+        .select("id, grant_sources(name, funder_name, deadline)")
+        .eq("org_id", orgId)
+        .not("grant_sources.deadline", "is", null)
+        .gte("grant_sources.deadline", now.toISOString())
+        .order("grant_sources(deadline)", { ascending: true })
+        .limit(3),
+
+      // Referral code lookup
+      db
+        .from("referrals")
+        .select("code")
+        .eq("referrer_user_id", ctx.userId)
+        .order("created_at", { ascending: false })
+        .limit(1),
+
+      // Top funders
+      db
+        .from("grant_matches")
+        .select("match_score, grant_sources(funder_name)")
+        .eq("org_id", orgId)
+        .order("match_score", { ascending: false }),
+
+      // Monthly Impact: new matches this month
+      db
+        .from("grant_matches")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .gte("created_at", monthStart),
+
+      // Monthly Impact: grants evaluated this month
+      db
+        .from("grant_pipeline")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .gte("created_at", monthStart),
+
+      // Monthly Impact: grants submitted this month
+      db
+        .from("grant_pipeline")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .eq("stage", "submitted")
+        .gte("updated_at", monthStart),
     ]);
 
     // ── Stats ─────────────────────────────────────────────────────────────────
@@ -270,14 +323,14 @@ export default async function DashboardPage() {
     // ── A-Z Qualification Score ───────────────────────────────────────────────
     azScore = calculateAZScore(
       azOrgResult.data ?? null,
-      azProfileResult.data ?? null,
+      orgProfileResult.data ?? null,
       azCapabilitiesResult.data ?? null,
       azSubscriptionResult.data ?? null,
     );
 
     // ── Deferred Profile Answers ──────────────────────────────────────────────
     // Map DB columns back to onboarding step IDs for ProfileCompletion card
-    const dp = deferredProfileResult.data as {
+    const dp = orgProfileResult.data as {
       grant_history_level?: string | null;
       business_model?: string | null;
       phone?: string | null;
@@ -303,7 +356,7 @@ export default async function DashboardPage() {
         annual_budget?: string | null;
         employee_count?: string | null;
       } | null;
-      const missionRow = azProfileResult.data as { mission_statement?: string | null } | null;
+      const missionRow = orgProfileResult.data as { mission_statement?: string | null } | null;
       raw.employee_count = maybe(orgRow?.employee_count ?? undefined);
       raw.annual_revenue  = maybe(orgRow?.annual_budget ?? undefined);
       raw.mission         = maybe(missionRow?.mission_statement ?? undefined);
@@ -319,25 +372,6 @@ export default async function DashboardPage() {
     vaultUploaded = seenTypes.size;
 
     // ── Calendar Preview: next 3 deadlines ───────────────────────────────────
-    const [calPipelineResult, calMatchResult] = await Promise.all([
-      db
-        .from("grant_pipeline")
-        .select("id, grant_sources(name, funder_name, deadline)")
-        .eq("org_id", orgId)
-        .not("stage", "in", '("awarded","declined")')
-        .gte("grant_sources.deadline", now.toISOString())
-        .order("grant_sources(deadline)", { ascending: true })
-        .limit(3),
-      db
-        .from("grant_matches")
-        .select("id, grant_sources(name, funder_name, deadline)")
-        .eq("org_id", orgId)
-        .not("grant_sources.deadline", "is", null)
-        .gte("grant_sources.deadline", now.toISOString())
-        .order("grant_sources(deadline)", { ascending: true })
-        .limit(3),
-    ]);
-
     const calPipeline: CalendarPreviewDeadline[] = (calPipelineResult.data ?? [])
       .filter((r) => (r.grant_sources as unknown as { deadline?: string | null } | null)?.deadline)
       .map((r) => {
@@ -361,12 +395,7 @@ export default async function DashboardPage() {
       .slice(0, 3);
 
     // ── Referral code for mini card ───────────────────────────────────────────
-    const { data: referralRows } = await db
-      .from("referrals")
-      .select("code")
-      .eq("referrer_user_id", ctx.userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    const referralRows = referralResult.data;
 
     if (referralRows && referralRows.length > 0) {
       referralCode = referralRows[0].code as string;
@@ -383,11 +412,7 @@ export default async function DashboardPage() {
     }
 
     // ── Top Funders ───────────────────────────────────────────────────────────
-    const { data: funderMatchRows } = await db
-      .from("grant_matches")
-      .select("match_score, grant_sources(funder_name)")
-      .eq("org_id", orgId)
-      .order("match_score", { ascending: false });
+    const funderMatchRows = funderMatchResult.data;
 
     const funderScoreMap = new Map<
       string,
@@ -414,30 +439,6 @@ export default async function DashboardPage() {
       .slice(0, 3);
 
     // ── Monthly Impact ────────────────────────────────────────────────────────
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const [
-      monthMatchCountResult,
-      monthEvaluatedCountResult,
-      monthSubmittedCountResult,
-    ] = await Promise.all([
-      db
-        .from("grant_matches")
-        .select("*", { count: "exact", head: true })
-        .eq("org_id", orgId)
-        .gte("created_at", monthStart),
-      db
-        .from("grant_pipeline")
-        .select("*", { count: "exact", head: true })
-        .eq("org_id", orgId)
-        .gte("created_at", monthStart),
-      db
-        .from("grant_pipeline")
-        .select("*", { count: "exact", head: true })
-        .eq("org_id", orgId)
-        .eq("stage", "submitted")
-        .gte("updated_at", monthStart),
-    ]);
-
     const currentMonthLabel = now.toLocaleDateString("en-US", {
       month: "short",
       year: "numeric",

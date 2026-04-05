@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: "GrantAQ — AI-Powered Grant Discovery, Strategy & Writing",
   description:
     "Find grants you actually qualify for. AI matches your organization to 5,000+ funding sources, builds your strategy, and helps write winning applications.",
+  alternates: {
+    canonical: "https://grantaq.com",
+  },
   openGraph: {
     title: "GrantAQ — Find Grants You Actually Qualify For",
     description: "AI-powered grant discovery, strategy, and writing for nonprofits and small businesses.",

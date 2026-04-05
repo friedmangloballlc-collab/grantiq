@@ -27,8 +27,9 @@ export async function POST(request: NextRequest) {
   });
 
   if (authError || !authData.user) {
+    logger.error("Signup auth error", { message: authError?.message });
     return NextResponse.json(
-      { error: authError?.message ?? "Signup failed" },
+      { error: "Failed to create account" },
       { status: 400 }
     );
   }
@@ -43,8 +44,9 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (orgError || !org) {
+    logger.error("Signup org creation error", { message: orgError?.message });
     return NextResponse.json(
-      { error: "Failed to create organization: " + (orgError?.message ?? "unknown") },
+      { error: "Failed to create account" },
       { status: 500 }
     );
   }
@@ -59,8 +61,9 @@ export async function POST(request: NextRequest) {
   });
 
   if (memberError) {
+    logger.error("Signup membership creation error", { message: memberError.message });
     return NextResponse.json(
-      { error: "Failed to create membership: " + memberError.message },
+      { error: "Failed to create account" },
       { status: 500 }
     );
   }

@@ -518,16 +518,16 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
 
   // ── Done screen ──────────────────────────────────────────────────────────
   if (done) {
-    const handleGoToDashboard = async () => {
+    const handleComplete = async (destination: string) => {
       setCompleting(true);
       try {
         await fetch("/api/onboarding/complete", { method: "POST" });
       } catch {
-        // Non-blocking — proceed to dashboard even if this fails
+        // Non-blocking — proceed even if this fails
       }
       // Brief pause so the user sees the "Finding your grants" state
       await new Promise((resolve) => setTimeout(resolve, 2500));
-      window.location.href = "/dashboard";
+      window.location.href = destination;
     };
 
     if (completing) {
@@ -551,13 +551,20 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
           You&apos;re all set!
         </h3>
         <p className="text-warm-500 max-w-sm">
-          Your profile is ready for matching. Head to your dashboard to see
+          Your profile is ready for matching. Head to your matches to see
           your grant matches — you can strengthen your profile there to get
           even better results.
         </p>
         <Button
           className="bg-brand-teal hover:bg-brand-teal-dark text-white px-8 py-3 text-base"
-          onClick={() => void handleGoToDashboard()}
+          onClick={() => void handleComplete("/matches")}
+        >
+          See Your Matches
+        </Button>
+        <Button
+          variant="outline"
+          className="px-8 py-3 text-base"
+          onClick={() => void handleComplete("/dashboard")}
         >
           Go to Dashboard
         </Button>
