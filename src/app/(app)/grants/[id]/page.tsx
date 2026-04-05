@@ -17,6 +17,300 @@ import { ClipboardList, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApplicationChecklist } from "@/components/pipeline/application-checklist";
 import { ReportIssueButton } from "@/components/grants/report-issue-button";
+import type { ReadinessCategory } from "@/components/grants/readiness-gauge";
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+interface OrgRow {
+  entity_type: string | null;
+  state: string | null;
+  annual_budget: number | null;
+}
+
+interface OrgProfileRow {
+  grant_history_level: string | null;
+  outcomes_tracking: boolean | null;
+}
+
+interface OrgCapabilitiesRow {
+  has_501c3: boolean | null;
+  has_audit: boolean | null;
+  has_sam_registration: boolean | null;
+  years_operating: number | null;
+  prior_federal_grants: number | null;
+  prior_foundation_grants: number | null;
+  annual_budget: number | null;
+}
+
+interface GrantRow {
+  source_type: string | null;
+  eligibility_types: string[] | null;
+  states: string[] | null;
+  amount_min: number | null;
+  amount_max: number | null;
+}
+
+// ─── Readiness Computation ─────────────────────────────────────────────────────
+
+/**
+ * Computes grant readiness categories for the ReadinessGauge from real org data.
+ *
+ * Returns { categories, overallScore } based on four dimensions:
+ *   1. Eligibility   — org entity_type vs grant eligibility_types
+ *   2. Geography     — org state vs grant states (empty = national)
+ *   3. Documents     — 501c3 letter, audit, SAM registration presence
+ *   4. Financials    — org annual_budget vs grant amount ranges
+ *
+ * Status rules:
+ *   "ready"           — requirement clearly met
+ *   "needs_attention" — requirement is likely met but uncertain / sub-optimal
+ *   "blocker"         — requirement is clearly not met
+ */
+export function computeGrantReadiness(
+  org: OrgRow | null,
+  profile: OrgProfileRow | null,
+  capabilities: OrgCapabilitiesRow | null,
+  grant: GrantRow | null
+): { categories: ReadinessCategory[]; overallScore: number } {
+  const categories: ReadinessCategory[] = [];
+
+  // ── 1. Eligibility ──────────────────────────────────────────────────────────
+  const eligibilityTypes: string[] = grant?.eligibility_types ?? [];
+  const entityType = (org?.entity_type ?? "").toLowerCase();
+
+  // Map db entity_type values to common eligibility keywords funders use
+  const entityKeywords: string[] = [];
+  if (entityType.includes("nonprofit") || entityType.includes("501c3") || entityType.includes("501c")) {
+    entityKeywords.push("nonprofit", "501c3", "501(c)(3)", "tax-exempt", "not-for-profit");
+  }
+  if (entityType === "government agency") {
+    entityKeywords.push("government", "public agency", "municipal", "tribal");
+  }
+  if (entityType.includes("tribal")) {
+    entityKeywords.push("tribal", "native american", "indigenous");
+  }
+  if (entityType.includes("llc") || entityType.includes("corporation") || entityType.includes("for-profit")) {
+    entityKeywords.push("for-profit", "business", "company");
+  }
+  if (entityType.includes("fiscal sponsor")) {
+    entityKeywords.push("nonprofit", "fiscal sponsor", "fiscally sponsored");
+  }
+
+  let eligibilityStatus: ReadinessCategory["status"];
+  let eligibilityMessage: string;
+
+  if (eligibilityTypes.length === 0) {
+    // Grant has no restriction listed — assume open eligibility
+    eligibilityStatus = "ready";
+    eligibilityMessage = "No eligibility restrictions listed";
+  } else {
+    const normalizedTypes = eligibilityTypes.map((t) => t.toLowerCase());
+    const matches = entityKeywords.some((kw) =>
+      normalizedTypes.some((et) => et.includes(kw) || kw.includes(et))
+    );
+    if (matches) {
+      eligibilityStatus = "ready";
+      eligibilityMessage = "Your entity type qualifies";
+    } else if (!org?.entity_type) {
+      eligibilityStatus = "needs_attention";
+      eligibilityMessage = "Complete your profile to verify eligibility";
+    } else {
+      eligibilityStatus = "blocker";
+      eligibilityMessage = `Your entity type may not qualify — eligible: ${eligibilityTypes.slice(0, 2).join(", ")}`;
+    }
+  }
+
+  categories.push({
+    name: "Eligibility",
+    status: eligibilityStatus,
+    message: eligibilityMessage,
+    ...(eligibilityStatus !== "ready" && {
+      fixAction: { label: "Update Profile", href: "/settings" },
+    }),
+  });
+
+  // ── 2. Geography ────────────────────────────────────────────────────────────
+  const grantStates: string[] = grant?.states ?? [];
+  const orgState = (org?.state ?? "").toUpperCase().trim();
+
+  let geoStatus: ReadinessCategory["status"];
+  let geoMessage: string;
+
+  if (grantStates.length === 0) {
+    geoStatus = "ready";
+    geoMessage = "National funding — no state restriction";
+  } else if (!orgState) {
+    geoStatus = "needs_attention";
+    geoMessage = "Add your state to confirm geographic eligibility";
+  } else {
+    const normalizedGrantStates = grantStates.map((s) => s.toUpperCase().trim());
+    if (normalizedGrantStates.includes(orgState)) {
+      geoStatus = "ready";
+      geoMessage = `Your state (${orgState}) is eligible`;
+    } else {
+      geoStatus = "blocker";
+      geoMessage = `Funder restricts to: ${grantStates.slice(0, 3).join(", ")}${grantStates.length > 3 ? ` +${grantStates.length - 3} more` : ""}`;
+    }
+  }
+
+  categories.push({
+    name: "Geography",
+    status: geoStatus,
+    message: geoMessage,
+    ...(geoStatus === "needs_attention" && {
+      fixAction: { label: "Update Profile", href: "/settings" },
+    }),
+  });
+
+  // ── 3. Documents ────────────────────────────────────────────────────────────
+  const sourceType = (grant?.source_type ?? "").toLowerCase();
+  const has501c3 = capabilities?.has_501c3 ?? false;
+  const hasAudit = capabilities?.has_audit ?? false;
+  const hasSam = capabilities?.has_sam_registration ?? false;
+
+  // Federal grants: SAM.gov registration is a hard blocker
+  if (sourceType === "federal") {
+    if (!hasSam) {
+      categories.push({
+        name: "Documents",
+        status: "blocker",
+        message: "SAM.gov registration required for federal grants",
+        fixAction: { label: "Register SAM.gov", href: "/vault" },
+      });
+    } else if (!hasAudit && (org?.annual_budget ?? 0) > 750_000) {
+      categories.push({
+        name: "Documents",
+        status: "needs_attention",
+        message: "Federal audit may be required (budget > $750K)",
+        fixAction: { label: "Upload Audit", href: "/vault" },
+      });
+    } else {
+      categories.push({
+        name: "Documents",
+        status: "ready",
+        message: "SAM.gov registered — federal requirements met",
+      });
+    }
+  } else if (sourceType === "foundation" || sourceType === "state") {
+    // Foundation/state: 501(c)(3) letter is typically required
+    if (!has501c3) {
+      categories.push({
+        name: "Documents",
+        status: "blocker",
+        message: "501(c)(3) determination letter required",
+        fixAction: { label: "Upload Letter", href: "/vault" },
+      });
+    } else if (!hasAudit) {
+      categories.push({
+        name: "Documents",
+        status: "needs_attention",
+        message: "Audited financials strengthen this application",
+        fixAction: { label: "Upload Audit", href: "/vault" },
+      });
+    } else {
+      categories.push({
+        name: "Documents",
+        status: "ready",
+        message: "501(c)(3) letter and audit on file",
+      });
+    }
+  } else {
+    // Corporate or unknown
+    const hasAnyDoc = has501c3 || hasAudit;
+    categories.push({
+      name: "Documents",
+      status: hasAnyDoc ? "ready" : "needs_attention",
+      message: hasAnyDoc
+        ? "Key documents on file"
+        : "Upload org documents to strengthen your application",
+      ...(!hasAnyDoc && { fixAction: { label: "Upload Docs", href: "/vault" } }),
+    });
+  }
+
+  // ── 4. Financials ───────────────────────────────────────────────────────────
+  const orgBudget = org?.annual_budget ?? capabilities?.annual_budget ?? null;
+  const grantMin = grant?.amount_min ?? null;
+  const grantMax = grant?.amount_max ?? null;
+
+  let financialsStatus: ReadinessCategory["status"];
+  let financialsMessage: string;
+
+  if (!orgBudget) {
+    financialsStatus = "needs_attention";
+    financialsMessage = "Add your annual budget to assess financial fit";
+  } else if (grantMax && orgBudget < grantMax * 0.15) {
+    // Org budget is under 15% of max award — very small relative to grant
+    financialsStatus = "needs_attention";
+    financialsMessage = "Your budget is small relative to this grant's scale";
+  } else if (grantMin && orgBudget < grantMin) {
+    // Org budget is below the minimum grant amount — likely a mismatch
+    financialsStatus = "needs_attention";
+    financialsMessage = `Grant minimum ($${(grantMin / 1000).toFixed(0)}K) may exceed typical org budget ratios`;
+  } else {
+    financialsStatus = "ready";
+    financialsMessage = "Budget scale appears appropriate for this grant";
+  }
+
+  categories.push({
+    name: "Financials",
+    status: financialsStatus,
+    message: financialsMessage,
+    ...(financialsStatus === "needs_attention" && {
+      fixAction: { label: "Update Budget", href: "/settings" },
+    }),
+  });
+
+  // ── 5. Track Record ─────────────────────────────────────────────────────────
+  const priorFederal = capabilities?.prior_federal_grants ?? 0;
+  const priorFoundation = capabilities?.prior_foundation_grants ?? 0;
+  const historyLevel = profile?.grant_history_level ?? null;
+  const yearsOp = capabilities?.years_operating ?? 0;
+
+  let trackStatus: ReadinessCategory["status"];
+  let trackMessage: string;
+
+  const totalGrants = priorFederal + priorFoundation;
+
+  if (sourceType === "federal" && priorFederal === 0 && yearsOp < 2) {
+    trackStatus = "needs_attention";
+    trackMessage = "No prior federal grants — consider a foundation grant first";
+  } else if (totalGrants > 0 || historyLevel === "intermediate" || historyLevel === "experienced") {
+    trackStatus = "ready";
+    trackMessage = totalGrants > 0
+      ? `${totalGrants} prior grant${totalGrants > 1 ? "s" : ""} on record`
+      : "Grant history meets threshold";
+  } else if (historyLevel === "beginner" || yearsOp >= 1) {
+    trackStatus = "needs_attention";
+    trackMessage = "Early-stage history — document past projects to build credibility";
+  } else {
+    trackStatus = "needs_attention";
+    trackMessage = "Complete your organization profile to assess track record";
+  }
+
+  categories.push({
+    name: "Track Record",
+    status: trackStatus,
+    message: trackMessage,
+    ...(trackStatus === "needs_attention" && {
+      fixAction: { label: "Update History", href: "/settings" },
+    }),
+  });
+
+  // ── Compute overall score ────────────────────────────────────────────────────
+  const weights: Record<ReadinessCategory["status"], number> = {
+    ready: 20,
+    needs_attention: 10,
+    blocker: 0,
+  };
+  const rawScore = categories.reduce((sum, c) => sum + weights[c.status], 0);
+  // Scale to 0–100 based on number of categories (each max 20 points)
+  const maxScore = categories.length * 20;
+  const overallScore = maxScore > 0 ? Math.round((rawScore / maxScore) * 100) : 0;
+
+  return { categories, overallScore };
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────────
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -60,41 +354,52 @@ export default async function GrantDetailPage({ params }: Props) {
   }
   const isFree = tier === "free";
 
-  const readinessCategories = [
-    {
-      name: "Eligibility",
-      status: "ready" as const,
-      message: "Your entity type qualifies",
-    },
-    {
-      name: "Financials",
-      status: "needs_attention" as const,
-      message: "Audit may be required",
-      fixAction: { label: "Upload Audit", href: "/settings" },
-    },
-    {
-      name: "Track Record",
-      status: "ready" as const,
-      message: "Prior grant history meets threshold",
-    },
-    {
-      name: "Capacity",
-      status: "ready" as const,
-      message: "Staff capacity sufficient",
-    },
-    {
-      name: "Narrative Strength",
-      status: "needs_attention" as const,
-      message: "Mission statement could be stronger",
-      fixAction: { label: "Improve", href: "/settings" },
-    },
-    {
-      name: "Documents",
-      status: "blocker" as const,
-      message: "Missing required board list",
-      fixAction: { label: "Upload", href: "/settings" },
-    },
-  ];
+  // Fetch org data for dynamic readiness computation
+  let orgRow: OrgRow | null = null;
+  let profileRow: OrgProfileRow | null = null;
+  let capabilitiesRow: OrgCapabilitiesRow | null = null;
+
+  if (user) {
+    const { data: membership } = await admin
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .single();
+
+    if (membership?.org_id) {
+      const [{ data: org }, { data: profile }, { data: capabilities }] = await Promise.all([
+        admin
+          .from("organizations")
+          .select("entity_type, state, annual_budget")
+          .eq("id", membership.org_id)
+          .single(),
+        admin
+          .from("org_profiles")
+          .select("grant_history_level, outcomes_tracking")
+          .eq("org_id", membership.org_id)
+          .single(),
+        admin
+          .from("org_capabilities")
+          .select("has_501c3, has_audit, has_sam_registration, years_operating, prior_federal_grants, prior_foundation_grants, annual_budget")
+          .eq("org_id", membership.org_id)
+          .single(),
+      ]);
+      orgRow = org as OrgRow | null;
+      profileRow = profile as OrgProfileRow | null;
+      capabilitiesRow = capabilities as OrgCapabilitiesRow | null;
+    }
+  }
+
+  const { categories: readinessCategories, overallScore: readinessScore } =
+    computeGrantReadiness(orgRow, profileRow, capabilitiesRow, {
+      source_type: grant.source_type ?? null,
+      eligibility_types: grant.eligibility_types ?? null,
+      states: grant.states ?? null,
+      amount_min: grant.amount_min ?? null,
+      amount_max: grant.amount_max ?? null,
+    });
 
   const sourceType = grant.source_type ?? "federal";
   const sourceTypeColors: Record<string, string> = {
@@ -220,7 +525,7 @@ export default async function GrantDetailPage({ params }: Props) {
       {/* Readiness Gauge */}
       <Card className="border-warm-200 dark:border-warm-800">
         <CardContent className="p-6">
-          <ReadinessGauge overallScore={68} categories={readinessCategories} />
+          <ReadinessGauge overallScore={readinessScore} categories={readinessCategories} />
           <div className="mt-4">
             <AIDisclosure type="readiness" />
           </div>

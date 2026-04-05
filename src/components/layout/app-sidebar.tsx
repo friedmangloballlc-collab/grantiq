@@ -43,7 +43,7 @@ interface NavItem {
   releaseDate?: Date;
 }
 
-const NAV_ITEMS: NavItem[] = [
+export const NAV_ITEMS: NavItem[] = [
   // Phase 1 — always visible
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, minPhase: 1 },
   { href: "/matches", label: "Grant Matches", icon: Search, minPhase: 1 },

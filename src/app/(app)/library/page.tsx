@@ -28,7 +28,7 @@ export default function LibraryPage() {
             Grant Library
           </h1>
           <p className="text-sm text-warm-500 mt-0.5">
-            Browse and search 2,344 grants, loans, in-kind resources, and matching gift programs.
+            Browse and search thousands of grants, loans, in-kind resources, and matching gift programs.
           </p>
         </div>
       </div>

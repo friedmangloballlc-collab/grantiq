@@ -4,6 +4,7 @@ import { MatchCard } from "@/components/grants/match-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ShareMatchCard } from "@/components/shared/share-match-card";
 import { InvitePrompt } from "@/components/shared/invite-prompt";
+import { MatchFilters } from "@/components/matches/match-filters";
 import type { UploadedDocument } from "@/components/vault/document-checklist";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -182,23 +183,27 @@ export default async function MatchesPage() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {visibleMatches.map((match: any) => (
-          <MatchCard
-            key={match.id}
-            id={match.grant_source_id}
-            grantName={match.grant_sources?.name ?? "Unknown Grant"}
-            funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
-            sourceType={match.grant_sources?.source_type ?? "federal"}
-            amountMax={match.grant_sources?.amount_max}
-            deadline={match.grant_sources?.deadline}
-            matchScore={Math.round(match.match_score)}
-            scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
-            missingRequirements={match.missing_requirements ?? []}
-            uploadedDocs={uploadedDocs}
-          />
-        ))}
-      </div>
+      <MatchFilters matches={visibleMatches as any[]}>
+        {(filtered) => (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((match: any) => (
+              <MatchCard
+                key={match.id}
+                id={match.grant_source_id}
+                grantName={match.grant_sources?.name ?? "Unknown Grant"}
+                funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
+                sourceType={match.grant_sources?.source_type ?? "federal"}
+                amountMax={match.grant_sources?.amount_max}
+                deadline={match.grant_sources?.deadline}
+                matchScore={Math.round(match.match_score)}
+                scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
+                missingRequirements={match.missing_requirements ?? []}
+                uploadedDocs={uploadedDocs}
+              />
+            ))}
+          </div>
+        )}
+      </MatchFilters>
 
       {/* Locked matches — blurred upgrade wall */}
       {lockedMatches.length > 0 && (

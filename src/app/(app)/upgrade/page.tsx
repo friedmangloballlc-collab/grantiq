@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOrg } from "@/hooks/use-org";
 import { SUBSCRIPTION_PRODUCTS, type SubscriptionTierKey } from "@/lib/stripe/products";
@@ -61,8 +61,31 @@ export default function UpgradePage() {
     }
   }
 
+  // Capitalize tier label for display
+  const tierLabel =
+    currentTier.charAt(0).toUpperCase() + currentTier.slice(1);
+
   return (
     <div className="max-w-5xl px-4 md:px-6 py-6 space-y-8">
+      {/* Personalized banner */}
+      <div className="rounded-xl border border-brand-teal/30 bg-brand-teal/5 dark:bg-brand-teal/10 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Lock className="h-5 w-5 text-brand-teal shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-warm-900 dark:text-warm-50">
+              Unlock more features to find and win grants faster
+            </p>
+            <p className="text-xs text-warm-500 mt-0.5">
+              You are on the{" "}
+              <span className="inline-flex items-center gap-1 font-medium text-warm-700 dark:text-warm-300 bg-warm-200 dark:bg-warm-700 px-1.5 py-0.5 rounded-full text-xs">
+                {tierLabel}
+              </span>{" "}
+              plan. Upgrade to unlock AI writing, more matches, and advanced analytics.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="text-center">
         <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">Choose Your Plan</h1>
         <p className="text-warm-500 mt-2">

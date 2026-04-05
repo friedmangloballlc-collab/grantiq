@@ -1,21 +1,34 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { X, Send, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { X, Send, Sparkles, RotateCcw, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AIDisclosure } from "@/components/shared/ai-disclosure";
+import { useOrg } from "@/hooks/use-org";
 import { cn } from "@/lib/utils";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  /** When true, renders the message with error styling */
+  isError?: boolean;
+  /** The user text that triggered this error — used by the Retry button */
+  retryText?: string;
 }
+
+const GREETING: Message = {
+  role: "assistant",
+  content: "Hi! I'm Grantie, your AI grant advisor. How can I help today?",
+};
 
 const SUGGESTED = [
   "What should I focus on this week?",
   "Which grants are due soon?",
   "How can I improve my readiness?",
 ];
+
+const STORAGE_KEY = (orgId: string) => `grantie-chat-${orgId}`;
+const MAX_STORED_MESSAGES = 50;
 
 export function GrantiePanel({
   open,
@@ -24,48 +37,147 @@ export function GrantiePanel({
   open: boolean;
   onClose: () => void;
 }) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hi! I'm Grantie, your AI grant advisor. How can I help today?",
-    },
-  ]);
+  const { orgId, orgName, tier } = useOrg();
+
+  const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // ── Persistence: load on mount ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!orgId) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY(orgId));
+      if (raw) {
+        const parsed: Message[] = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch {
+      // Corrupted storage — ignore and start fresh
+    }
+    setHydrated(true);
+  }, [orgId]);
+
+  // ── Persistence: save on every message change (after hydration) ─────────────
+  useEffect(() => {
+    if (!hydrated || !orgId) return;
+    try {
+      const toStore = messages.slice(-MAX_STORED_MESSAGES);
+      localStorage.setItem(STORAGE_KEY(orgId), JSON.stringify(toStore));
+    } catch {
+      // Quota exceeded or private-browsing restriction — silently skip
+    }
+  }, [messages, hydrated, orgId]);
+
+  // ── Scroll to bottom on new messages ────────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]);
 
-  const send = async (text: string) => {
-    if (!text.trim() || loading) return;
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+  // ── Core send function ───────────────────────────────────────────────────────
+  const send = useCallback(
+    async (text: string) => {
+      if (!text.trim() || loading) return;
+      setInput("");
+
+      setMessages((prev) => [...prev, { role: "user", content: text }]);
+      setLoading(true);
+
+      try {
+        // Build a clean conversation history (exclude error messages)
+        const conversationHistory = messages
+          .filter((m) => !m.isError)
+          .map(({ role, content }) => ({ role, content }));
+
+        const res = await fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            org_id: orgId,
+            message: text,
+            conversation_history: conversationHistory,
+            context: {
+              tier,
+              orgName,
+              matchCount: null,
+              pipelineCount: null,
+            },
+          }),
+        });
+
+        if (!res.ok) {
+          const errorContent =
+            res.status === 429
+              ? "You've reached your daily Grantie limit. Upgrade for more."
+              : "Sorry, I had trouble with that. Try again?";
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: errorContent,
+              isError: true,
+              retryText: text,
+            },
+          ]);
+          return;
+        }
+
+        const data = await res.json();
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.response },
+        ]);
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Sorry, I had trouble with that. Try again?",
+            isError: true,
+            retryText: text,
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loading, messages, orgId, orgName, tier]
+  );
+
+  // ── Retry: remove the error message then resend the original text ────────────
+  const retry = useCallback(
+    (retryText: string, errorIndex: number) => {
+      setMessages((prev) => prev.filter((_, i) => i !== errorIndex));
+      // Also remove the preceding user message at errorIndex - 1 so send()
+      // re-appends it cleanly and conversation_history stays consistent.
+      setMessages((prev) => {
+        const preceding = prev[errorIndex - 1];
+        if (preceding?.role === "user" && preceding.content === retryText) {
+          return prev.filter((_, i) => i !== errorIndex - 1);
+        }
+        return prev;
       });
-      const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.response },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, I had trouble with that. Try again?",
-        },
-      ]);
-    } finally {
-      setLoading(false);
+      send(retryText);
+    },
+    [send]
+  );
+
+  // ── New conversation ─────────────────────────────────────────────────────────
+  const clearHistory = useCallback(() => {
+    setMessages([GREETING]);
+    if (orgId) {
+      try {
+        localStorage.removeItem(STORAGE_KEY(orgId));
+      } catch {
+        // ignore
+      }
     }
-  };
+  }, [orgId]);
 
   return (
     <div
@@ -83,9 +195,20 @@ export function GrantiePanel({
           </span>
           <AIDisclosure type="chat" />
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={clearHistory}
+            aria-label="New conversation"
+            title="New conversation"
+          >
+            <PlusCircle className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Message list */}
@@ -98,18 +221,34 @@ export function GrantiePanel({
               msg.role === "user" ? "justify-end" : "justify-start"
             )}
           >
-            <div
-              className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm",
-                msg.role === "user"
-                  ? "bg-brand-teal text-white"
-                  : "bg-warm-100 dark:bg-warm-800 text-warm-900 dark:text-warm-50"
+            <div className="flex flex-col gap-1 max-w-[85%]">
+              <div
+                className={cn(
+                  "rounded-2xl px-4 py-2.5 text-sm",
+                  msg.role === "user"
+                    ? "bg-brand-teal text-white"
+                    : msg.isError
+                    ? "bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+                    : "bg-warm-100 dark:bg-warm-800 text-warm-900 dark:text-warm-50"
+                )}
+              >
+                {msg.content}
+              </div>
+
+              {/* Retry button — only on error messages */}
+              {msg.isError && msg.retryText && (
+                <button
+                  onClick={() => retry(msg.retryText!, i)}
+                  className="flex items-center gap-1 self-start text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-200 transition-colors pl-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Retry
+                </button>
               )}
-            >
-              {msg.content}
             </div>
           </div>
         ))}
+
         {loading && (
           <div className="flex justify-start">
             <div className="bg-warm-100 dark:bg-warm-800 rounded-2xl px-4 py-2.5 text-sm text-warm-400">
