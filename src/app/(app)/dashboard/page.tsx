@@ -331,6 +331,9 @@ export default async function DashboardPage() {
     // ── Deferred Profile Answers ──────────────────────────────────────────────
     // Map DB columns back to onboarding step IDs for ProfileCompletion card
     const dp = orgProfileResult.data as {
+      industry?: string | null;
+      business_stage?: string | null;
+      funding_use?: string | null;
       grant_history_level?: string | null;
       business_model?: string | null;
       phone?: string | null;
@@ -343,6 +346,9 @@ export default async function DashboardPage() {
     if (dp) {
       const maybe = (v: string | null | undefined) => v ?? undefined;
       const raw: Record<string, string | undefined> = {
+        industry:             maybe(dp.industry),
+        business_stage:       maybe(dp.business_stage),
+        funding_use:          maybe(dp.funding_use),
         grant_history:        maybe(dp.grant_history_level),
         business_model:       maybe(dp.business_model),
         phone:                maybe(dp.phone),
@@ -478,7 +484,7 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Dashboard</h1>
         <p className="text-sm text-warm-500 mt-1">
           {isNewUser
-            ? "Welcome to GrantIQ. Let\u2019s get you set up."
+            ? "Welcome to GrantAQ. Let\u2019s get you set up."
             : "Welcome back. Here\u2019s what needs your attention."}
         </p>
       </div>

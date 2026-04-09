@@ -447,13 +447,17 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
 
   const saveToServer = async (stepId: string, value: string | string[]) => {
     try {
-      await fetch("/api/onboarding/save", {
+      const res = await fetch("/api/onboarding/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ field: stepId, value }),
       });
-    } catch {
-      // non-blocking — profile card still updates locally
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        console.warn(`Onboarding save failed for ${stepId}:`, (data as { error?: string }).error ?? res.status);
+      }
+    } catch (err) {
+      console.warn(`Onboarding save network error for ${stepId}:`, err);
     }
   };
 
@@ -469,8 +473,8 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
     const completedCount = Object.keys(newAnswers).length;
     onProfileUpdate(profileUpdate, completedCount);
 
-    // Save to server (fire-and-forget)
-    void saveToServer(currentStep.id, value);
+    // Save to server (await so we catch failures)
+    await saveToServer(currentStep.id, value);
 
     // Show encouragement
     const enc = ENCOURAGEMENTS[encIndex % ENCOURAGEMENTS.length];
