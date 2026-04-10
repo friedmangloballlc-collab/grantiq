@@ -74,7 +74,7 @@ export default async function FunderDetailPage({ params }: Props) {
   ) as "federal" | "state" | "foundation" | "corporate";
 
   // Fetch match scores for this org
-  let matchScores: Record<string, number> = {};
+  const matchScores: Record<string, number> = {};
   let avgMatchScore: number | null = null;
   if (ctx?.orgId) {
     const { data: matchRows } = await db
@@ -101,7 +101,6 @@ export default async function FunderDetailPage({ params }: Props) {
         ? allStates.join(", ")
         : `${allStates.slice(0, 2).join(", ")} and ${allStates.length - 2} more states`
       : "nationwide";
-  const topFocus = focusAreas[0] ?? "general funding";
   const strategyBrief = [
     `${funderName} has ${grants.length} grant${grants.length !== 1 ? "s" : ""} in the GrantAQ database`,
     totalFunding > 0 ? `, representing up to ${formatAmount(totalFunding)} in total available funding.` : ".",

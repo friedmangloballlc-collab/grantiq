@@ -12,8 +12,8 @@ export default function TermsOfServicePage() {
       <p className="text-sm text-warm-500 mb-10">Last updated: March 2026 &mdash; Effective upon account creation</p>
 
       <p className="text-sm mb-8 text-warm-600 dark:text-warm-400">
-        These Terms of Service ("Terms") govern your access to and use of GrantAQ, operated by Friedman Global LLC
-        ("Company," "we," "us," or "our"). By creating an account or using any part of GrantAQ, you agree to these
+        These Terms of Service (&quot;Terms&quot;) govern your access to and use of GrantAQ, operated by Friedman Global LLC
+        (&quot;Company,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By creating an account or using any part of GrantAQ, you agree to these
         Terms. If you do not agree, do not use the platform.
       </p>
 
@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
       <Section title="2. Account Responsibility">
         <p>
           You are responsible for the accuracy and completeness of all information you provide, including your
-          organization profile, financial data, EIN, board information, and uploaded documents. GrantAQ's AI systems
+          organization profile, financial data, EIN, board information, and uploaded documents. GrantAQ&apos;s AI systems
           rely on this information to generate match scores, readiness assessments, and grant drafts. Providing
           inaccurate information may result in poor recommendations and does not constitute grounds for a refund.
         </p>
@@ -58,7 +58,7 @@ export default function TermsOfServicePage() {
           </p>
         </div>
         <p className="mt-4">
-          AI outputs may contain errors, omissions, or content that does not accurately reflect your organization's work.
+          AI outputs may contain errors, omissions, or content that does not accurately reflect your organization&apos;s work.
           You are solely responsible for the accuracy and completeness of any grant application submitted to a funder.
         </p>
       </Section>
@@ -99,7 +99,7 @@ export default function TermsOfServicePage() {
             not paid within 30 days accrue interest at 1.5% per month.
           </li>
           <li>
-            <strong>Scope:</strong> Success fees apply only to grants where GrantAQ's platform was used to initiate,
+            <strong>Scope:</strong> Success fees apply only to grants where GrantAQ&apos;s platform was used to initiate,
             draft, or materially assist with the application.
           </li>
         </ul>
@@ -217,7 +217,7 @@ export default function TermsOfServicePage() {
 
       <Section title="12. Modifications to Terms">
         <p>
-          We may modify these Terms at any time. For material changes, we will provide at least 30 days' advance notice
+          We may modify these Terms at any time. For material changes, we will provide at least 30 days&apos; advance notice
           by email and/or a prominent notice in the platform. Continued use of GrantAQ after the effective date of
           changes constitutes acceptance of the updated Terms. If you do not agree to the changes, you must stop using
           the platform and cancel your subscription before the effective date.

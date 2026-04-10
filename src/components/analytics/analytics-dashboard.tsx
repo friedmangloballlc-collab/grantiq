@@ -50,7 +50,6 @@ function StatCard({
   value,
   icon: Icon,
   sub,
-  color,
 }: {
   label: string;
   value: string;

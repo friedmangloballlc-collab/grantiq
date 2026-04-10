@@ -2,10 +2,10 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 // Dynamic import to avoid build-time DOM polyfill issues
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadPdfParse(): Promise<(buf: Buffer) => Promise<any>> {
+async function loadPdfParse(): Promise<(buf: Buffer) => Promise<{ text: string }>> {
   const mod = await import("pdf-parse");
-  return (mod as any).default ?? mod;
+  // Dynamic import shape is unpredictable — cast through unknown
+  return (mod as unknown as { default: (buf: Buffer) => Promise<{ text: string }> }).default ?? (mod as unknown as (buf: Buffer) => Promise<{ text: string }>);
 }
 import { RfpParseOutputSchema, type RfpParseOutput } from "./schemas";
 import { RFP_PARSER_SYSTEM_PROMPT } from "./prompts";

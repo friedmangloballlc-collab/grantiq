@@ -5,7 +5,7 @@ import { isStripeConfigured } from "@/lib/stripe/products";
 import { createPortalSession } from "@/lib/stripe/checkout";
 import { logger } from "@/lib/logger";
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   // Auth check
   const supabase = await createServerSupabaseClient();
   const {

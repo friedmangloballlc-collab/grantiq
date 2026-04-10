@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { X, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -47,16 +47,20 @@ export function InvitePrompt({
   storageKey,
 }: InvitePromptProps) {
   const key = storageKey ?? `invite-prompt-dismissed-${variant}`;
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const dismissed = localStorage.getItem(key);
-    if (!dismissed) setVisible(true);
-  }, [key]);
+  const isDismissed = useSyncExternalStore(
+    (cb) => {
+      window.addEventListener("storage", cb);
+      return () => window.removeEventListener("storage", cb);
+    },
+    () => localStorage.getItem(key) !== null,
+    () => true, // server snapshot — treat as dismissed to avoid flash
+  );
+  const [manuallyHidden, setManuallyHidden] = useState(false);
+  const visible = !isDismissed && !manuallyHidden;
 
   const dismiss = () => {
     localStorage.setItem(key, "1");
-    setVisible(false);
+    setManuallyHidden(true);
   };
 
   const handleCta = () => {

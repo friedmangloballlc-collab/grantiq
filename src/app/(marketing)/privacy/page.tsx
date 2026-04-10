@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
       <Section title="1. Who We Are">
         <p>
           GrantAQ is a product of <strong>Friedman Global LLC</strong>, a grant consulting and technology company. When
-          this policy says "GrantAQ," "we," "us," or "our," it refers to Friedman Global LLC and the GrantAQ platform
+          this policy says &quot;GrantAQ,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our,&quot; it refers to Friedman Global LLC and the GrantAQ platform
           operated at grantaq.com.
         </p>
         <p className="mt-3">
@@ -141,7 +141,7 @@ export default function PrivacyPolicyPage() {
         <ul className="list-disc pl-5 space-y-2 text-sm">
           <li>The right to know what personal information we collect, use, disclose, and sell.</li>
           <li>The right to request deletion of your personal information.</li>
-          <li>The right to opt out of the "sale" of personal information. <strong>We do not sell personal information.</strong></li>
+          <li>The right to opt out of the &quot;sale&quot; of personal information. <strong>We do not sell personal information.</strong></li>
           <li>The right to non-discrimination for exercising your privacy rights.</li>
         </ul>
         <p className="mt-3 text-sm">
@@ -149,7 +149,7 @@ export default function PrivacyPolicyPage() {
           <a href="mailto:privacy@grantaq.com" className="text-brand-teal hover:underline">
             privacy@grantaq.com
           </a>{" "}
-          with the subject line "CCPA Request."
+          with the subject line &quot;CCPA Request.&quot;
         </p>
       </Section>
 

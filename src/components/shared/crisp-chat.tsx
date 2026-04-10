@@ -6,8 +6,8 @@ export function CrispChat() {
     const crispId = process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID;
     if (!crispId || typeof window === "undefined") return;
 
-    (window as any).$crisp = [];
-    (window as any).CRISP_WEBSITE_ID = crispId;
+    (window as unknown as Record<string, unknown>).$crisp = [];
+    (window as unknown as Record<string, unknown>).CRISP_WEBSITE_ID = crispId;
 
     const script = document.createElement("script");
     script.src = "https://client.crisp.chat/l.js";

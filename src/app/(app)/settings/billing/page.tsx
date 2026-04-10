@@ -35,7 +35,7 @@ export default async function BillingPage() {
   } = await supabase.auth.getUser();
 
   let subscription = null;
-  let usageStats = { matches: 0, chat_messages: 0, readiness: 0, strategy_reports: 0 };
+  const usageStats = { matches: 0, chat_messages: 0, readiness: 0, strategy_reports: 0 };
 
   if (user) {
     const { data: membership } = await supabase

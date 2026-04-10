@@ -204,7 +204,7 @@ ${generatedSections.map(s => `### ${s.section_name}\n${s.content}`).join("\n\n")
 /**
  * Tracks AI usage for billing and cost accounting.
  */
-async function trackUsage(
+async function _trackUsage(
   orgId: string,
   userId: string,
   draftId: string,

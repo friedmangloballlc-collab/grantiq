@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
 import { stripe } from "@/lib/stripe/client";
 import { getTierForPriceId } from "@/lib/stripe/config";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as any;
+        const session = event.data.object as Stripe.Checkout.Session;
         const orgId = session.metadata?.org_id;
 
         if (!session.subscription) {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
           break;
         }
 
-        const subscription = await stripe.subscriptions.retrieve(session.subscription as string) as any;
+        const subscription = await stripe.subscriptions.retrieve(session.subscription as string) as Stripe.Subscription & { current_period_end?: number };
         const priceId = subscription.items?.data?.[0]?.price?.id;
         const tierInfo = priceId ? getTierForPriceId(priceId) : undefined;
 
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "customer.subscription.updated": {
-        const sub = event.data.object as any;
+        const sub = event.data.object as Stripe.Subscription & { current_period_end?: number };
         const priceId = sub.items.data[0]?.price.id;
         const tierInfo = priceId ? getTierForPriceId(priceId) : undefined;
         if (tierInfo) {
@@ -97,14 +98,16 @@ export async function POST(req: NextRequest) {
             .update({
               tier: tierInfo.tier,
               status: sub.status === "active" ? "active" : sub.status === "past_due" ? "past_due" : "active",
-              current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+              current_period_end: sub.current_period_end
+                ? new Date(sub.current_period_end * 1000).toISOString()
+                : null,
             })
             .eq("stripe_subscription_id", sub.id);
         }
         break;
       }
       case "customer.subscription.deleted": {
-        const sub = event.data.object as any;
+        const sub = event.data.object as Stripe.Subscription;
         await supabase
           .from("subscriptions")
           .update({ status: "canceled", tier: "free" })
@@ -112,7 +115,7 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "invoice.payment_failed": {
-        const invoice = event.data.object as any;
+        const invoice = event.data.object as Stripe.Invoice;
         await supabase
           .from("subscriptions")
           .update({ status: "past_due" })

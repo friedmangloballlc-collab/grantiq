@@ -38,7 +38,7 @@ export default async function AdminCorrectionsPage() {
     ...new Set((rawCorrections ?? []).map((r) => (r as { user_id: string }).user_id)),
   ];
 
-  let emailMap: Record<string, string> = {};
+  const emailMap: Record<string, string> = {};
   if (userIds.length > 0) {
     // auth.users is not queryable via the JS client directly — use admin RPC or
     // fall back to a profiles/org_members lookup if available.

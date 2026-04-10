@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://grantaq.com"),
   title: "GrantAQ — AI-Powered Grant Discovery",
   description: "Find, track, and win grants with AI-powered matching and writing assistance.",
   icons: {

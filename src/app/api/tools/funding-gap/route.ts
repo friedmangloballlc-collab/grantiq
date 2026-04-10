@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const { entityType, annualBudget, state, missionArea } = body as {
+  const { entityType, annualBudget, state, missionArea: _missionArea } = body as {
     entityType?: string;
     annualBudget?: number;
     state?: string;

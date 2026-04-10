@@ -439,11 +439,13 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
   const totalSteps = visibleSteps.length;
 
   // Reset multi/text input when step changes
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setTextInput("");
     setMultiSelected([]);
     setIndustrySearch("");
   }, [currentStepIndex]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const saveToServer = async (stepId: string, value: string | string[]) => {
     try {

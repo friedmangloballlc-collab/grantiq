@@ -23,16 +23,6 @@ import { createClient } from "@/lib/supabase/client";
 // Types
 // ---------------------------------------------------------------------------
 
-type StepType =
-  | "form"
-  | "textarea"
-  | "single_select"
-  | "multi_select"
-  | "checklist"
-  | "file_upload"
-  | "package_select"
-  | "review";
-
 interface Phase {
   id: number;
   title: string;
@@ -347,7 +337,7 @@ export function FormationWizard() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [fileError, setFileError] = useState("");
+  const [fileError, _setFileError] = useState("");
 
   // Pre-fill email from auth
   useEffect(() => {
@@ -608,7 +598,7 @@ interface StepContentProps {
 }
 
 function StepContent(props: StepContentProps) {
-  const { stepId, form, setField, goNext, goBack, canGoBack } = props;
+  const { stepId } = props;
 
   switch (stepId) {
     case "contact":

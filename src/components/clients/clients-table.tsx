@@ -33,21 +33,6 @@ function formatDate(iso: string | null): string {
   });
 }
 
-function ReadinessBadge({ score }: { score: number }) {
-  const color =
-    score >= 70
-      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-      : score >= 40
-      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-
-  return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", color)}>
-      {score}
-    </span>
-  );
-}
-
 export function ClientsTable({ clients, currentOrgId }: ClientsTableProps) {
   const [query, setQuery] = useState("");
   const [isPending, startTransition] = useTransition();

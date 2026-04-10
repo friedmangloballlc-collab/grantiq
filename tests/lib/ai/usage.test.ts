@@ -162,8 +162,7 @@ describe("checkUsageLimit", () => {
     const result = await checkUsageLimit("org-1", "match", "starter");
     expect(result.allowed).toBe(true);
     expect(consoleSpy).toHaveBeenCalledWith(
-      "Usage check query failed:",
-      expect.anything()
+      expect.stringContaining("Usage check query failed")
     );
 
     consoleSpy.mockRestore();
@@ -258,8 +257,7 @@ describe("recordUsage", () => {
     ).resolves.toBeUndefined();
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      "Failed to record AI usage:",
-      expect.anything()
+      expect.stringContaining("Failed to record AI usage")
     );
 
     consoleSpy.mockRestore();

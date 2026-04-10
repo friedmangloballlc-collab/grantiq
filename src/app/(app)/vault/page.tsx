@@ -25,7 +25,7 @@ export default async function VaultPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let uploadedDocs: UploadedDocument[] = [];
+  const uploadedDocs: UploadedDocument[] = [];
   const total = DOCUMENT_DEFINITIONS.length; // 13
   let tier = "free";
 

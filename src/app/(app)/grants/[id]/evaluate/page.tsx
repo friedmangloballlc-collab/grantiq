@@ -11,8 +11,6 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const TIER_ORDER = ["free", "starter", "pro", "enterprise"];
-
 // Scorecard monthly limits per tier (null = unlimited)
 const SCORECARD_MONTHLY_LIMIT: Record<string, number | null> = {
   free: 0,

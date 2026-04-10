@@ -54,7 +54,7 @@ export default async function FundersPage() {
   }
 
   // Fetch org match scores if authenticated
-  let matchScoreMap: Map<string, { totalScore: number; count: number }> =
+  const matchScoreMap: Map<string, { totalScore: number; count: number }> =
     new Map();
   if (ctx?.orgId) {
     const { data: matchRows } = await db

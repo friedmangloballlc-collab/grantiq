@@ -1,7 +1,6 @@
 // grantaq/src/lib/ai/writing/pipeline.ts
 
-import type { WritingTier, WritingContext, DraftResult } from "@/types/writing";
-import { parseRfp } from "./rfp-parser";
+import type { WritingTier, WritingContext } from "@/types/writing";
 import { analyzeFunder } from "./funder-analyzer";
 import { generateDraft } from "./draft-generator";
 import { checkCoherence } from "./coherence-checker";
@@ -161,7 +160,7 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
     const { sections, budget } = await generateDraft(input.draft_id, context);
 
     // 7. Coherence check
-    const coherence = await checkCoherence({
+    const _coherence = await checkCoherence({
       draft_id: input.draft_id,
       sections,
       budget,

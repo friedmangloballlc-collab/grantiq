@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useSyncExternalStore } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -56,14 +56,24 @@ const DEADLINE_OPTIONS: { value: DeadlineRange; label: string }[] = [
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function daysFromNow(deadline: string): number {
-  const diff = new Date(deadline).getTime() - Date.now();
+function daysFromTimestamp(deadline: string, now: number): number {
+  const diff = new Date(deadline).getTime() - now;
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function subscribeToTime(cb: () => void) {
+  const id = setInterval(cb, 60_000);
+  return () => clearInterval(id);
+}
+
+function getTimeSnapshot() {
+  return Date.now();
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export function MatchFilters({ matches, children }: MatchFiltersProps) {
+  const now = useSyncExternalStore(subscribeToTime, getTimeSnapshot, getTimeSnapshot);
   const [sourceType, setSourceType] = useState<SourceTypeFilter>("all");
   const [sortBy, setSortBy] = useState<SortBy>("match_score");
   const [deadlineRange, setDeadlineRange] = useState<DeadlineRange>("all");
@@ -81,12 +91,10 @@ export function MatchFilters({ matches, children }: MatchFiltersProps) {
     // Filter by deadline range
     if (deadlineRange !== "all") {
       const days = parseInt(deadlineRange, 10);
-      const now = Date.now();
       result = result.filter((m) => {
         const deadline = m.grant_sources?.deadline;
         if (!deadline) return false;
-        const diff = new Date(deadline).getTime() - now;
-        const daysUntil = diff / (1000 * 60 * 60 * 24);
+        const daysUntil = daysFromTimestamp(deadline, now);
         return daysUntil >= 0 && daysUntil <= days;
       });
     }
@@ -102,7 +110,7 @@ export function MatchFilters({ matches, children }: MatchFiltersProps) {
         if (!da && !db) return 0;
         if (!da) return 1;
         if (!db) return -1;
-        return daysFromNow(da) - daysFromNow(db);
+        return daysFromTimestamp(da, now) - daysFromTimestamp(db, now);
       }
       if (sortBy === "amount_highest") {
         return (b.grant_sources?.amount_max ?? 0) - (a.grant_sources?.amount_max ?? 0);
@@ -111,7 +119,7 @@ export function MatchFilters({ matches, children }: MatchFiltersProps) {
     });
 
     return result;
-  }, [matches, sourceType, sortBy, deadlineRange]);
+  }, [matches, sourceType, sortBy, deadlineRange, now]);
 
   const activeCount = filtered.length;
   const totalCount = matches.length;

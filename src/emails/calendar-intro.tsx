@@ -21,7 +21,6 @@ export interface CalendarIntroProps {
 }
 
 const TEAL = "#0D9488";
-const WARM_900 = "#1C1917";
 const WARM_700 = "#44403C";
 const WARM_500 = "#78716C";
 const WARM_200 = "#E7E5E4";

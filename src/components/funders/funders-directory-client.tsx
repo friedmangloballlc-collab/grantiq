@@ -42,6 +42,16 @@ function formatAmount(n: number) {
   return n > 0 ? `$${n}` : "Varies";
 }
 
+function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: "asc" | "desc" }) {
+  if (sortKey !== col)
+    return <span className="inline-block w-3 h-3 opacity-0" />;
+  return sortDir === "desc" ? (
+    <ChevronDown className="inline h-3 w-3 ml-0.5" />
+  ) : (
+    <ChevronUp className="inline h-3 w-3 ml-0.5" />
+  );
+}
+
 interface Props {
   funders: FunderRow[];
   hasMatchData: boolean;
@@ -93,16 +103,6 @@ export function FundersDirectoryClient({ funders, hasMatchData }: Props) {
     return rows;
   }, [funders, query, typeFilter, sortKey, sortDir]);
 
-  function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col)
-      return <span className="inline-block w-3 h-3 opacity-0" />;
-    return sortDir === "desc" ? (
-      <ChevronDown className="inline h-3 w-3 ml-0.5" />
-    ) : (
-      <ChevronUp className="inline h-3 w-3 ml-0.5" />
-    );
-  }
-
   return (
     <div className="space-y-4">
       {/* Search + filters */}
@@ -150,13 +150,13 @@ export function FundersDirectoryClient({ funders, hasMatchData }: Props) {
                 className="text-right px-4 py-3 font-medium text-warm-600 dark:text-warm-400 cursor-pointer select-none hover:text-warm-900 dark:hover:text-warm-100"
                 onClick={() => handleSort("grantCount")}
               >
-                Grants <SortIcon col="grantCount" />
+                Grants <SortIcon col="grantCount" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th
                 className="text-right px-4 py-3 font-medium text-warm-600 dark:text-warm-400 cursor-pointer select-none hover:text-warm-900 dark:hover:text-warm-100"
                 onClick={() => handleSort("averageAward")}
               >
-                Avg Award <SortIcon col="averageAward" />
+                Avg Award <SortIcon col="averageAward" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="text-left px-4 py-3 font-medium text-warm-600 dark:text-warm-400">
                 Top Focus Area
@@ -166,7 +166,7 @@ export function FundersDirectoryClient({ funders, hasMatchData }: Props) {
                   className="text-right px-4 py-3 font-medium text-warm-600 dark:text-warm-400 cursor-pointer select-none hover:text-warm-900 dark:hover:text-warm-100"
                   onClick={() => handleSort("avgMatchScore")}
                 >
-                  Your Match <SortIcon col="avgMatchScore" />
+                  Your Match <SortIcon col="avgMatchScore" sortKey={sortKey} sortDir={sortDir} />
                 </th>
               )}
               <th className="px-4 py-3" />

@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 
 const TIERS = ["free", "starter", "pro", "growth", "enterprise"] as const;
-type Tier = (typeof TIERS)[number];
 
 interface TierSelectProps {
   userId: string;

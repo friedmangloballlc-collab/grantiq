@@ -231,7 +231,7 @@ export function getAvailableTiers(subscriptionTier: string): WritingTier[] {
 export async function canPurchaseWriting(
   orgId: string,
   tier: WritingTier,
-  grantType: GrantType
+  _grantType: GrantType
 ): Promise<{ allowed: boolean; reason: string | null }> {
   const supabase = createAdminClient();
 

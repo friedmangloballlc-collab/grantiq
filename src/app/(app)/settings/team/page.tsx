@@ -38,7 +38,16 @@ export default async function TeamPage() {
         .order("created_at", { ascending: true });
 
       if (data) {
-        members = data.map((m: any) => ({
+        interface MemberRow {
+          id: string;
+          user_id: string;
+          role: string;
+          status: string;
+          created_at: string;
+          profiles?: { email?: string; full_name?: string } | null;
+        }
+
+        members = (data as MemberRow[]).map((m) => ({
           id: m.id,
           user_id: m.user_id,
           role: m.role,

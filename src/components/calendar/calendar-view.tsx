@@ -30,13 +30,6 @@ function daysUntil(deadline: string): number {
   return Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function urgencyClasses(days: number): string {
-  if (days < 0) return "text-warm-400 line-through";
-  if (days < 7) return "text-red-600 dark:text-red-400 font-bold";
-  if (days < 14) return "text-amber-600 dark:text-amber-400 font-semibold";
-  return "text-green-600 dark:text-green-400";
-}
-
 function urgencyBadge(days: number): string {
   if (days < 0) return "bg-warm-100 text-warm-500 dark:bg-warm-800 dark:text-warm-400";
   if (days < 7) return "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300";

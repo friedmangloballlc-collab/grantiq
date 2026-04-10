@@ -12,7 +12,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.anthropic.com https://api.openai.com; frame-src https://js.stripe.com https://hooks.stripe.com; font-src 'self' data:;",
+    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://client.crisp.chat https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://client.crisp.chat; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.anthropic.com https://api.openai.com https://us.i.posthog.com https://us-assets.i.posthog.com https://client.crisp.chat wss://client.relay.crisp.chat; frame-src https://js.stripe.com https://hooks.stripe.com https://game.crisp.chat; font-src 'self' data: https://client.crisp.chat;",
   },
 ];
 

@@ -78,16 +78,24 @@ export default async function RoadmapPage() {
     );
   }
 
-  const quarters = roadmaps.map((rm: any) => ({
+  interface RoadmapRow {
+    id: string;
+    quarter: number;
+    year: number;
+    recommended_grants?: { name: string; action: string; month?: number }[];
+    total_potential_amount?: number;
+  }
+
+  const quarters = (roadmaps as RoadmapRow[]).map((rm) => ({
     id: rm.id,
-    quarter: rm.quarter,
+    quarter: String(rm.quarter),
     year: rm.year,
     recommendedGrants: rm.recommended_grants ?? [],
     totalPotentialAmount: rm.total_potential_amount ?? 0,
   }));
 
   const totalPotential = quarters.reduce(
-    (sum: number, q: any) => sum + q.totalPotentialAmount,
+    (sum, q) => sum + q.totalPotentialAmount,
     0
   );
 

@@ -239,7 +239,7 @@ function isHeaderCell(cell: string): boolean {
 // isHeaderRow — returns a score (0-N) indicating how likely this row is a
 // column-header row.  A score ≥ 2 is treated as a header.
 // ---------------------------------------------------------------------------
-function headerScore(row: any[]): number {
+function headerScore(row: unknown[]): number {
   const nonEmpty = row.filter((c) => String(c).trim().length > 0);
   if (nonEmpty.length < 2) return 0;
   return nonEmpty.filter((cell) => isHeaderCell(String(cell))).length;
@@ -282,7 +282,7 @@ function looksLikeDataCell(cell: string): boolean {
 //   • it scores ≥ 2 on keyword matching, AND
 //   • none of its cells look like actual data values
 // ---------------------------------------------------------------------------
-function isLikelyHeaderRow(row: any[]): boolean {
+function isLikelyHeaderRow(row: unknown[]): boolean {
   const nonEmpty = row
     .map((c) => String(c ?? "").trim())
     .filter((c) => c.length > 0);
@@ -303,23 +303,23 @@ function isLikelyHeaderRow(row: any[]): boolean {
 // ---------------------------------------------------------------------------
 interface SheetSection {
   headers: string[];
-  rows: any[][];
+  rows: unknown[][];
 }
 
-function extractSections(rawRows: any[][]): SheetSection[] {
+function extractSections(rawRows: unknown[][]): SheetSection[] {
   const sections: SheetSection[] = [];
   let currentHeaders: string[] | null = null;
-  let currentRows: any[][] = [];
+  let currentRows: unknown[][] = [];
 
   // Rows we always skip (nav links, tips, sheet titles)
   const SKIP_PREFIXES = ["◄", "tip:", "press ctrl", "industries covered"];
 
-  const isSkipRow = (row: any[]): boolean => {
+  const isSkipRow = (row: unknown[]): boolean => {
     const first = String(row[0] ?? "").trim().toLowerCase();
     return SKIP_PREFIXES.some((p) => first.startsWith(p));
   };
 
-  const isEmptyRow = (row: any[]): boolean =>
+  const isEmptyRow = (row: unknown[]): boolean =>
     row.every((c) => String(c).trim().length === 0);
 
   for (let i = 0; i < rawRows.length; i++) {
@@ -333,10 +333,10 @@ function extractSections(rawRows: any[][]): SheetSection[] {
       if (currentHeaders && currentRows.length > 0) {
         sections.push({ headers: currentHeaders, rows: currentRows });
       }
-      currentHeaders = row.map((h: any) => normalizeColumnName(String(h ?? "")));
+      currentHeaders = row.map((h: unknown) => normalizeColumnName(String(h ?? "")));
       currentRows = [];
     } else if (currentHeaders) {
-      const nonEmpty = row.filter((c: any) => String(c).trim().length > 0);
+      const nonEmpty = row.filter((c: unknown) => String(c).trim().length > 0);
       if (nonEmpty.length >= 1) {
         currentRows.push(row);
       }
@@ -380,7 +380,7 @@ export function parseGrantsXlsx(filePath: string): ParseGrantsResult {
     if (!sourceType) continue;
 
     const ws = wb.Sheets[sheetName];
-    const rawRows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    const rawRows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
     if (rawRows.length < 2) continue;
 

@@ -4,7 +4,7 @@ import { MatchCard } from "@/components/grants/match-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ShareMatchCard } from "@/components/shared/share-match-card";
 import { InvitePrompt } from "@/components/shared/invite-prompt";
-import { MatchFilters } from "@/components/matches/match-filters";
+import { MatchFilters, type MatchItem } from "@/components/matches/match-filters";
 import type { UploadedDocument } from "@/components/vault/document-checklist";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -145,7 +145,10 @@ export default async function MatchesPage() {
   const referralCode = (referralRows?.[0] as { code?: string } | undefined)?.code ?? "";
 
   // Compute total potential value from visible matches
-  const totalValue = visibleMatches.reduce((sum, m: any) => {
+  const typedVisible = visibleMatches as unknown as MatchItem[];
+  const typedLocked = lockedMatches as unknown as MatchItem[];
+
+  const totalValue = typedVisible.reduce((sum, m) => {
     return sum + (m.grant_sources?.amount_max ?? 0);
   }, 0);
 
@@ -183,18 +186,18 @@ export default async function MatchesPage() {
         </div>
       )}
 
-      <MatchFilters matches={visibleMatches as any[]}>
+      <MatchFilters matches={typedVisible}>
         {(filtered) => (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((match: any) => (
+            {filtered.map((match) => (
               <MatchCard
                 key={match.id}
                 id={match.grant_source_id}
                 grantName={match.grant_sources?.name ?? "Unknown Grant"}
                 funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
                 sourceType={match.grant_sources?.source_type ?? "federal"}
-                amountMax={match.grant_sources?.amount_max}
-                deadline={match.grant_sources?.deadline}
+                amountMax={match.grant_sources?.amount_max ?? null}
+                deadline={match.grant_sources?.deadline ?? null}
                 matchScore={Math.round(match.match_score)}
                 scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
                 missingRequirements={match.missing_requirements ?? []}
@@ -209,15 +212,15 @@ export default async function MatchesPage() {
       {lockedMatches.length > 0 && (
         <div className="relative mt-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 blur-sm pointer-events-none select-none">
-            {lockedMatches.map((match: any) => (
+            {typedLocked.map((match) => (
               <MatchCard
                 key={match.id}
                 id={match.grant_source_id}
                 grantName={match.grant_sources?.name ?? "Unknown Grant"}
                 funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
                 sourceType={match.grant_sources?.source_type ?? "federal"}
-                amountMax={match.grant_sources?.amount_max}
-                deadline={match.grant_sources?.deadline}
+                amountMax={match.grant_sources?.amount_max ?? null}
+                deadline={match.grant_sources?.deadline ?? null}
                 matchScore={Math.round(match.match_score)}
                 scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
                 missingRequirements={match.missing_requirements ?? []}

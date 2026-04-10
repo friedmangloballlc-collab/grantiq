@@ -122,13 +122,13 @@ export async function POST(req: NextRequest) {
           pipeline_count: pipelineCount?.length ?? 0,
           top_match_score: topMatch?.match_score ?? null,
         },
-        recentMatches: ((recentMatches ?? []) as any[]).map((m) => ({
-          grant_name: (m.grant_sources as any)?.name ?? "Unknown",
+        recentMatches: ((recentMatches ?? []) as { match_score: number; grant_sources?: { name?: string; funder_name?: string } | null }[]).map((m) => ({
+          grant_name: m.grant_sources?.name ?? "Unknown",
           match_score: m.match_score,
-          funder_name: (m.grant_sources as any)?.funder_name ?? "Unknown",
+          funder_name: m.grant_sources?.funder_name ?? "Unknown",
         })),
-        pipelineSummary: ((pipelineItems ?? []) as any[]).map((p) => ({
-          grant_name: (p.grant_sources as any)?.name ?? "Unknown",
+        pipelineSummary: ((pipelineItems ?? []) as { stage?: string; deadline?: string; grant_sources?: { name?: string } | null }[]).map((p) => ({
+          grant_name: p.grant_sources?.name ?? "Unknown",
           stage: p.stage,
           deadline: p.deadline,
         })),

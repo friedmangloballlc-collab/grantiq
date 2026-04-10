@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { X, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -8,18 +8,28 @@ const STORAGE_KEY = "grantaq_cookie_consent";
 
 type ConsentState = "accepted" | "declined" | null;
 
-export function CookieConsent() {
-  const [consent, setConsent] = useState<ConsentState | "loading">("loading");
-  const [showPreferences, setShowPreferences] = useState(false);
+function subscribeToStorage(cb: () => void) {
+  window.addEventListener("storage", cb);
+  return () => window.removeEventListener("storage", cb);
+}
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY) as ConsentState | null;
-      setConsent(stored);
-    } catch {
-      setConsent(null);
-    }
-  }, []);
+function getConsentSnapshot(): ConsentState {
+  try {
+    return localStorage.getItem(STORAGE_KEY) as ConsentState;
+  } catch {
+    return null;
+  }
+}
+
+function getConsentServerSnapshot(): ConsentState {
+  return null;
+}
+
+export function CookieConsent() {
+  const storedConsent = useSyncExternalStore(subscribeToStorage, getConsentSnapshot, getConsentServerSnapshot);
+  const [localConsent, setLocalConsent] = useState<ConsentState | undefined>(undefined);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const consent = localConsent !== undefined ? localConsent : storedConsent;
 
   const accept = () => {
     try {
@@ -27,7 +37,7 @@ export function CookieConsent() {
     } catch {
       // localStorage may be unavailable in some contexts
     }
-    setConsent("accepted");
+    setLocalConsent("accepted");
   };
 
   const decline = () => {
@@ -36,12 +46,12 @@ export function CookieConsent() {
     } catch {
       // localStorage may be unavailable in some contexts
     }
-    setConsent("declined");
+    setLocalConsent("declined");
     setShowPreferences(false);
   };
 
   // Don't render until we've checked localStorage (avoids hydration flash)
-  if (consent === "loading" || consent === "accepted" || consent === "declined") {
+  if (consent === "accepted" || consent === "declined") {
     return null;
   }
 

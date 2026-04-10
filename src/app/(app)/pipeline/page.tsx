@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { type PipelineItem } from "@/components/pipeline/kanban-board";
+import { type PipelineItem, type LOIStatus } from "@/components/pipeline/kanban-board";
 import { PipelineBoardWrapper } from "@/components/pipeline/pipeline-board-wrapper";
 import { PipelineSummary } from "@/components/pipeline/pipeline-summary";
 import { StageGuide } from "@/components/pipeline/stage-guide";
@@ -75,7 +75,18 @@ export default async function PipelinePage() {
     writing: "in_development",
   };
 
-  const pipelineItems: PipelineItem[] = items.map((item: any) => {
+  const pipelineItems: PipelineItem[] = (items as unknown as {
+    id: string;
+    stage?: string;
+    deadline?: string | null;
+    loi_status?: string | null;
+    grant_sources?: {
+      name?: string | null;
+      funder_name?: string | null;
+      amount_max?: number | null;
+      deadline?: string | null;
+    } | null;
+  }[]).map((item) => {
     const rawStage = item.stage ?? "identified";
     const stage = STAGE_MIGRATION[rawStage] ?? rawStage;
     return {
@@ -87,7 +98,7 @@ export default async function PipelinePage() {
       deadline: item.grant_sources?.deadline ?? item.deadline ?? null,
       progress: 0,
       aiStatus: "Ready to start",
-      loiStatus: item.loi_status ?? null,
+      loiStatus: (item.loi_status as LOIStatus) ?? null,
     };
   });
 

@@ -18,7 +18,6 @@ import {
   Sparkles,
   RefreshCw,
   Download,
-  Plus,
   ArrowRight,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -154,12 +153,12 @@ export function CommandPalette() {
     {
       label: "Run Matches",
       icon: RefreshCw,
-      run: (r) => navigate("/matches?run=1"),
+      run: (_r) => navigate("/matches?run=1"),
     },
     {
       label: "Export Data",
       icon: Download,
-      run: (r) => navigate("/analytics?export=1"),
+      run: (_r) => navigate("/analytics?export=1"),
     },
   ];
 

@@ -34,7 +34,7 @@ export function ReferralDashboard({
   };
 
   const nextReward = getNextReward(signedUp);
-  const currentReward = getCurrentReward(signedUp);
+  const _currentReward = getCurrentReward(signedUp);
   const remaining = nextReward ? nextReward.count - signedUp : 0;
 
   const emailBody = encodeURIComponent(

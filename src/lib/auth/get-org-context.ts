@@ -51,7 +51,7 @@ export const getOrgContext = cache(async () => {
     userId: user.id,
     email: user.email ?? undefined,
     orgId: membership.org_id,
-    orgName: (membership.organizations as any)?.name ?? "My Organization",
+    orgName: (membership.organizations as { name?: string } | null)?.name ?? "My Organization",
     role: membership.role,
     tier: sub?.tier ?? "free",
   };
