@@ -179,6 +179,13 @@ const CORE_STEPS: Step[] = [
     ],
   },
   {
+    id: "naics_primary",
+    question: "What's your NAICS code?",
+    subtitle: "NAICS is the industry code the federal government uses to categorize businesses — most federal grants filter by it, so this is one of the most important fields.",
+    type: "text",
+    placeholder: "e.g. 541511",
+  },
+  {
     id: "funding_use",
     question: "What would you use grant funding for?",
     type: "single_select",
@@ -192,6 +199,63 @@ const CORE_STEPS: Step[] = [
       { label: "Training & workforce development", value: "training" },
       { label: "Facility expansion", value: "facility" },
       { label: "Working capital", value: "working_capital" },
+    ],
+  },
+  {
+    id: "funding_amount",
+    question: "How much funding are you looking for?",
+    subtitle: "We'll match you with grants in your range.",
+    type: "single_select",
+    options: [
+      { label: "Under $25K", value: "0:25000" },
+      { label: "$25K – $100K", value: "25000:100000" },
+      { label: "$100K – $500K", value: "100000:500000" },
+      { label: "$500K – $1M", value: "500000:1000000" },
+      { label: "$1M – $5M", value: "1000000:5000000" },
+      { label: "$5M+", value: "5000000:" },
+      { label: "Not sure yet", value: ":" },
+    ],
+  },
+  {
+    id: "federal_certifications",
+    question: "Do you hold any of these federal certifications?",
+    subtitle: "These unlock set-aside grants reserved for specific groups. Select all that apply.",
+    type: "multi_select",
+    options: [
+      { label: "SBA 8(a)", value: "sba_8a" },
+      { label: "WOSB (Women-Owned Small Business)", value: "wosb" },
+      { label: "VOSB (Veteran-Owned Small Business)", value: "vosb" },
+      { label: "SDVOSB (Service-Disabled Veteran)", value: "sdvosb" },
+      { label: "HUBZone", value: "hubzone" },
+      { label: "MBE (Minority Business Enterprise)", value: "mbe" },
+      { label: "None of these", value: "none" },
+      { label: "Interested but not yet certified", value: "interested" },
+    ],
+  },
+  {
+    id: "sam_registration_status",
+    question: "Are you registered on SAM.gov?",
+    subtitle: "SAM.gov registration (and a UEI number) is required to receive any federal grant. It's free but takes 7–10 days.",
+    type: "single_select",
+    options: [
+      { label: "Registered with active UEI", value: "registered" },
+      { label: "In progress", value: "in_progress" },
+      { label: "Not yet, but planning to", value: "not_started" },
+      { label: "Not applicable", value: "not_applicable" },
+    ],
+  },
+  {
+    id: "match_funds_capacity",
+    question: "If a grant requires matching funds, how much could you contribute?",
+    subtitle: "Many federal grants require 10–50% of project cost from other sources.",
+    type: "single_select",
+    options: [
+      { label: "None", value: "none" },
+      { label: "Up to 10%", value: "up_to_10" },
+      { label: "Up to 25%", value: "up_to_25" },
+      { label: "Up to 50%", value: "up_to_50" },
+      { label: "More than 50%", value: "over_50" },
+      { label: "Not sure yet", value: "unsure" },
     ],
   },
   {
@@ -382,8 +446,18 @@ function answerToProfileUpdate(
       return { entity_type: value as string };
     case "industry":
       return { industry: value as string };
+    case "naics_primary":
+      return { naics_primary: value as string };
     case "funding_use":
       return { funding_use: value as string };
+    case "funding_amount":
+      return { funding_amount: value as string };
+    case "federal_certifications":
+      return { federal_certifications: Array.isArray(value) ? value.join(", ") : value as string };
+    case "sam_registration_status":
+      return { sam_registration_status: value as string };
+    case "match_funds_capacity":
+      return { match_funds_capacity: value as string };
     case "business_stage":
       return { business_stage: value as string };
     case "grant_history":

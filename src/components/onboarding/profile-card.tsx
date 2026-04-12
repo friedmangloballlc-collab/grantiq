@@ -7,7 +7,12 @@ export interface ProfileData {
   // Step IDs — match onboarding step ids exactly
   entity_type?: string;
   industry?: string;
+  naics_primary?: string;
   funding_use?: string;
+  funding_amount?: string;
+  federal_certifications?: string;
+  sam_registration_status?: string;
+  match_funds_capacity?: string;
   business_stage?: string;
   grant_history?: string;
   location?: string;
@@ -45,14 +50,18 @@ export function ProfileCard({
   data: ProfileData;
   completedFields: number;
 }) {
-  // Core steps only — 5 required fields
-  const totalFields = 5;
+  const totalFields = 10;
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
     { label: "Organization Type", value: data.entity_type ?? data.entityType },
     { label: "Industry", value: data.industry },
+    { label: "NAICS Code", value: data.naics_primary },
     { label: "Funding Purpose", value: data.funding_use ?? data.fundingUse },
+    { label: "Funding Range", value: data.funding_amount },
+    { label: "Federal Certifications", value: data.federal_certifications },
+    { label: "SAM.gov Status", value: data.sam_registration_status },
+    { label: "Match Funds", value: data.match_funds_capacity },
     { label: "Business Stage", value: data.business_stage ?? data.businessStage },
     { label: "Location", value: data.location ?? (data.city && data.state ? `${data.city}, ${data.state}` : data.state) },
   ];
