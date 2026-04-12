@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     logger.info("Grant enrichment started", { pendingCount: count });
 
-    while (totalProcessed < 500) { // Cap at 500 per run
+    while (totalProcessed < 100) { // Cap at 100 per run (fits in 5min timeout)
       // Fetch batch needing enrichment
       const { data: grants, error: fetchError } = await supabase
         .from("grant_sources")
