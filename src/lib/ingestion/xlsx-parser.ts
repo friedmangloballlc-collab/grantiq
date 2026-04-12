@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { parseAmount, parseDeadline, extractStateFromSheetName, mapSourceType } from "./parsers";
+import { parseAmount, parseDeadline, extractStateFromSheetName, mapSourceType, parseMatchPercent } from "./parsers";
 import { ParsedGrantSchema, type ParsedGrant } from "./grant-schema";
 
 // ---------------------------------------------------------------------------
@@ -62,6 +62,27 @@ export const COLUMN_ALIASES: Record<string, string[]> = {
     "coverage", "coverage area", "target area", "assets",
   ],
   application_process: ["application process", "how to apply", "apply"],
+  contact_info: [
+    "contact", "contact info", "contact information", "phone", "email",
+    "contact email", "contact person", "contact name", "point of contact",
+  ],
+  match_required: [
+    "match required", "matching funds", "match", "cost share",
+    "cost sharing", "match requirement", "matching requirement",
+  ],
+  sam_required: [
+    "sam required", "sam.gov", "sam registration", "sam.gov required",
+    "requires sam", "uei required",
+  ],
+  new_applicant_friendly: [
+    "new applicant friendly", "first-time applicants", "new grantees",
+    "accepts unsolicited?", "unsolicited", "open to new applicants",
+    "new applicant",
+  ],
+  naics_code: [
+    "naics", "naics code", "naics codes", "industry code",
+    "eligible naics", "naics eligible",
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -144,6 +165,12 @@ export function extractRowData(
   const catRaw = resolveColumn(row, "category", undefined);
   const cfdaRaw = resolveColumn(row, "cfda_number", undefined);
   const stateRaw = resolveColumn(row, "state", undefined);
+  const contactRaw = resolveColumn(row, "contact_info", undefined);
+  const matchReqRaw = resolveColumn(row, "match_required", undefined);
+  const samReqRaw = resolveColumn(row, "sam_required", undefined);
+  const newApplicantRaw = resolveColumn(row, "new_applicant_friendly", undefined);
+  const naicsRaw = resolveColumn(row, "naics_code", undefined);
+  const appProcessRaw = resolveColumn(row, "application_process", undefined);
 
   const { min, max } = parseAmount(amountRaw);
   const deadline = parseDeadline(deadlineRaw);
@@ -179,6 +206,14 @@ export function extractRowData(
     cfda_number: cfdaRaw || null,
     category: catRaw || sheetName.replace(/^\d+\.\s*/, ""),
     data_source: "seed" as const,
+    application_process: appProcessRaw || null,
+    contact_info: contactRaw ? { raw: contactRaw } : null,
+    requires_sam: samReqRaw ? /yes|required|true/i.test(samReqRaw) : false,
+    match_required_pct: matchReqRaw ? parseMatchPercent(matchReqRaw) : null,
+    new_applicant_friendly: newApplicantRaw ? /yes|true|friendly/i.test(newApplicantRaw) : null,
+    eligible_naics: naicsRaw
+      ? naicsRaw.split(/[,;/]/).map((s: string) => s.trim()).filter((s: string) => /^\d{2,6}$/.test(s))
+      : [],
   };
 
   const result = ParsedGrantSchema.safeParse(raw);

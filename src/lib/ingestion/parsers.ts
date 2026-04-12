@@ -115,3 +115,19 @@ export function mapSourceType(sheetName: string): GrantSourceType | null {
   if (/^\d+\./.test(sheetName)) return "foundation";
   return "foundation";
 }
+
+export function parseMatchPercent(raw: string): number | null {
+  if (!raw) return null;
+  const trimmed = raw.trim().toLowerCase();
+  if (/^(no|none|n\/a|not required|0)$/i.test(trimmed)) return 0;
+  if (/^yes$/i.test(trimmed)) return 50;
+  const pctMatch = trimmed.match(/(\d+)\s*%/);
+  if (pctMatch) return parseInt(pctMatch[1], 10);
+  const ratioMatch = trimmed.match(/(\d+)\s*:\s*(\d+)/);
+  if (ratioMatch) {
+    const a = parseInt(ratioMatch[1], 10);
+    const b = parseInt(ratioMatch[2], 10);
+    if (a + b > 0) return Math.round((a / (a + b)) * 100);
+  }
+  return null;
+}
