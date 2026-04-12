@@ -802,6 +802,106 @@ export default async function GrantDetailPage({ params }: Props) {
             )}
           </AccordionContent>
         </AccordionItem>
+        {/* Grant Details — new enrichment fields */}
+        <AccordionItem
+          value="details"
+          className="border border-warm-200 dark:border-warm-800 rounded-lg px-4"
+        >
+          <AccordionTrigger className="text-sm font-medium">
+            Grant Details
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {grant.cfda_number && (
+                <div>
+                  <span className="text-xs text-warm-500">CFDA/ALN Number</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.cfda_number}</p>
+                </div>
+              )}
+              {grant.opportunity_number && (
+                <div>
+                  <span className="text-xs text-warm-500">Opportunity Number</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.opportunity_number}</p>
+                </div>
+              )}
+              {grant.naics_code && (
+                <div>
+                  <span className="text-xs text-warm-500">NAICS Code</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.naics_code}</p>
+                </div>
+              )}
+              {grant.eligible_naics?.length > 0 && (
+                <div>
+                  <span className="text-xs text-warm-500">Eligible NAICS</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.eligible_naics.join(", ")}</p>
+                </div>
+              )}
+              {grant.estimated_funding && (
+                <div>
+                  <span className="text-xs text-warm-500">Estimated Total Funding</span>
+                  <p className="text-warm-900 dark:text-warm-50">${Number(grant.estimated_funding).toLocaleString()}</p>
+                </div>
+              )}
+              {grant.estimated_awards_count && (
+                <div>
+                  <span className="text-xs text-warm-500">Expected Awards</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.estimated_awards_count}</p>
+                </div>
+              )}
+              {grant.amount_min != null && grant.amount_max != null && (
+                <div>
+                  <span className="text-xs text-warm-500">Award Range</span>
+                  <p className="text-warm-900 dark:text-warm-50">${Number(grant.amount_min).toLocaleString()} – ${Number(grant.amount_max).toLocaleString()}</p>
+                </div>
+              )}
+              {grant.open_date && (
+                <div>
+                  <span className="text-xs text-warm-500">Open Date</span>
+                  <p className="text-warm-900 dark:text-warm-50">{new Date(grant.open_date).toLocaleDateString()}</p>
+                </div>
+              )}
+              <div>
+                <span className="text-xs text-warm-500">SAM.gov Required</span>
+                <p className="text-warm-900 dark:text-warm-50">{grant.requires_sam ? "Yes" : "No"}</p>
+              </div>
+              <div>
+                <span className="text-xs text-warm-500">Cost Sharing</span>
+                <p className="text-warm-900 dark:text-warm-50">{grant.cost_sharing_required ? "Yes" : "No"}</p>
+              </div>
+              {grant.match_required_pct != null && grant.match_required_pct > 0 && (
+                <div>
+                  <span className="text-xs text-warm-500">Matching Funds Required</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.match_required_pct}%</p>
+                </div>
+              )}
+              {grant.required_certification && (
+                <div>
+                  <span className="text-xs text-warm-500">Required Certification</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.required_certification.toUpperCase()}</p>
+                </div>
+              )}
+              {grant.set_aside_code && (
+                <div>
+                  <span className="text-xs text-warm-500">Set-Aside</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.set_aside_code}</p>
+                </div>
+              )}
+              {grant.funding_activity_category && (
+                <div>
+                  <span className="text-xs text-warm-500">Funding Category</span>
+                  <p className="text-warm-900 dark:text-warm-50">{grant.funding_activity_category}</p>
+                </div>
+              )}
+              {grant.new_applicant_friendly && (
+                <div className="col-span-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                    New Applicant Friendly
+                  </span>
+                </div>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
 
       {/* Bottom action — add to pipeline if not already */}
