@@ -280,11 +280,19 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      embeddingGenerated,
-      matchCount,
-      matchError,
-      readinessScore,
-      readinessError,
+      debug: {
+        orgId,
+        hasMission: !!missionText,
+        missionLength: missionText?.length ?? 0,
+        hasEmbedding: !!org.mission_embedding,
+        embeddingGenerated,
+        hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+        hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
+        matchCount,
+        matchError,
+        readinessScore,
+        readinessError,
+      },
     });
   } catch (err) {
     logger.error("Onboarding complete error", { err: String(err) });

@@ -602,9 +602,16 @@ export function ChatInterface({ onProfileUpdate }: ChatInterfaceProps) {
     const handleComplete = async (destination: string) => {
       setCompleting(true);
       try {
-        await fetch("/api/onboarding/complete", { method: "POST" });
-      } catch {
-        // Non-blocking — proceed even if this fails
+        const res = await fetch("/api/onboarding/complete", { method: "POST" });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          console.error("Onboarding complete failed:", res.status, body);
+        } else {
+          const body = await res.json().catch(() => ({}));
+          console.log("Onboarding complete:", body);
+        }
+      } catch (err) {
+        console.error("Onboarding complete network error:", err);
       }
       // Brief pause so the user sees the "Finding your grants" state
       await new Promise((resolve) => setTimeout(resolve, 2500));
