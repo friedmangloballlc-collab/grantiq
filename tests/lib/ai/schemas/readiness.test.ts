@@ -3,6 +3,7 @@ import {
   ReadinessLLMOutputSchema,
   computeTierLabel,
   computeGrantEligibility,
+  computeProfileBonus,
   enrichReadinessOutput,
 } from "@/lib/ai/schemas/readiness";
 
@@ -122,8 +123,88 @@ describe("computeGrantEligibility", () => {
   });
 });
 
+describe("computeProfileBonus", () => {
+  it("gives +20 for SAM registered", () => {
+    const { bonus } = computeProfileBonus({
+      sam_registration_status: "registered",
+      federal_certifications: [],
+      naics_primary: null,
+      match_funds_capacity: null,
+      funding_amount_min: null,
+      funding_amount_max: null,
+    });
+    expect(bonus).toBe(20);
+  });
+
+  it("gives +10 for SAM in_progress and gap for remaining 10", () => {
+    const { bonus, gaps } = computeProfileBonus({
+      sam_registration_status: "in_progress",
+      federal_certifications: [],
+      naics_primary: null,
+      match_funds_capacity: null,
+      funding_amount_min: null,
+      funding_amount_max: null,
+    });
+    expect(bonus).toBe(10);
+    const samGap = gaps.find((g) => g.field === "sam_registration_status");
+    expect(samGap).toBeDefined();
+    expect(samGap!.points).toBe(10);
+  });
+
+  it("gives full 60 points for a complete profile", () => {
+    const { bonus, gaps } = computeProfileBonus({
+      sam_registration_status: "registered",
+      federal_certifications: ["wosb", "hubzone"],
+      naics_primary: "541511",
+      match_funds_capacity: "up_to_50",
+      funding_amount_min: 100000,
+      funding_amount_max: 500000,
+    });
+    expect(bonus).toBe(60); // 20+15+10+10+5
+    expect(gaps).toHaveLength(0);
+  });
+
+  it("gives 0 points and all gaps for empty profile", () => {
+    const { bonus, gaps } = computeProfileBonus({
+      sam_registration_status: null,
+      federal_certifications: [],
+      naics_primary: null,
+      match_funds_capacity: null,
+      funding_amount_min: null,
+      funding_amount_max: null,
+    });
+    expect(bonus).toBe(0);
+    expect(gaps).toHaveLength(5);
+    expect(gaps.reduce((sum, g) => sum + g.points, 0)).toBe(60);
+  });
+
+  it("gives +5 for up_to_10 match capacity", () => {
+    const { bonus } = computeProfileBonus({
+      sam_registration_status: null,
+      federal_certifications: [],
+      naics_primary: null,
+      match_funds_capacity: "up_to_10",
+      funding_amount_min: null,
+      funding_amount_max: null,
+    });
+    expect(bonus).toBe(5);
+  });
+
+  it("gives +15 for any recognized federal certification", () => {
+    const { bonus } = computeProfileBonus({
+      sam_registration_status: null,
+      federal_certifications: ["sba_8a"],
+      naics_primary: null,
+      match_funds_capacity: null,
+      funding_amount_min: null,
+      funding_amount_max: null,
+    });
+    expect(bonus).toBe(15);
+  });
+});
+
 describe("enrichReadinessOutput", () => {
-  it("adds tier_label, eligible_grant_types, and blocked_grant_types", () => {
+  it("adds tier_label, eligible_grant_types, and blocked_grant_types without profile", () => {
     const enriched = enrichReadinessOutput(validLLMOutput);
 
     expect(enriched.overall_score).toBe(72);
@@ -132,5 +213,40 @@ describe("enrichReadinessOutput", () => {
     expect(Array.isArray(enriched.eligible_grant_types)).toBe(true);
     expect(Array.isArray(enriched.blocked_grant_types)).toBe(true);
     expect(enriched.data_completeness_pct).toBe(80);
+    expect(enriched.profile_bonus).toBe(0);
+    expect(enriched.profile_gaps).toHaveLength(0);
+  });
+
+  it("applies profile bonus and caps at 100", () => {
+    const highScore = { ...validLLMOutput, overall_score: 85 };
+    const profile = {
+      sam_registration_status: "registered" as const,
+      federal_certifications: ["wosb"],
+      naics_primary: "541511",
+      match_funds_capacity: "up_to_50" as const,
+      funding_amount_min: 50000,
+      funding_amount_max: 200000,
+    };
+    const enriched = enrichReadinessOutput(highScore, profile);
+
+    // 85 + 60 = 145, capped at 100
+    expect(enriched.overall_score).toBe(100);
+    expect(enriched.profile_bonus).toBe(60);
+    expect(enriched.tier_label).toBe("excellent");
+  });
+
+  it("includes profile gaps for missing fields", () => {
+    const profile = {
+      sam_registration_status: null,
+      federal_certifications: [] as string[],
+      naics_primary: null,
+      match_funds_capacity: null,
+      funding_amount_min: null,
+      funding_amount_max: null,
+    };
+    const enriched = enrichReadinessOutput(validLLMOutput, profile);
+
+    expect(enriched.profile_gaps.length).toBeGreaterThan(0);
+    expect(enriched.profile_gaps.every((g) => g.field && g.action && g.points > 0)).toBe(true);
   });
 });
