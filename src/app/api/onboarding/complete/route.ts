@@ -130,6 +130,9 @@ export async function POST() {
               ? profile.federal_certifications as string[]
               : [],
             match_funds_capacity: profile.match_funds_capacity ?? null,
+            past_federal_funding_level: profile.past_federal_funding_level ?? null,
+            audited_financials: capabilities.has_audit ?? false,
+            technology_readiness_level: profile.technology_readiness_level ?? null,
           };
 
           const candidatesWithDefaults = vectorResults.map((v) => ({

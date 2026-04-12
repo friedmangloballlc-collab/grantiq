@@ -324,6 +324,30 @@ const CORE_STEPS: Step[] = [
     ],
   },
   {
+    id: "past_federal_funding_level",
+    question: "Have you received federal funding before?",
+    subtitle: "This specifically means grants or contracts from the U.S. federal government — not state, local, or private grants.",
+    type: "single_select",
+    options: [
+      { label: "No federal funding", value: "none" },
+      { label: "Under $100K", value: "under_100k" },
+      { label: "$100K – $500K", value: "100k_500k" },
+      { label: "$500K – $1M", value: "500k_1m" },
+      { label: "Over $1M", value: "over_1m" },
+    ],
+  },
+  {
+    id: "audited_financials_available",
+    question: "Do you have audited financial statements?",
+    subtitle: "An independent audit is required for most federal grants above $500K. This is different from regular bookkeeping.",
+    type: "single_select",
+    options: [
+      { label: "Yes, we have audited financials", value: "yes" },
+      { label: "No, but planning to get one", value: "planning" },
+      { label: "No", value: "no" },
+    ],
+  },
+  {
     id: "location",
     question: "Where is your business located?",
     subtitle: "Enter your city and state",
@@ -530,6 +554,10 @@ function answerToProfileUpdate(
       return { target_beneficiaries: Array.isArray(value) ? value.join(", ") : value as string };
     case "impact_metrics":
       return { impact_metrics: Array.isArray(value) ? value.join(", ") : value as string };
+    case "past_federal_funding_level":
+      return { past_federal_funding_level: value as string };
+    case "audited_financials_available":
+      return { audited_financials_available: value as string };
     case "documents":
       return { documents: (value as string[]).join(", ") };
     case "document_upload":

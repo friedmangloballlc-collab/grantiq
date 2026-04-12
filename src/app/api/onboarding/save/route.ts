@@ -25,6 +25,9 @@ const FIELD_MAP: Record<
   employee_count:           { table: "organizations",    column: "employee_count" },
   annual_revenue:           { table: "organizations",    column: "annual_budget" },
   ownership:                { table: "org_profiles",     column: "ownership_demographics" },
+  past_federal_funding_level: { table: "org_profiles",   column: "past_federal_funding_level" },
+  technology_readiness_level: { table: "org_profiles",  column: "technology_readiness_level" },
+  audited_financials_available: { table: "org_profiles", column: "audited_financials_available" }, // handled specially
   mission:                  { table: "organizations",    column: "mission_statement" },
   project_description:      { table: "org_profiles",     column: "project_description" },
   target_beneficiaries:     { table: "org_profiles",     column: "target_beneficiaries" }, // handled specially
@@ -110,6 +113,16 @@ export async function POST(req: NextRequest) {
         .from("org_profiles")
         .update({ federal_certifications: JSON.stringify(certs) })
         .eq("org_id", orgId);
+      return NextResponse.json({ success: true });
+    }
+
+    // Special case: audited_financials — save boolean to org_capabilities.has_audit too
+    if (field === "audited_financials_available" && typeof value === "string") {
+      const hasAudit = value === "yes";
+      await Promise.all([
+        db.from("org_profiles").update({ audited_financials_available: value }).eq("org_id", orgId),
+        db.from("org_capabilities").update({ has_audit: hasAudit }).eq("org_id", orgId),
+      ]);
       return NextResponse.json({ success: true });
     }
 

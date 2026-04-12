@@ -82,7 +82,7 @@ export default async function DashboardPage() {
       // Org profile: single merged query for focus, A-Z score, and deferred profile
       db
         .from("org_profiles")
-        .select("documents_ready, industry, business_stage, grant_history_level, program_areas, mission_statement, business_model, phone, contact_method, ownership_demographics, interested_in_nonprofit, funding_use, naics_primary, funding_amount_min, funding_amount_max, federal_certifications, sam_registration_status, match_funds_capacity, project_description, target_beneficiaries, impact_metrics")
+        .select("documents_ready, industry, business_stage, grant_history_level, program_areas, mission_statement, business_model, phone, contact_method, ownership_demographics, interested_in_nonprofit, funding_use, naics_primary, funding_amount_min, funding_amount_max, federal_certifications, sam_registration_status, match_funds_capacity, project_description, target_beneficiaries, impact_metrics, past_federal_funding_level, audited_financials_available")
         .eq("org_id", orgId)
         .single(),
 
@@ -350,6 +350,8 @@ export default async function DashboardPage() {
       project_description?: string | null;
       target_beneficiaries?: string[] | null;
       impact_metrics?: string[] | null;
+      past_federal_funding_level?: string | null;
+      audited_financials_available?: string | null;
     } | null;
 
     if (dp) {
@@ -373,6 +375,8 @@ export default async function DashboardPage() {
         project_description:     maybe(dp.project_description),
         target_beneficiaries:    Array.isArray(dp.target_beneficiaries) && dp.target_beneficiaries.length > 0 ? dp.target_beneficiaries.join(", ") : undefined,
         impact_metrics:          Array.isArray(dp.impact_metrics) && dp.impact_metrics.length > 0 ? dp.impact_metrics.join(", ") : undefined,
+        past_federal_funding_level: maybe(dp.past_federal_funding_level),
+        audited_financials_available: maybe(dp.audited_financials_available),
       };
       // We also need employee_count / annual_revenue / mission from organizations
       const orgRow = azOrgResult.data as {

@@ -26,6 +26,8 @@ export interface ProfileData {
   project_description?: string;
   target_beneficiaries?: string;
   impact_metrics?: string;
+  past_federal_funding_level?: string;
+  audited_financials_available?: string;
   documents?: string;
   interested_nonprofit?: string;
   // Legacy fields kept for backward compatibility
@@ -53,7 +55,7 @@ export function ProfileCard({
   data: ProfileData;
   completedFields: number;
 }) {
-  const totalFields = 14;
+  const totalFields = 16;
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
@@ -70,6 +72,8 @@ export function ProfileCard({
     { label: "Project", value: data.project_description ? (data.project_description.length > 40 ? data.project_description.slice(0, 40) + "..." : data.project_description) : undefined },
     { label: "Beneficiaries", value: data.target_beneficiaries },
     { label: "Impact Metrics", value: data.impact_metrics },
+    { label: "Federal Funding History", value: data.past_federal_funding_level },
+    { label: "Audited Financials", value: data.audited_financials_available },
     { label: "Location", value: data.location ?? (data.city && data.state ? `${data.city}, ${data.state}` : data.state) },
   ];
 

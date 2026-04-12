@@ -13,6 +13,10 @@ export interface HardFilterInput {
   sam_registration_status: string | null;
   federal_certifications: string[];
   match_funds_capacity: string | null;
+  // Project fit fields
+  past_federal_funding_level: string | null;
+  audited_financials: boolean;
+  technology_readiness_level: number | null;
 }
 
 interface GrantCandidate {
@@ -32,6 +36,10 @@ interface GrantCandidate {
   requires_sam?: boolean | null;
   required_certification?: string | null;
   match_required_pct?: number | null;
+  // Project fit fields
+  required_trl_min?: number | null;
+  requires_audited_financials?: boolean | null;
+  required_federal_experience?: string | null;
   [key: string]: unknown;
 }
 
@@ -90,6 +98,29 @@ export function applyHardFilters(candidates: GrantCandidate[], org: HardFilterIn
     if (grant.match_required_pct != null && grant.match_required_pct > 0 && org.match_funds_capacity != null) {
       const orgCapacity = MATCH_CAPACITY_TO_PCT[org.match_funds_capacity] ?? 0;
       if (orgCapacity < grant.match_required_pct) return false;
+    }
+
+    // TRL: if grant requires minimum TRL, org must meet it (when org has answered)
+    if (grant.required_trl_min != null && org.technology_readiness_level != null) {
+      if (org.technology_readiness_level < grant.required_trl_min) return false;
+    }
+
+    // Audited financials: if grant requires them, org must have them
+    if (grant.requires_audited_financials === true && org.audited_financials) {
+      // org.audited_financials is true/false — only filter if org said no
+    }
+    if (grant.requires_audited_financials === true && org.audited_financials === false) {
+      return false;
+    }
+
+    // Federal experience: if grant requires prior federal funding at a level, check org meets it
+    if (grant.required_federal_experience && org.past_federal_funding_level != null) {
+      const FED_LEVEL_ORDER: Record<string, number> = {
+        none: 0, under_100k: 1, "100k_500k": 2, "500k_1m": 3, over_1m: 4,
+      };
+      const required = FED_LEVEL_ORDER[grant.required_federal_experience] ?? 0;
+      const orgLevel = FED_LEVEL_ORDER[org.past_federal_funding_level] ?? 0;
+      if (orgLevel < required) return false;
     }
 
     return true;
