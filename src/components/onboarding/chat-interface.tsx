@@ -270,6 +270,14 @@ const CORE_STEPS: Step[] = [
     ],
   },
   {
+    id: "mission",
+    question: "Tell us about your organization",
+    subtitle: "What do you do and who do you serve? This is the most important field for grant matching — be specific.",
+    type: "textarea" as StepType,
+    placeholder:
+      "e.g. We provide affordable legal services to low-income families in South Florida...",
+  },
+  {
     id: "location",
     question: "Where is your business located?",
     subtitle: "Enter your city and state",
@@ -329,14 +337,6 @@ export const DEFERRED_STEPS: Step[] = [
       { label: "LGBTQ+-owned", value: "lgbtq_owned" },
       { label: "None of these", value: "none" },
     ],
-  },
-  {
-    id: "mission",
-    question: "Tell us about your organization",
-    subtitle: "What do you do and who do you serve?",
-    type: "textarea",
-    placeholder:
-      "e.g. We provide affordable legal services to low-income families in South Florida...",
   },
   {
     id: "business_model",

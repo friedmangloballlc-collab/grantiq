@@ -50,7 +50,7 @@ export function ProfileCard({
   data: ProfileData;
   completedFields: number;
 }) {
-  const totalFields = 10;
+  const totalFields = 11;
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
@@ -63,6 +63,7 @@ export function ProfileCard({
     { label: "SAM.gov Status", value: data.sam_registration_status },
     { label: "Match Funds", value: data.match_funds_capacity },
     { label: "Business Stage", value: data.business_stage ?? data.businessStage },
+    { label: "Mission", value: data.mission ? (data.mission.length > 40 ? data.mission.slice(0, 40) + "..." : data.mission) : undefined },
     { label: "Location", value: data.location ?? (data.city && data.state ? `${data.city}, ${data.state}` : data.state) },
   ];
 

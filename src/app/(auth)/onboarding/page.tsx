@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { ChatInterface } from "@/components/onboarding/chat-interface";
 import { ProfileCard, type ProfileData } from "@/components/onboarding/profile-card";
 
-const TOTAL_FIELDS = 10;
+const TOTAL_FIELDS = 11;
 
 export default function OnboardingPage() {
   const [profileData, setProfileData] = useState<ProfileData>({});
