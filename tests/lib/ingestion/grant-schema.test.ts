@@ -2,21 +2,21 @@ import { describe, it, expect } from "vitest";
 import { ParsedGrantSchema, ParsedGrant } from "@/lib/ingestion/grant-schema";
 
 describe("ParsedGrantSchema", () => {
-  const minimal: ParsedGrant = {
+  const minimal = {
     name: "Community Development Grant",
     funder_name: "USDA Rural Development",
-    source_type: "federal",
+    source_type: "federal" as const,
     url: null,
     amount_min: null,
     amount_max: null,
     deadline: null,
-    deadline_type: "rolling",
+    deadline_type: "rolling" as const,
     eligibility_types: [],
     states: [],
     description: null,
     cfda_number: null,
     category: null,
-    data_source: "seed",
+    data_source: "seed" as const,
   };
 
   it("accepts a valid minimal grant", () => {
@@ -53,7 +53,7 @@ describe("ParsedGrantSchema", () => {
   });
 
   it("accepts a full grant with all fields", () => {
-    const full: ParsedGrant = {
+    const full = {
       ...minimal,
       amount_min: 50000,
       amount_max: 500000,
@@ -67,5 +67,36 @@ describe("ParsedGrantSchema", () => {
     };
     const result = ParsedGrantSchema.safeParse(full);
     expect(result.success).toBe(true);
+  });
+
+  it("accepts full Grants.gov metadata", () => {
+    const result = ParsedGrantSchema.safeParse({
+      name: "Youth STEM Program",
+      funder_name: "NSF",
+      source_type: "federal",
+      opportunity_number: "NSF-24-001",
+      open_date: "2026-01-15",
+      estimated_funding: 5000000,
+      cfda_numbers: ["47.076", "47.041"],
+      applicant_eligibility_types: ["nonprofit_501c3", "higher_education"],
+      funding_activity_category: "ST",
+      cost_sharing_required: true,
+      award_ceiling: 500000,
+      award_floor: 50000,
+      estimated_awards_count: 15,
+      naics_code: "541711",
+      requires_sam: true,
+      eligible_naics: ["541711", "541712"],
+      match_required_pct: 25,
+      raw_text: '{"full":"api_response"}',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.opportunity_number).toBe("NSF-24-001");
+      expect(result.data.cfda_numbers).toEqual(["47.076", "47.041"]);
+      expect(result.data.cost_sharing_required).toBe(true);
+      expect(result.data.requires_sam).toBe(true);
+      expect(result.data.match_required_pct).toBe(25);
+    }
   });
 });
