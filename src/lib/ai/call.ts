@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAnthropicClient, estimateCostCents, MODELS } from "@/lib/ai/client";
+import { getOpenAIClient, estimateCostCents, MODELS } from "@/lib/ai/client";
 import { logger } from "@/lib/logger";
 import { detectPromptInjection, sanitizeInput } from "@/lib/ai/sanitize";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/lib/ai/usage";
 
 export interface AiCallOptions {
-  /** Model to use — defaults to MODELS.SCORING */
+  /** Model to use — defaults to MODELS.SCORING (gpt-4o-mini) */
   model?: string;
   /** System prompt (not sanitized — internal use only) */
   systemPrompt: string;
@@ -49,11 +49,11 @@ export class PromptInjectionError extends Error {
 }
 
 /**
- * Core AI call wrapper. Handles:
+ * Core AI call wrapper using OpenAI. Handles:
  * 1. Prompt injection detection
  * 2. Input sanitization
  * 3. Usage limit checking
- * 4. Claude API call
+ * 4. OpenAI API call
  * 5. Usage recording (ai_usage + ai_generations)
  */
 export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
@@ -91,20 +91,21 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
     }
   }
 
-  // 4. Call Claude
-  const anthropic = getAnthropicClient();
-  const response = await anthropic.messages.create({
+  // 4. Call OpenAI
+  const openai = getOpenAIClient();
+  const response = await openai.chat.completions.create({
     model,
     max_tokens: maxTokens,
     temperature,
-    system: systemPrompt,
-    messages: [{ role: "user", content: sanitized }],
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: sanitized },
+    ],
   });
 
-  const content =
-    response.content[0]?.type === "text" ? response.content[0].text : "";
-  const inputTokens = response.usage.input_tokens;
-  const outputTokens = response.usage.output_tokens;
+  const content = response.choices[0]?.message?.content ?? "";
+  const inputTokens = response.usage?.prompt_tokens ?? 0;
+  const outputTokens = response.usage?.completion_tokens ?? 0;
   const costCents = estimateCostCents(model, inputTokens, outputTokens);
 
   // 5. Record usage — fire-and-forget (don't block on errors)

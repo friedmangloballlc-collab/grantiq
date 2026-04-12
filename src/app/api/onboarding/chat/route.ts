@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAnthropicClient, MODELS } from "@/lib/ai/client";
+import { getOpenAIClient, MODELS } from "@/lib/ai/client";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -108,32 +108,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "message is required" }, { status: 400 });
     }
 
-    const client = getAnthropicClient();
+    const openai = getOpenAIClient();
 
-    // Build conversation history for Claude
-    const messages = (history ?? [])
+    // Build conversation history for OpenAI
+    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      { role: "system", content: ONBOARDING_SYSTEM_PROMPT },
+    ];
+
+    for (const m of (history ?? [])
       .filter((m: { role: string }) => m.role === "user" || m.role === "assistant")
-      .slice(-10)
-      .map((m: { role: string; content: string }) => ({
+      .slice(-10)) {
+      messages.push({
         role: m.role as "user" | "assistant",
         content: m.content,
-      }));
+      });
+    }
 
     // Add current message
-    messages.push({ role: "user" as const, content: message });
+    messages.push({ role: "user", content: message });
 
-    const response = await client.messages.create({
+    const response = await openai.chat.completions.create({
       model: MODELS.SCORING,
       max_tokens: 1024,
       temperature: 0.4,
-      system: ONBOARDING_SYSTEM_PROMPT,
       messages,
     });
 
-    const textBlock = response.content.find(
-      (block) => block.type === "text"
-    );
-    const responseText = (textBlock && "text" in textBlock ? textBlock.text : null) ?? "I'm sorry, could you repeat that?";
+    const responseText = response.choices[0]?.message?.content ?? "I'm sorry, could you repeat that?";
 
     // Extract profile update JSON if present
     let profileUpdate = null;
