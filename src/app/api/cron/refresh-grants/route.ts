@@ -71,24 +71,29 @@ export async function GET(request: NextRequest) {
 
   try {
     // -----------------------------------------------------------------------
-    // 1. Fetch latest 100 posted opportunities from Grants.gov
+    // 1. Fetch latest 100 posted + 50 forecasted opportunities from Grants.gov
     // -----------------------------------------------------------------------
-    const result = await searchGrantsGov({
-      oppStatus: "posted",
-      rows: 100,
-      startRecordNum: 0,
-    });
+    const [postedResult, forecastedResult] = await Promise.all([
+      searchGrantsGov({ oppStatus: "posted", rows: 100, startRecordNum: 0 }),
+      searchGrantsGov({ oppStatus: "forecasted", rows: 50, startRecordNum: 0 }),
+    ]);
+
+    const allOpportunities = [
+      ...postedResult.opportunities,
+      ...forecastedResult.opportunities,
+    ];
 
     logger.info("Grants.gov fetch complete", {
-      hitCount: result.total,
-      fetched: result.opportunities.length,
+      posted: postedResult.opportunities.length,
+      forecasted: forecastedResult.opportunities.length,
+      total: allOpportunities.length,
     });
 
     // -----------------------------------------------------------------------
     // 2. Upsert into grant_sources (deduplicate on external_id)
     // -----------------------------------------------------------------------
-    if (result.opportunities.length > 0) {
-      const rows = result.opportunities.map(toGrantSourceRow);
+    if (allOpportunities.length > 0) {
+      const rows = allOpportunities.map(toGrantSourceRow);
 
       // Check which external_ids already exist
       const externalIds = rows.map((r) => r.external_id);
@@ -175,7 +180,7 @@ export async function GET(request: NextRequest) {
     const summary = {
       success: true,
       duration_ms: Date.now() - started,
-      grants_fetched: result.opportunities.length,
+      grants_fetched: allOpportunities.length,
       grants_added: added,
       grants_updated: updated,
       grants_expired: expired,
