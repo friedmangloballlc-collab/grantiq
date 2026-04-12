@@ -188,7 +188,8 @@ const CORE_STEPS: Step[] = [
   {
     id: "funding_use",
     question: "What would you use grant funding for?",
-    type: "single_select",
+    subtitle: "Select all that apply",
+    type: "multi_select",
     options: [
       { label: "Start or launch a business", value: "launch" },
       { label: "Hire employees / expand team", value: "hiring" },
@@ -449,7 +450,7 @@ function answerToProfileUpdate(
     case "naics_primary":
       return { naics_primary: value as string };
     case "funding_use":
-      return { funding_use: value as string };
+      return { funding_use: Array.isArray(value) ? value.join(", ") : value as string };
     case "funding_amount":
       return { funding_amount: value as string };
     case "federal_certifications":
