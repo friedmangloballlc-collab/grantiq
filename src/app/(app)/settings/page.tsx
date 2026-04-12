@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { OrgSettingsForm } from "@/components/settings/org-settings-form";
 import { ExportDataButton } from "@/components/settings/export-data-button";
 import { DeleteAccountDialog } from "@/components/settings/delete-account-dialog";
@@ -28,12 +29,12 @@ export default async function OrgSettingsPage() {
       .single();
 
     if (membership) {
-      const { data } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("id", membership.org_id)
-        .single();
-      org = data ? { ...data, userRole: membership.role } : null;
+      const db = createAdminClient();
+      const [{ data: orgData }, { data: profileData }] = await Promise.all([
+        db.from("organizations").select("*").eq("id", membership.org_id).single(),
+        db.from("org_profiles").select("*").eq("org_id", membership.org_id).single(),
+      ]);
+      org = orgData ? { ...orgData, ...profileData, userRole: membership.role } : null;
     }
   }
 
