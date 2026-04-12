@@ -57,31 +57,50 @@ export async function GET(request: NextRequest) {
 
   try {
     // ── Pick next sources to crawl ─────────────────────────────────────
-    // Prioritize: highest priority first, then least recently checked
+    // Respect crawl_frequency: only pick sources that are due for a check
+    const now = new Date();
+    const FREQ_HOURS: Record<string, number> = {
+      daily: 20,      // ~daily (allow some overlap)
+      weekly: 144,     // ~6 days
+      biweekly: 312,   // ~13 days
+      monthly: 672,    // ~28 days
+      quarterly: 2016, // ~84 days
+    };
+
+    // Get sources that are either never checked OR due for recrawl
     const { data: sources, error: fetchError } = await supabase
       .from("grant_source_directory")
-      .select("id, name, organization, category, website, ingestion_status")
+      .select("id, name, organization, category, website, ingestion_status, crawl_frequency, last_checked")
       .not("website", "is", null)
-      .in("ingestion_status", ["planned", "not_started", "manual_seed"])
+      .neq("crawl_frequency", "manual")
+      .not("ingestion_status", "eq", "not_applicable")
       .order("priority", { ascending: true })
       .order("last_checked", { ascending: true, nullsFirst: true })
-      .limit(BATCH_SIZE);
+      .limit(BATCH_SIZE * 3); // Fetch extra, then filter by frequency
+
+    // Filter to only sources that are due for crawl
+    const dueSources = (sources ?? []).filter((s) => {
+      if (!s.last_checked) return true; // Never checked — always due
+      const freqHours = FREQ_HOURS[s.crawl_frequency ?? "weekly"] ?? 144;
+      const hoursSinceCheck = (now.getTime() - new Date(s.last_checked).getTime()) / (1000 * 60 * 60);
+      return hoursSinceCheck >= freqHours;
+    }).slice(0, BATCH_SIZE);
 
     if (fetchError) {
       return NextResponse.json({ error: fetchError.message }, { status: 500 });
     }
 
-    if (!sources?.length) {
+    if (!dueSources.length) {
       return NextResponse.json({
         success: true,
-        message: "No sources to crawl",
+        message: "No sources due for crawl",
         duration_ms: Date.now() - started,
       });
     }
 
-    logger.info("Starting source crawl", { count: sources.length });
+    logger.info("Starting source crawl", { count: dueSources.length });
 
-    for (const source of sources) {
+    for (const source of dueSources) {
       const url = source.website;
       if (!url) continue;
 
@@ -158,6 +177,8 @@ export async function GET(request: NextRequest) {
             cfda_number: g.cfda_number,
             requires_sam: g.requires_sam,
             cost_sharing_required: g.cost_sharing_required,
+            eligible_naics: g.eligible_naics,
+            application_process: g.application_process,
             data_source: "api_crawl" as const,
             status: "open" as const,
             is_active: true,

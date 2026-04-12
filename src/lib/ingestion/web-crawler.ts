@@ -17,6 +17,8 @@ export interface CrawledGrant {
   requires_sam: boolean;
   cost_sharing_required: boolean;
   source_type: "federal" | "state" | "foundation" | "corporate";
+  eligible_naics: string[];
+  application_process: string | null;
 }
 
 /**
@@ -76,28 +78,38 @@ export async function extractGrantsFromText(
 ): Promise<CrawledGrant[]> {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  const prompt = `You are extracting grant opportunity data from a webpage. Extract ALL distinct grant programs/opportunities mentioned.
+  const prompt = `You are a grant data extraction specialist. Extract EVERY distinct grant program, funding opportunity, or award mentioned on this page.
 
-SOURCE: ${sourceName}
-URL: ${sourceUrl}
-TYPE: ${sourceType}
+SOURCE ORGANIZATION: ${sourceName}
+SOURCE URL: ${sourceUrl}
+GRANT TYPE: ${sourceType}
 
-For each grant found, extract:
-- name: exact grant program name
-- funder_name: organization offering the grant
-- description: 1-3 sentence description of what the grant funds
-- amount_min: minimum award in dollars (null if not stated)
-- amount_max: maximum award in dollars (null if not stated)
-- deadline: deadline date in YYYY-MM-DD format (null if rolling/not stated)
-- eligibility_types: array of eligible org types (e.g., ["nonprofit_501c3", "government", "tribal"])
-- states: array of 2-letter state codes if geographically limited, empty if national
-- category: grant category (e.g., "health", "education", "environment")
-- cfda_number: CFDA/ALN number if mentioned (null otherwise)
-- requires_sam: true if SAM.gov registration mentioned as required
-- cost_sharing_required: true if matching funds/cost sharing mentioned
+EXTRACTION RULES:
+1. Extract ONLY facts explicitly stated on the page — NEVER invent, guess, or infer
+2. If a field is not mentioned, use null — do NOT fill in typical values
+3. Each grant program should be a separate entry (don't merge different programs)
+4. Dollar amounts: extract exact numbers. "$50K" = 50000, "$1.5M" = 1500000
+5. Dates: convert to YYYY-MM-DD format. "March 15, 2026" = "2026-03-15"
+6. If the page lists application requirements, note them in the description
 
-Return ONLY a JSON array of grants. If no grants found, return [].
-Do NOT invent or guess data — only extract what's explicitly stated on the page.
+For EACH grant, extract these fields:
+- name: the exact grant/program name as written on the page
+- funder_name: the organization offering the grant (use "${sourceName}" if not separately stated)
+- description: 2-4 sentences describing what the grant funds, who it helps, and what outcomes are expected. Be specific — include the funded activities, not just the topic area
+- amount_min: minimum award amount in whole dollars (null if not stated)
+- amount_max: maximum award amount in whole dollars (null if not stated)
+- deadline: application deadline in YYYY-MM-DD (null if rolling, continuous, or not stated)
+- eligibility_types: who can apply — use these exact values: "nonprofit_501c3", "nonprofit_other", "government", "tribal", "llc", "corporation", "sole_prop", "partnership", "higher_education", "k12", "individual", "any"
+- states: 2-letter state codes if geographically limited (e.g., ["CA", "NY"]), empty array [] if national or not specified
+- category: primary focus area (e.g., "health", "education", "environment", "workforce", "technology", "arts", "agriculture", "housing", "justice", "economic development")
+- cfda_number: CFDA or ALN number if mentioned (e.g., "93.778"), null otherwise
+- requires_sam: true ONLY if the page explicitly says SAM.gov registration is required
+- cost_sharing_required: true ONLY if matching funds or cost sharing is explicitly mentioned
+- naics_codes: array of NAICS codes if mentioned (e.g., ["541511"]), empty array if not
+- application_url: direct link to the application page if provided, null otherwise
+- funding_cycle: "annual", "quarterly", "rolling", "one-time", or null
+
+Return ONLY a valid JSON array. If no grants are found on this page, return [].
 
 PAGE TEXT:
 ${text}`;
@@ -136,6 +148,8 @@ ${text}`;
       requires_sam: g.requires_sam === true,
       cost_sharing_required: g.cost_sharing_required === true,
       source_type: sourceType,
+      eligible_naics: Array.isArray(g.naics_codes) ? g.naics_codes.map(String) : [],
+      application_process: typeof g.application_url === "string" ? g.application_url : null,
     })).filter((g: CrawledGrant) => g.name.length > 3);
   } catch (err) {
     logger.error("Grant extraction failed", { sourceUrl, err: String(err) });
