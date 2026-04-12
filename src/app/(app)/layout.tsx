@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
-import { CrispChat } from "@/components/shared/crisp-chat";
 import { getOrgContext } from "@/lib/auth/get-org-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { OrgContext } from "@/hooks/use-org";
@@ -73,7 +72,6 @@ export default async function AppLayout({
       >
         {children}
       </AppShell>
-      <CrispChat />
     </>
   );
 }
