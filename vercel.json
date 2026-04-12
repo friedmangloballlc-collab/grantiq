@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/check-urls",
       "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/generate-embeddings",
+      "schedule": "0 9 * * *"
     }
   ]
 }
