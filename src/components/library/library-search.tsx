@@ -20,6 +20,7 @@ const GRANT_TYPES = [
   { value: "state", label: "State" },
   { value: "foundation", label: "Foundation" },
   { value: "corporate", label: "Corporate" },
+  { value: "for_profit", label: "For-Profit" },
 ];
 
 interface Filters {

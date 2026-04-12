@@ -62,9 +62,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ grants: [], total: 0, tier, maxResults });
     }
 
+    // For-profit filter uses category search instead of source_type
+    const isForProfit = type === "for_profit";
+    const effectiveType = isForProfit ? null : (type && type !== "all" ? type : null);
+    const effectiveQuery = isForProfit
+      ? (q ? `${q} ForProfit` : "ForProfit")
+      : (q && q.trim() !== "" ? q.trim() : null);
+
     const { data, error } = await db.rpc("search_grants", {
-      query: q && q.trim() !== "" ? q.trim() : null,
-      p_type: type && type !== "all" ? type : null,
+      query: effectiveQuery,
+      p_type: effectiveType,
       p_state: state && state !== "all" ? state : null,
       p_amount_min: min,
       p_amount_max: max,

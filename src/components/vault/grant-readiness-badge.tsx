@@ -68,6 +68,9 @@ export function GrantReadinessBadge({
   showMissing = true,
   className,
 }: GrantReadinessBadgeProps) {
+  // Don't show scary "Not Ready" if user hasn't uploaded any docs yet
+  if (uploadedDocs.length === 0) return null;
+
   const { level, missingNames } = computeReadiness(sourceType, uploadedDocs);
 
   const config = {
