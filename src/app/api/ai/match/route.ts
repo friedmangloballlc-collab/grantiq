@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     // ── Fetch org profile ──────────────────────────────────────────────
     const [orgResult, profileResult, capResult] = await Promise.all([
       db.from("organizations").select("name, entity_type, annual_budget, employee_count").eq("id", org_id).single(),
-      db.from("org_profiles").select("mission_statement, state, city, program_areas, population_served, grant_history_level, industry").eq("org_id", org_id).single(),
+      db.from("org_profiles").select("mission_statement, state, city, program_areas, population_served, grant_history_level, industry, naics_primary, funding_amount_min, funding_amount_max, federal_certifications, sam_registration_status, match_funds_capacity").eq("org_id", org_id).single(),
       db.from("org_capabilities").select("has_sam_registration").eq("org_id", org_id).single(),
     ]);
 
@@ -166,6 +166,12 @@ export async function POST(req: NextRequest) {
       has_sam_registration: orgProfile.has_sam_registration,
       has_audit: false,
       years_operating: 1,
+      naics_primary: profile.naics_primary ?? null,
+      funding_amount_min: profile.funding_amount_min ?? null,
+      funding_amount_max: profile.funding_amount_max ?? null,
+      sam_registration_status: profile.sam_registration_status ?? null,
+      federal_certifications: Array.isArray(profile.federal_certifications) ? profile.federal_certifications as string[] : [],
+      match_funds_capacity: profile.match_funds_capacity ?? null,
     };
 
     const filtered = applyHardFilters(

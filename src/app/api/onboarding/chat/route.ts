@@ -17,34 +17,50 @@ Your goal is to collect the following information through natural conversation. 
 2. **Business/industry type**: Retail, Food & Beverage, Professional Services, Manufacturing, Technology, Healthcare, Construction, Creative & Arts, Non-Profit/Social Enterprise, Agriculture, Education, Energy, Financial Services, Legal, Other
    → industry: use lowercase_snake_case (e.g., "food_and_beverage", "professional_services")
 
-3. **What would you use grant funding for?**: Start/launch business, Hire employees, Purchase equipment, R&D/Innovation, Marketing, Technology upgrades, Training/workforce development, Facility expansion, Working capital
+3. **NAICS code**: Ask for their 6-digit NAICS code. Explain it's the industry code the federal government uses — most federal grants filter by it. If they don't know, offer to help them find it based on their industry answer.
+   → naics_primary: 6-digit string (e.g., "541511"). Allow skip.
+
+4. **What would you use grant funding for?**: Start/launch business, Hire employees, Purchase equipment, R&D/Innovation, Marketing, Technology upgrades, Training/workforce development, Facility expansion, Working capital
    → funding_use: use an array of lowercase_snake_case strings (e.g., ["hire_employees", "purchase_equipment"])
 
-4. **Business stage**: Planning (not launched), Startup (<1 year), Early stage (1-3 years), Established (3+ years)
+5. **How much funding are you looking for?**: Under $25K, $25K-$100K, $100K-$500K, $500K-$1M, $1M-$5M, $5M+, Not sure yet
+   → funding_amount_min: integer (or null if "Not sure"), funding_amount_max: integer (or null if open-ended/$5M+ or "Not sure")
+   Mappings: "Under $25K" → min:0, max:25000; "$25K-$100K" → min:25000, max:100000; "$100K-$500K" → min:100000, max:500000; "$500K-$1M" → min:500000, max:1000000; "$1M-$5M" → min:1000000, max:5000000; "$5M+" → min:5000000, max:null; "Not sure" → min:null, max:null
+
+6. **Federal certifications** (select all that apply): SBA 8(a), WOSB, VOSB, SDVOSB, HUBZone, MBE, None of these, Interested but not yet certified
+   → federal_certifications: JSON array of strings (e.g., ["sba_8a", "wosb"]) or [] if none. Use values: "sba_8a", "wosb", "vosb", "sdvosb", "hubzone", "mbe", "none", "interested"
+
+7. **SAM.gov registration status**: Registered with active UEI, In progress, Not yet but planning to, Not applicable
+   → sam_registration_status: one of "registered", "in_progress", "not_started", "not_applicable"
+
+8. **Matching funds capacity**: None, Up to 10%, Up to 25%, Up to 50%, More than 50%, Not sure yet
+   → match_funds_capacity: one of "none", "up_to_10", "up_to_25", "up_to_50", "over_50", "unsure"
+
+9. **Business stage**: Planning (not launched), Startup (<1 year), Early stage (1-3 years), Established (3+ years)
    → business_stage: use one of: "planning", "startup", "early_stage", "established"
 
-5. **Have you received grants before?**: Yes or No
-   → grant_history_level: "none" if No, "intermediate" if Yes
+10. **Have you received grants before?**: Yes or No
+    → grant_history_level: "none" if No, "intermediate" if Yes
 
-6. **Business location** (state and city)
-   → state: 2-letter state code (e.g., "FL"), city: city name string
+11. **Business location** (state and city)
+    → state: 2-letter state code (e.g., "FL"), city: city name string
 
-7. **Number of employees**: Just me, 2-10, 11-50, 51-200, 201-500, 500+
-   → employee_count: use the midpoint integer: 1, 5, 25, 100, 350, 500
+12. **Number of employees**: Just me, 2-10, 11-50, 51-200, 201-500, 500+
+    → employee_count: use the midpoint integer: 1, 5, 25, 100, 350, 500
 
-8. **Annual revenue/budget**: Pre-revenue, Under $50K, $50K-$250K, $250K-$1M, $1M-$5M, $5M+
-   → annual_budget: use integer: 0, 25000, 150000, 625000, 3000000, 7500000
+13. **Annual revenue/budget**: Pre-revenue, Under $50K, $50K-$250K, $250K-$1M, $1M-$5M, $5M+
+    → annual_budget: use integer: 0, 25000, 150000, 625000, 3000000, 7500000
 
-9. **Business ownership demographics** (select all): Woman-owned, Minority-owned, Veteran-owned, Disabled-owned, LGBTQ+-owned, None of these
-   → ownership_demographics: array of strings (e.g., ["woman_owned", "minority_owned"]) or []
+14. **Business ownership demographics** (select all): Woman-owned, Minority-owned, Veteran-owned, Disabled-owned, LGBTQ+-owned, None of these
+    → ownership_demographics: array of strings (e.g., ["woman_owned", "minority_owned"]) or []
 
-10. **Mission/description**: What does your organization do? Who do you serve?
+15. **Mission/description**: What does your organization do? Who do you serve?
     → mission_statement: string, population_served: string, program_areas: array of strings
 
-11. **Document readiness**: Do you have these ready? Business plan, Budget/financials, EIN, 501(c)(3) letter (if nonprofit), SAM.gov registration, Tax returns
+16. **Document readiness**: Do you have these ready? Business plan, Budget/financials, EIN, 501(c)(3) letter (if nonprofit), SAM.gov registration, Tax returns
     → has_ein: boolean, has_501c3: boolean, has_sam_registration: boolean, has_audit: boolean, documents_missing: array of strings
 
-12. **Interested in starting a nonprofit?** (only ask if entity_type is NOT "nonprofit_501c3"): Yes/No
+17. **Interested in starting a nonprofit?** (only ask if entity_type is NOT "nonprofit_501c3"): Yes/No
     → interested_in_nonprofit: boolean
 
 ## JSON Output Format
@@ -57,7 +73,7 @@ After EACH user answer, end your response with EXACTLY this structure on its own
 
 Rules for the JSON block:
 - Only include fields the user provided in THIS message (not previous turns)
-- Set "onboardingComplete": true after question 12 (or 11 if they are a nonprofit)
+- Set "onboardingComplete": true after question 17 (or 16 if they are a nonprofit)
 - Use the exact field names and value formats specified above
 - The JSON block MUST be the last thing in your response
 - Your conversational text MUST come before the JSON block
@@ -164,6 +180,12 @@ export async function POST(req: NextRequest) {
             if (profileUpdate.population_served) profileFields.population_served = profileUpdate.population_served;
             if (profileUpdate.program_areas) profileFields.program_areas = profileUpdate.program_areas;
             if (profileUpdate.grant_history_level) profileFields.grant_history_level = profileUpdate.grant_history_level;
+            if (profileUpdate.naics_primary) profileFields.naics_primary = profileUpdate.naics_primary;
+            if (profileUpdate.funding_amount_min !== undefined) profileFields.funding_amount_min = profileUpdate.funding_amount_min;
+            if (profileUpdate.funding_amount_max !== undefined) profileFields.funding_amount_max = profileUpdate.funding_amount_max;
+            if (profileUpdate.federal_certifications) profileFields.federal_certifications = profileUpdate.federal_certifications;
+            if (profileUpdate.sam_registration_status) profileFields.sam_registration_status = profileUpdate.sam_registration_status;
+            if (profileUpdate.match_funds_capacity) profileFields.match_funds_capacity = profileUpdate.match_funds_capacity;
 
             if (Object.keys(profileFields).length > 0) {
               await db.from("org_profiles").update(profileFields).eq("org_id", membership.org_id);
