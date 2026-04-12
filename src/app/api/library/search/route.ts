@@ -14,6 +14,41 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check tier for library access
+    const db = createAdminClient();
+    const { data: membership } = await db
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single();
+
+    if (!membership) {
+      return NextResponse.json({ error: "No organization" }, { status: 403 });
+    }
+
+    const { data: sub } = await db
+      .from("subscriptions")
+      .select("tier, trial_ends_at")
+      .eq("org_id", membership.org_id)
+      .single();
+
+    const tier = sub?.tier ?? "free";
+    const trialActive = sub?.trial_ends_at ? new Date(sub.trial_ends_at) > new Date() : false;
+
+    if (tier === "free" && !trialActive) {
+      return NextResponse.json({ error: "Library requires Starter plan or above" }, { status: 403 });
+    }
+
+    // Tier-based result limits
+    const TIER_LIMITS: Record<string, number> = {
+      starter: 50,
+      pro: 200,
+      growth: 500,
+      enterprise: 1000,
+    };
+    const maxResults = TIER_LIMITS[tier] ?? (trialActive ? 200 : 50);
+
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") ?? null;
     const type = searchParams.get("type") ?? null;
@@ -21,10 +56,12 @@ export async function GET(req: NextRequest) {
     const min = searchParams.get("min") ? Number(searchParams.get("min")) : null;
     const max = searchParams.get("max") ? Number(searchParams.get("max")) : null;
     const page = Math.max(0, Number(searchParams.get("page") ?? 0));
-    const limit = 24;
+    const limit = Math.min(24, maxResults - page * 24);
 
-    // Use admin client for catalog queries — grant_sources is a public catalog
-    const db = createAdminClient();
+    if (limit <= 0) {
+      return NextResponse.json({ grants: [], total: 0, tier, maxResults });
+    }
+
     const { data, error } = await db.rpc("search_grants", {
       query: q && q.trim() !== "" ? q.trim() : null,
       p_type: type && type !== "all" ? type : null,
