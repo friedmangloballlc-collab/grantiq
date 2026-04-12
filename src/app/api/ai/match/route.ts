@@ -176,6 +176,7 @@ export async function POST(req: NextRequest) {
       audited_financials: capResult.data?.audit_status === "has",
       audit_status: (capResult.data?.audit_status as "has" | "could_obtain" | "cannot" | null) ?? null,
       technology_readiness_level: profile.technology_readiness_level ?? null,
+      industry: profile.industry ?? null,
     };
 
     const filtered = applyHardFilters(

@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import { logger } from "@/lib/logger";
 import { vectorRecall } from "@/lib/matching/vector-recall";
 import { applyHardFilters, type HardFilterInput } from "@/lib/matching/hard-filter";
+import { computeWeightedScore } from "@/lib/matching/weighted-score";
 import { assessReadiness } from "@/lib/ai/engines/readiness";
 import { computeProfileHash } from "@/lib/ai/cache";
 import type { OrgProfileFields } from "@/lib/ai/schemas/readiness";
@@ -137,6 +138,7 @@ export async function POST() {
             audited_financials: capabilities.audit_status === "has",
             audit_status: (capabilities.audit_status as "has" | "could_obtain" | "cannot" | null) ?? null,
             technology_readiness_level: profile.technology_readiness_level ?? null,
+            industry: profile.industry ?? null,
           };
 
           const candidatesWithDefaults = vectorResults.map((v) => ({
@@ -149,20 +151,49 @@ export async function POST() {
           const filteredCandidates = applyHardFilters(candidatesWithDefaults, filterInput);
 
           if (filteredCandidates.length > 0) {
-            // Fast path: use vector similarity as match score (no AI scoring)
-            // This keeps onboarding under 15 seconds. AI scoring runs later
-            // when user clicks "Run Match" from the matches page.
+            // Weighted scoring: 70% similarity + 15% eligibility + 15% location
             const computedAt = new Date().toISOString();
-            const top50 = filteredCandidates.slice(0, 50);
 
-            const matchRows = top50.map((c) => ({
+            const orgScoreContext = {
+              entity_type: org.entity_type ?? "other",
+              state: org.state ?? null,
+              industry: profile.industry ?? null,
+              sam_registration_status: profile.sam_registration_status ?? null,
+              funding_amount_min: profile.funding_amount_min ?? null,
+              funding_amount_max: profile.funding_amount_max ?? null,
+            };
+
+            const scored = filteredCandidates.map((c) => {
+              const grantFields = {
+                similarity: c.similarity,
+                eligibility_types: c.eligibility_types ?? [],
+                states: c.states ?? [],
+                source_type: c.source_type,
+                category: (c as Record<string, unknown>).category as string | null ?? null,
+                requires_sam: (c as Record<string, unknown>).requires_sam as boolean | null ?? null,
+                amount_min: c.amount_min,
+                amount_max: c.amount_max,
+              };
+              const score = computeWeightedScore(grantFields, orgScoreContext);
+              return { candidate: c, score };
+            });
+
+            // Sort by weighted score, take top 50
+            scored.sort((a, b) => b.score.total - a.score.total);
+            const top50 = scored.slice(0, 50);
+
+            const matchRows = top50.map(({ candidate: c, score }) => ({
               org_id: orgId,
               grant_source_id: c.id,
-              match_score: Math.round(c.similarity * 100),
-              score_breakdown: {},
-              match_reasons: { why_it_matches: ["Matched by semantic similarity to your profile"] },
+              match_score: score.total,
+              score_breakdown: {
+                similarity: score.similarity_score,
+                eligibility: score.eligibility_score,
+                location: score.location_score,
+              },
+              match_reasons: { why_it_matches: ["Weighted match: similarity + eligibility + location"] },
               missing_requirements: [] as string[],
-              model_version: "vector-similarity-v1",
+              model_version: "weighted-v1",
               embedding_similarity: c.similarity,
               computed_at: computedAt,
               profile_hash: profileHash,

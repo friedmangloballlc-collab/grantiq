@@ -19,6 +19,7 @@ describe("applyHardFilters", () => {
     audited_financials: false,
     audit_status: null as "has" | "could_obtain" | "cannot" | null,
     technology_readiness_level: null as number | null,
+    industry: null as string | null,
   };
 
   it("passes grants matching all criteria", () => {
@@ -41,6 +42,24 @@ describe("applyHardFilters", () => {
   });
   it("filters closed grants", () => {
     expect(applyHardFilters([{ ...baseCandidate, status: "closed" }], baseOrg)).toHaveLength(0);
+  });
+
+  // ── For-profit eligibility ───────────────────────────────────────────
+
+  it("filters nonprofit-only grants for LLC entities", () => {
+    const grant = { ...baseCandidate, eligibility_types: ["nonprofit_501c3"] };
+    const org = { ...baseOrg, entity_type: "llc" };
+    expect(applyHardFilters([grant], org)).toHaveLength(0);
+  });
+  it("passes for-profit grants for LLC entities", () => {
+    const grant = { ...baseCandidate, eligibility_types: ["for_profit"] };
+    const org = { ...baseOrg, entity_type: "llc" };
+    expect(applyHardFilters([grant], org)).toHaveLength(1);
+  });
+  it("passes grants open to any org type", () => {
+    const grant = { ...baseCandidate, eligibility_types: ["any"] };
+    const org = { ...baseOrg, entity_type: "llc" };
+    expect(applyHardFilters([grant], org)).toHaveLength(1);
   });
 
   // ── New grant matching field filters ────────────────────────────────

@@ -18,6 +18,8 @@ export interface HardFilterInput {
   audited_financials: boolean;
   audit_status: "has" | "could_obtain" | "cannot" | null;
   technology_readiness_level: number | null;
+  // Industry/sector for relevance filtering
+  industry: string | null;
 }
 
 interface GrantCandidate {
@@ -42,6 +44,7 @@ interface GrantCandidate {
   requires_audited_financials?: boolean | null;
   required_federal_experience?: string | null;
   project_keywords?: string[] | null;
+  category?: string | null;
   [key: string]: unknown;
 }
 
@@ -74,8 +77,30 @@ const FED_LEVEL_ORDER: Record<string, number> = {
 export function checkGrant(grant: GrantCandidate, org: HardFilterInput): FilterResult {
   const now = new Date();
 
-  if (grant.eligibility_types.length > 0 && !grant.eligibility_types.includes(org.entity_type) && !grant.eligibility_types.includes("any"))
-    return { pass: false, reason: "entity_type_mismatch", detail: `Requires ${grant.eligibility_types.join("/")}` };
+  // Entity type eligibility — check if org type is allowed
+  if (grant.eligibility_types.length > 0 && !grant.eligibility_types.includes("any")) {
+    // Check direct match first
+    if (!grant.eligibility_types.includes(org.entity_type)) {
+      // For-profit orgs (llc, corporation, sole_prop, partnership) can match "for_profit"
+      const forProfitTypes = new Set(["llc", "corporation", "s_corp", "c_corp", "sole_prop", "sole_proprietorship", "partnership", "other"]);
+      const isForProfit = forProfitTypes.has(org.entity_type);
+      const grantAllowsForProfit = grant.eligibility_types.includes("for_profit");
+
+      // Nonprofit orgs can match "nonprofit_other" or "nonprofit_501c3"
+      const isNonprofit = org.entity_type.startsWith("nonprofit");
+      const grantAllowsNonprofit = grant.eligibility_types.includes("nonprofit_501c3") || grant.eligibility_types.includes("nonprofit_other");
+
+      if (isForProfit && !grantAllowsForProfit) {
+        return { pass: false, reason: "not_for_profit_eligible", detail: "Grant is not open to for-profit businesses" };
+      }
+      if (isNonprofit && !grantAllowsNonprofit && !grant.eligibility_types.includes(org.entity_type)) {
+        return { pass: false, reason: "entity_type_mismatch", detail: `Requires ${grant.eligibility_types.join("/")}` };
+      }
+      if (!isForProfit && !isNonprofit) {
+        return { pass: false, reason: "entity_type_mismatch", detail: `Requires ${grant.eligibility_types.join("/")}` };
+      }
+    }
+  }
 
   if (grant.states.length > 0 && org.state) {
     if (!grant.states.includes(org.state) && !grant.states.includes("national") && !grant.states.includes("all"))
