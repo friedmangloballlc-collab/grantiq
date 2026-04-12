@@ -50,13 +50,13 @@ export const ParsedGrantSchema = z.object({
   posted_date: z.string().nullable().default(null),
   classification_code: z.string().nullable().default(null),
   solicitation_number: z.string().nullable().default(null),
-  point_of_contact: z.record(z.unknown()).nullable().default(null),
+  point_of_contact: z.record(z.string(), z.unknown()).nullable().default(null),
   set_aside_code: z.string().nullable().default(null),
 
   // ── New: Shared enrichment ───────────────────────────────────────────
   application_process: z.string().nullable().default(null),
-  contact_info: z.record(z.unknown()).nullable().default(null),
-  geographic_restrictions: z.record(z.unknown()).nullable().default(null),
+  contact_info: z.record(z.string(), z.unknown()).nullable().default(null),
+  geographic_restrictions: z.record(z.string(), z.unknown()).nullable().default(null),
   requires_sam: z.boolean().default(false),
   required_certification: z.string().nullable().default(null),
   match_required_pct: z.number().nullable().default(null),

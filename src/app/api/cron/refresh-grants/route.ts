@@ -33,15 +33,28 @@ function toGrantSourceRow(opp: GrantsGovOpportunity) {
     url: opp.url,
     amount_min: opp.amount_min,
     amount_max: opp.amount_max,
-    deadline: opp.close_date, // already ISO from the client
+    award_ceiling: opp.award_ceiling,
+    award_floor: opp.award_floor,
+    deadline: opp.close_date,
     deadline_type: "full_application" as const,
     recurrence: "annual" as const,
     description: opp.description || null,
     cfda_number: opp.cfda_number,
+    cfda_numbers: opp.cfda_numbers,
     data_source: "api_crawl" as const,
     status: opp.status === "closed" ? "closed" : "open",
     is_active: opp.status !== "closed",
-    external_id: opp.id, // Grants.gov opportunity ID for dedup
+    external_id: opp.id,
+    opportunity_number: opp.number || null,
+    open_date: opp.open_date,
+    archive_date: opp.archive_date,
+    estimated_funding: opp.estimated_funding,
+    estimated_awards_count: opp.estimated_awards_count,
+    cost_sharing_required: opp.cost_sharing_required,
+    applicant_eligibility_types: opp.applicant_eligibility_types,
+    funding_activity_category: opp.funding_activity_category,
+    competition_id: opp.competition_id,
+    raw_text: opp.raw_json,
   };
 }
 
@@ -114,10 +127,22 @@ export async function GET(request: NextRequest) {
             deadline: row.deadline,
             amount_min: row.amount_min,
             amount_max: row.amount_max,
+            award_ceiling: row.award_ceiling,
+            award_floor: row.award_floor,
             status: row.status,
             is_active: row.is_active,
             description: row.description,
             url: row.url,
+            opportunity_number: row.opportunity_number,
+            open_date: row.open_date,
+            archive_date: row.archive_date,
+            estimated_funding: row.estimated_funding,
+            estimated_awards_count: row.estimated_awards_count,
+            cost_sharing_required: row.cost_sharing_required,
+            applicant_eligibility_types: row.applicant_eligibility_types,
+            funding_activity_category: row.funding_activity_category,
+            cfda_numbers: row.cfda_numbers,
+            raw_text: row.raw_text,
           })
           .eq("external_id", row.external_id);
 
