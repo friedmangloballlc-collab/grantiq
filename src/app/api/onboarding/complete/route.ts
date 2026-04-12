@@ -184,78 +184,77 @@ export async function POST() {
       }
     }
 
-    // ── Step 3: Run readiness scoring INLINE ──────────────────────────────
-    let readinessScore: number | null = null;
-    let readinessError: string | null = null;
-
-    try {
-      const profileFields: OrgProfileFields = {
-        sam_registration_status: profile.sam_registration_status ?? null,
-        federal_certifications: Array.isArray(profile.federal_certifications)
-          ? profile.federal_certifications as string[]
-          : [],
-        naics_primary: profile.naics_primary ?? null,
-        match_funds_capacity: profile.match_funds_capacity ?? null,
-        funding_amount_min: profile.funding_amount_min ?? null,
-        funding_amount_max: profile.funding_amount_max ?? null,
-        past_federal_funding_level: profile.past_federal_funding_level ?? null,
-        audit_status: (capabilities.audit_status as "has" | "could_obtain" | "cannot" | null) ?? null,
-        technology_readiness_level: profile.technology_readiness_level ?? null,
-      };
-
-      const result = await assessReadiness(
-        { orgId, userId: user.id, tier: "free" },
-        {
-          name: org.name,
-          entity_type: org.entity_type,
-          mission_statement: missionText,
-          state: org.state,
-          annual_budget: org.annual_budget ?? capabilities.annual_budget,
-          employee_count: org.employee_count,
-          years_operating: capabilities.years_operating ?? 0,
-          has_501c3: capabilities.has_501c3 ?? false,
-          has_ein: capabilities.has_ein ?? false,
-          has_sam_registration: capabilities.has_sam_registration ?? false,
-          has_grants_gov: capabilities.has_grants_gov ?? false,
-          has_audit: capabilities.has_audit ?? false,
-          has_fiscal_sponsor: capabilities.has_fiscal_sponsor ?? false,
-          has_grant_writer: capabilities.has_grant_writer ?? false,
-          prior_federal_grants: capabilities.prior_federal_grants ?? 0,
-          prior_foundation_grants: capabilities.prior_foundation_grants ?? 0,
-          sam_gov_status: capabilities.sam_gov_status ?? "none",
-          grants_gov_status: capabilities.grants_gov_status ?? "not_registered",
-          program_areas: profile.program_areas ?? [],
-          population_served: profile.population_served ?? [],
-          grant_history_level: profile.grant_history_level ?? null,
-          outcomes_tracking: profile.outcomes_tracking ?? false,
-          naics_primary: profile.naics_primary ?? null,
+    // ── Step 3: Readiness scoring — fire and forget (don't block response) ─
+    const readinessPromise = (async () => {
+      try {
+        const profileFields: OrgProfileFields = {
+          sam_registration_status: profile.sam_registration_status ?? null,
           federal_certifications: Array.isArray(profile.federal_certifications)
             ? profile.federal_certifications as string[]
             : [],
-          sam_registration_status: profile.sam_registration_status ?? null,
+          naics_primary: profile.naics_primary ?? null,
           match_funds_capacity: profile.match_funds_capacity ?? null,
           funding_amount_min: profile.funding_amount_min ?? null,
           funding_amount_max: profile.funding_amount_max ?? null,
-        },
-        profileFields
-      );
+          past_federal_funding_level: profile.past_federal_funding_level ?? null,
+          audit_status: (capabilities.audit_status as "has" | "could_obtain" | "cannot" | null) ?? null,
+          technology_readiness_level: profile.technology_readiness_level ?? null,
+        };
 
-      readinessScore = result.overall_score;
+        const result = await assessReadiness(
+          { orgId, userId: user.id, tier: "free" },
+          {
+            name: org.name,
+            entity_type: org.entity_type,
+            mission_statement: missionText,
+            state: org.state,
+            annual_budget: org.annual_budget ?? capabilities.annual_budget,
+            employee_count: org.employee_count,
+            years_operating: capabilities.years_operating ?? 0,
+            has_501c3: capabilities.has_501c3 ?? false,
+            has_ein: capabilities.has_ein ?? false,
+            has_sam_registration: capabilities.has_sam_registration ?? false,
+            has_grants_gov: capabilities.has_grants_gov ?? false,
+            has_audit: capabilities.has_audit ?? false,
+            has_fiscal_sponsor: capabilities.has_fiscal_sponsor ?? false,
+            has_grant_writer: capabilities.has_grant_writer ?? false,
+            prior_federal_grants: capabilities.prior_federal_grants ?? 0,
+            prior_foundation_grants: capabilities.prior_foundation_grants ?? 0,
+            sam_gov_status: capabilities.sam_gov_status ?? "none",
+            grants_gov_status: capabilities.grants_gov_status ?? "not_registered",
+            program_areas: profile.program_areas ?? [],
+            population_served: profile.population_served ?? [],
+            grant_history_level: profile.grant_history_level ?? null,
+            outcomes_tracking: profile.outcomes_tracking ?? false,
+            naics_primary: profile.naics_primary ?? null,
+            federal_certifications: Array.isArray(profile.federal_certifications)
+              ? profile.federal_certifications as string[]
+              : [],
+            sam_registration_status: profile.sam_registration_status ?? null,
+            match_funds_capacity: profile.match_funds_capacity ?? null,
+            funding_amount_min: profile.funding_amount_min ?? null,
+            funding_amount_max: profile.funding_amount_max ?? null,
+          },
+          profileFields
+        );
 
-      const profileHash = computeProfileHash({ ...capabilities, ...profile });
-      await db.from("readiness_scores").insert({
-        org_id: orgId,
-        criteria: result.criteria,
-        overall_score: result.overall_score,
-        gaps: result.top_3_gaps.map((g) => g.gap_description),
-        recommendations: result.top_3_gaps.map((g) => g.fix_action),
-        profile_hash: profileHash,
-        scored_at: new Date().toISOString(),
-      });
-    } catch (err) {
-      readinessError = err instanceof Error ? err.message : String(err);
-      logger.error("Inline score_readiness failed", { err: readinessError });
-    }
+        const profileHash = computeProfileHash({ ...capabilities, ...profile });
+        await db.from("readiness_scores").insert({
+          org_id: orgId,
+          criteria: result.criteria,
+          overall_score: result.overall_score,
+          gaps: result.top_3_gaps.map((g) => g.gap_description),
+          recommendations: result.top_3_gaps.map((g) => g.fix_action),
+          profile_hash: profileHash,
+          scored_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        logger.error("Background readiness scoring failed", { err: String(err) });
+      }
+    })();
+
+    // Don't await — let it run in background. Response returns immediately with matches.
+    void readinessPromise;
 
     // ── Step 4: Enqueue welcome email (keep as job — not time-critical) ──
     await db.from("job_queue").insert({
@@ -282,8 +281,7 @@ export async function POST() {
         hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
         matchCount,
         matchError,
-        readinessScore,
-        readinessError,
+        readinessScoring: "background",
       },
     });
   } catch (err) {
