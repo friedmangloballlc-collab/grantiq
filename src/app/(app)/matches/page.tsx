@@ -70,7 +70,7 @@ export default async function MatchesPage() {
     db
       .from("grant_matches")
       .select(
-        "id, grant_source_id, match_score, scores, score_breakdown, missing_requirements, grant_sources(id, name, funder_name, source_type, amount_max, deadline)"
+        "id, grant_source_id, match_score, score_breakdown, missing_requirements, match_reasons, grant_sources(id, name, funder_name, source_type, amount_max, deadline)"
       )
       .eq("org_id", orgId)
       .order("match_score", { ascending: false })
@@ -199,7 +199,7 @@ export default async function MatchesPage() {
                 amountMax={match.grant_sources?.amount_max ?? null}
                 deadline={match.grant_sources?.deadline ?? null}
                 matchScore={Math.round(match.match_score)}
-                scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
+                scoreBreakdown={match.score_breakdown ?? {}}
                 missingRequirements={match.missing_requirements ?? []}
                 uploadedDocs={uploadedDocs}
               />
@@ -222,7 +222,7 @@ export default async function MatchesPage() {
                 amountMax={match.grant_sources?.amount_max ?? null}
                 deadline={match.grant_sources?.deadline ?? null}
                 matchScore={Math.round(match.match_score)}
-                scoreBreakdown={match.scores ?? match.score_breakdown ?? {}}
+                scoreBreakdown={match.score_breakdown ?? {}}
                 missingRequirements={match.missing_requirements ?? []}
                 uploadedDocs={uploadedDocs}
               />
