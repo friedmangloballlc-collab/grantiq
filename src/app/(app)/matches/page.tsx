@@ -129,9 +129,9 @@ export default async function MatchesPage() {
         </h1>
         <EmptyState
           title="No matches yet"
-          description="Complete your organization profile to get AI-powered grant matches."
-          actionLabel="Complete Profile"
-          actionHref="/onboarding"
+          description="Your matches are being generated. Try refreshing in a moment, or go to your dashboard."
+          actionLabel="Go to Dashboard"
+          actionHref="/dashboard"
         />
       </div>
     );

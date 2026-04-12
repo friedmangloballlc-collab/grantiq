@@ -5,7 +5,6 @@ import OpenAI from "openai";
 import { logger } from "@/lib/logger";
 import { vectorRecall } from "@/lib/matching/vector-recall";
 import { applyHardFilters, type HardFilterInput } from "@/lib/matching/hard-filter";
-import { scoreGrantBatch, type OrgProfile, type GrantForScoring } from "@/lib/ai/engines/match";
 import { assessReadiness } from "@/lib/ai/engines/readiness";
 import { computeProfileHash } from "@/lib/ai/cache";
 import type { OrgProfileFields } from "@/lib/ai/schemas/readiness";
@@ -150,73 +149,32 @@ export async function POST() {
           const filteredCandidates = applyHardFilters(candidatesWithDefaults, filterInput);
 
           if (filteredCandidates.length > 0) {
-            // Limit to top 40 for AI scoring (controls cost for free tier)
-            const toScore: GrantForScoring[] = filteredCandidates.slice(0, 40).map((c) => ({
-              id: c.id,
-              name: c.name,
-              funder_name: c.funder_name,
-              source_type: c.source_type,
-              amount_min: c.amount_min,
-              amount_max: c.amount_max,
-              description: c.description as string | null,
-              deadline: c.deadline,
-              states: c.states,
-              eligibility_types: c.eligibility_types,
+            // Fast path: use vector similarity as match score (no AI scoring)
+            // This keeps onboarding under 15 seconds. AI scoring runs later
+            // when user clicks "Run Match" from the matches page.
+            const computedAt = new Date().toISOString();
+            const top50 = filteredCandidates.slice(0, 50);
+
+            const matchRows = top50.map((c) => ({
+              org_id: orgId,
+              grant_source_id: c.id,
+              match_score: Math.round(c.similarity * 100),
+              score_breakdown: {},
+              match_reasons: { why_it_matches: ["Matched by semantic similarity to your profile"] },
+              missing_requirements: [] as string[],
+              model_version: "vector-similarity-v1",
+              embedding_similarity: c.similarity,
+              computed_at: computedAt,
+              profile_hash: profileHash,
             }));
 
-            const orgProfile: OrgProfile = {
-              name: org.name,
-              entity_type: org.entity_type,
-              mission_statement: missionText,
-              state: org.state,
-              city: org.city,
-              annual_budget: org.annual_budget,
-              employee_count: org.employee_count,
-              program_areas: profile.program_areas ?? [],
-              population_served: profile.population_served ?? [],
-              grant_history_level: profile.grant_history_level ?? null,
-              has_501c3: capabilities.has_501c3 ?? false,
-              has_sam_registration: capabilities.has_sam_registration ?? false,
-              has_audit: capabilities.has_audit ?? false,
-              years_operating: capabilities.years_operating ?? 0,
-              prior_federal_grants: capabilities.prior_federal_grants ?? 0,
-              prior_foundation_grants: capabilities.prior_foundation_grants ?? 0,
-              industry: profile.industry ?? null,
-            };
-
-            const scoringResult = await scoreGrantBatch(
-              { orgId, userId: user.id, tier: "free" },
-              orgProfile,
-              toScore
-            );
-
-            // Store matches
-            const computedAt = new Date().toISOString();
-            const matchRows = scoringResult.scored_grants.map((sg) => {
-              const vectorMatch = filteredCandidates.find((c) => c.id === sg.grant_id);
-              return {
-                org_id: orgId,
-                grant_source_id: sg.grant_id,
-                match_score: sg.match_score,
-                score_breakdown: {},
-                match_reasons: { why_it_matches: [sg.match_rationale] },
-                missing_requirements: sg.missing_requirements,
-                model_version: "claude-sonnet-4-20250514",
-                embedding_similarity: vectorMatch?.similarity ?? null,
-                computed_at: computedAt,
-                profile_hash: profileHash,
-              };
-            });
-
-            if (matchRows.length > 0) {
-              await db.from("grant_matches").delete().eq("org_id", orgId);
-              const { error: insertErr } = await db.from("grant_matches").insert(matchRows);
-              if (insertErr) {
-                matchError = insertErr.message;
-                logger.error("Failed to store matches", { message: insertErr.message });
-              } else {
-                matchCount = matchRows.length;
-              }
+            await db.from("grant_matches").delete().eq("org_id", orgId);
+            const { error: insertErr } = await db.from("grant_matches").insert(matchRows);
+            if (insertErr) {
+              matchError = insertErr.message;
+              logger.error("Failed to store matches", { message: insertErr.message });
+            } else {
+              matchCount = matchRows.length;
             }
           }
         }
