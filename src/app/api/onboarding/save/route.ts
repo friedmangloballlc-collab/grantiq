@@ -116,12 +116,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    // Special case: audited_financials — save boolean to org_capabilities.has_audit too
+    // Special case: audited_financials — save to audit_status enum + legacy has_audit
     if (field === "audited_financials_available" && typeof value === "string") {
+      const auditStatusMap: Record<string, string> = { yes: "has", planning: "could_obtain", no: "cannot" };
+      const auditStatus = auditStatusMap[value] ?? null;
       const hasAudit = value === "yes";
       await Promise.all([
         db.from("org_profiles").update({ audited_financials_available: value }).eq("org_id", orgId),
-        db.from("org_capabilities").update({ has_audit: hasAudit }).eq("org_id", orgId),
+        db.from("org_capabilities").update({ has_audit: hasAudit, audit_status: auditStatus }).eq("org_id", orgId),
       ]);
       return NextResponse.json({ success: true });
     }

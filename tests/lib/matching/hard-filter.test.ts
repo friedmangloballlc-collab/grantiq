@@ -17,6 +17,7 @@ describe("applyHardFilters", () => {
     federal_certifications: [] as string[], match_funds_capacity: null as string | null,
     past_federal_funding_level: null as string | null,
     audited_financials: false,
+    audit_status: null as "has" | "could_obtain" | "cannot" | null,
     technology_readiness_level: null as number | null,
   };
 
@@ -138,14 +139,19 @@ describe("applyHardFilters", () => {
 
   // ── Audited financials filters ──────────────────────────────────────
 
-  it("filters when grant requires audit but org doesn't have one", () => {
+  it("filters when grant requires audit but org cannot obtain", () => {
     const grant = { ...baseCandidate, requires_audited_financials: true };
-    const org = { ...baseOrg, audited_financials: false };
+    const org = { ...baseOrg, audit_status: "cannot" as const };
     expect(applyHardFilters([grant], org)).toHaveLength(0);
   });
   it("passes when grant requires audit and org has one", () => {
     const grant = { ...baseCandidate, requires_audited_financials: true };
-    const org = { ...baseOrg, audited_financials: true };
+    const org = { ...baseOrg, audit_status: "has" as const };
+    expect(applyHardFilters([grant], org)).toHaveLength(1);
+  });
+  it("passes when grant requires audit and org could obtain", () => {
+    const grant = { ...baseCandidate, requires_audited_financials: true };
+    const org = { ...baseOrg, audit_status: "could_obtain" as const };
     expect(applyHardFilters([grant], org)).toHaveLength(1);
   });
 

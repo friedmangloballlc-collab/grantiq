@@ -77,6 +77,10 @@ export async function POST() {
         ? `Programs: ${profile.program_areas.join(", ")}`
         : "",
       profile.business_stage ? `Stage: ${profile.business_stage.replace(/_/g, " ")}` : "",
+      profile.technology_readiness_level ? `Technology readiness: TRL ${profile.technology_readiness_level}` : "",
+      profile.past_federal_funding_level && profile.past_federal_funding_level !== "none"
+        ? `Past federal funding: ${profile.past_federal_funding_level.replace(/_/g, " ")}`
+        : "",
     ].filter(Boolean).join(". ");
 
     if (embeddingParts.length > 10 && !org.mission_embedding) {
@@ -131,7 +135,8 @@ export async function POST() {
               : [],
             match_funds_capacity: profile.match_funds_capacity ?? null,
             past_federal_funding_level: profile.past_federal_funding_level ?? null,
-            audited_financials: capabilities.has_audit ?? false,
+            audited_financials: capabilities.audit_status === "has",
+            audit_status: (capabilities.audit_status as "has" | "could_obtain" | "cannot" | null) ?? null,
             technology_readiness_level: profile.technology_readiness_level ?? null,
           };
 
@@ -235,6 +240,9 @@ export async function POST() {
         match_funds_capacity: profile.match_funds_capacity ?? null,
         funding_amount_min: profile.funding_amount_min ?? null,
         funding_amount_max: profile.funding_amount_max ?? null,
+        past_federal_funding_level: profile.past_federal_funding_level ?? null,
+        audit_status: (capabilities.audit_status as "has" | "could_obtain" | "cannot" | null) ?? null,
+        technology_readiness_level: profile.technology_readiness_level ?? null,
       };
 
       const result = await assessReadiness(

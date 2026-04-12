@@ -159,8 +159,11 @@ describe("computeProfileBonus", () => {
       match_funds_capacity: "up_to_50",
       funding_amount_min: 100000,
       funding_amount_max: 500000,
+      past_federal_funding_level: "500k_1m",
+      audit_status: "has",
+      technology_readiness_level: 6,
     });
-    expect(bonus).toBe(60); // 20+15+10+10+5
+    expect(bonus).toBe(90); // 20+15+10+10+5+15+10+5
     expect(gaps).toHaveLength(0);
   });
 
@@ -172,10 +175,12 @@ describe("computeProfileBonus", () => {
       match_funds_capacity: null,
       funding_amount_min: null,
       funding_amount_max: null,
+      past_federal_funding_level: null,
+      audit_status: null,
+      technology_readiness_level: null,
     });
     expect(bonus).toBe(0);
-    expect(gaps).toHaveLength(5);
-    expect(gaps.reduce((sum, g) => sum + g.points, 0)).toBe(60);
+    expect(gaps).toHaveLength(7); // 5 original + federal + audit (not TRL)
   });
 
   it("gives +5 for up_to_10 match capacity", () => {

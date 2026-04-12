@@ -49,6 +49,9 @@ export interface OrgProfileFields {
   match_funds_capacity: string | null;
   funding_amount_min: number | null;
   funding_amount_max: number | null;
+  past_federal_funding_level: string | null;
+  audit_status: "has" | "could_obtain" | "cannot" | null;
+  technology_readiness_level: number | null;
 }
 
 export interface ReadinessOutput {
@@ -188,6 +191,31 @@ export function computeProfileBonus(
     bonus += 5;
   } else {
     gaps.push({ field: "funding_amount", action: "Specify your target funding range", points: 5 });
+  }
+
+  // Federal funding history: +15 if 100k+, +5 if under 100k
+  if (profile.past_federal_funding_level && ["100k_500k", "500k_1m", "over_1m"].includes(profile.past_federal_funding_level)) {
+    bonus += 15;
+  } else if (profile.past_federal_funding_level === "under_100k") {
+    bonus += 5;
+    gaps.push({ field: "past_federal_funding_level", action: "Build federal funding history through larger programs", points: 10 });
+  } else {
+    gaps.push({ field: "past_federal_funding_level", action: "Build federal funding history by starting with smaller programs like SBIR Phase I", points: 15 });
+  }
+
+  // Audit status: +10 if has, +3 if could obtain
+  if (profile.audit_status === "has") {
+    bonus += 10;
+  } else if (profile.audit_status === "could_obtain") {
+    bonus += 3;
+    gaps.push({ field: "audit_status", action: "Engage a CPA firm to complete an independent audit — unlocks grants over $500K", points: 7 });
+  } else {
+    gaps.push({ field: "audit_status", action: "Confirm whether you have audited financials (unlocks grants over $500K)", points: 10 });
+  }
+
+  // TRL: +5 if >= 4 (don't emit gap — only relevant for tech orgs, asked contextually)
+  if (profile.technology_readiness_level != null && profile.technology_readiness_level >= 4) {
+    bonus += 5;
   }
 
   return { bonus, gaps };
