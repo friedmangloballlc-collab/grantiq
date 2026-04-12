@@ -26,6 +26,9 @@ const FIELD_MAP: Record<
   annual_revenue:           { table: "organizations",    column: "annual_budget" },
   ownership:                { table: "org_profiles",     column: "ownership_demographics" },
   mission:                  { table: "organizations",    column: "mission_statement" },
+  project_description:      { table: "org_profiles",     column: "project_description" },
+  target_beneficiaries:     { table: "org_profiles",     column: "target_beneficiaries" }, // handled specially
+  impact_metrics:           { table: "org_profiles",     column: "impact_metrics" }, // handled specially
   documents:                { table: "org_profiles",     column: "documents_ready" },
   interested_nonprofit:     { table: "org_profiles",     column: "interested_in_nonprofit" },
 };
@@ -106,6 +109,26 @@ export async function POST(req: NextRequest) {
       await db
         .from("org_profiles")
         .update({ federal_certifications: JSON.stringify(certs) })
+        .eq("org_id", orgId);
+      return NextResponse.json({ success: true });
+    }
+
+    // Special case: target_beneficiaries — store as jsonb array
+    if (field === "target_beneficiaries") {
+      const items = Array.isArray(value) ? value : [value];
+      await db
+        .from("org_profiles")
+        .update({ target_beneficiaries: JSON.stringify(items) })
+        .eq("org_id", orgId);
+      return NextResponse.json({ success: true });
+    }
+
+    // Special case: impact_metrics — store as jsonb array
+    if (field === "impact_metrics") {
+      const items = Array.isArray(value) ? value : [value];
+      await db
+        .from("org_profiles")
+        .update({ impact_metrics: JSON.stringify(items) })
         .eq("org_id", orgId);
       return NextResponse.json({ success: true });
     }

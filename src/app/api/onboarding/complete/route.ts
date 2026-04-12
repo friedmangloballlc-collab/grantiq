@@ -61,6 +61,13 @@ export async function POST() {
 
     const embeddingParts = [
       missionText ? `Mission: ${missionText}` : "",
+      profile.project_description ? `Project: ${profile.project_description}` : "",
+      Array.isArray(profile.target_beneficiaries) && profile.target_beneficiaries.length > 0
+        ? `Serves: ${(profile.target_beneficiaries as string[]).map((b: string) => b.replace(/_/g, " ")).join(", ")}`
+        : "",
+      Array.isArray(profile.impact_metrics) && profile.impact_metrics.length > 0
+        ? `Impact: ${(profile.impact_metrics as string[]).map((m: string) => m.replace(/_/g, " ")).join(", ")}`
+        : "",
       profile.industry ? `Industry: ${profile.industry.replace(/_/g, " ")}` : "",
       profile.funding_use ? `Funding needs: ${profile.funding_use.replace(/_/g, " ")}` : "",
       org.entity_type ? `Organization type: ${org.entity_type.replace(/_/g, " ")}` : "",

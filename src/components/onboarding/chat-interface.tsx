@@ -279,6 +279,51 @@ const CORE_STEPS: Step[] = [
       "e.g. We provide affordable legal services to low-income families in South Florida...",
   },
   {
+    id: "project_description",
+    question: "What specific project would you use grant funding for?",
+    subtitle: "Describe what you'd do with the money — the more specific, the better your matches.",
+    type: "textarea" as StepType,
+    placeholder: "e.g. Launch a 12-month workforce training program for 200 unemployed adults in South Florida, including job placement services...",
+  },
+  {
+    id: "target_beneficiaries",
+    question: "Who does your work serve or benefit?",
+    subtitle: "Many grants are structured around who you help, not just who you are. Select all that apply.",
+    type: "multi_select",
+    options: [
+      { label: "Children & Youth", value: "children_youth" },
+      { label: "Veterans & Military Families", value: "veterans" },
+      { label: "Low-Income Communities", value: "low_income" },
+      { label: "Minority Communities", value: "minorities" },
+      { label: "Women & Girls", value: "women_girls" },
+      { label: "Rural Communities", value: "rural" },
+      { label: "Immigrants & Refugees", value: "immigrants" },
+      { label: "People with Disabilities", value: "disabilities" },
+      { label: "Seniors / Elderly", value: "seniors" },
+      { label: "Small Businesses", value: "small_businesses" },
+      { label: "Students / Educators", value: "students" },
+      { label: "General Public", value: "general_public" },
+    ],
+  },
+  {
+    id: "impact_metrics",
+    question: "What outcomes or impact can you measure?",
+    subtitle: "Grants increasingly require measurable results. Select what you can track.",
+    type: "multi_select",
+    options: [
+      { label: "Jobs created or retained", value: "jobs" },
+      { label: "People served / trained", value: "people_served" },
+      { label: "Revenue growth", value: "revenue" },
+      { label: "Businesses assisted", value: "businesses_assisted" },
+      { label: "Environmental impact (emissions, waste, etc.)", value: "environmental" },
+      { label: "Technology developed / commercialized", value: "technology" },
+      { label: "Educational outcomes (graduation, test scores)", value: "education" },
+      { label: "Health outcomes", value: "health" },
+      { label: "Housing units built / preserved", value: "housing" },
+      { label: "None yet — still early stage", value: "none" },
+    ],
+  },
+  {
     id: "location",
     question: "Where is your business located?",
     subtitle: "Enter your city and state",
@@ -479,6 +524,12 @@ function answerToProfileUpdate(
       return { ownership: (value as string[]).join(", ") };
     case "mission":
       return { mission: value as string };
+    case "project_description":
+      return { project_description: value as string };
+    case "target_beneficiaries":
+      return { target_beneficiaries: Array.isArray(value) ? value.join(", ") : value as string };
+    case "impact_metrics":
+      return { impact_metrics: Array.isArray(value) ? value.join(", ") : value as string };
     case "documents":
       return { documents: (value as string[]).join(", ") };
     case "document_upload":

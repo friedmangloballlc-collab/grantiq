@@ -23,6 +23,9 @@ export interface ProfileData {
   annual_revenue?: string;
   ownership?: string;
   mission?: string;
+  project_description?: string;
+  target_beneficiaries?: string;
+  impact_metrics?: string;
   documents?: string;
   interested_nonprofit?: string;
   // Legacy fields kept for backward compatibility
@@ -50,7 +53,7 @@ export function ProfileCard({
   data: ProfileData;
   completedFields: number;
 }) {
-  const totalFields = 11;
+  const totalFields = 14;
   const progress = Math.round((completedFields / totalFields) * 100);
 
   const fields = [
@@ -64,6 +67,9 @@ export function ProfileCard({
     { label: "Match Funds", value: data.match_funds_capacity },
     { label: "Business Stage", value: data.business_stage ?? data.businessStage },
     { label: "Mission", value: data.mission ? (data.mission.length > 40 ? data.mission.slice(0, 40) + "..." : data.mission) : undefined },
+    { label: "Project", value: data.project_description ? (data.project_description.length > 40 ? data.project_description.slice(0, 40) + "..." : data.project_description) : undefined },
+    { label: "Beneficiaries", value: data.target_beneficiaries },
+    { label: "Impact Metrics", value: data.impact_metrics },
     { label: "Location", value: data.location ?? (data.city && data.state ? `${data.city}, ${data.state}` : data.state) },
   ];
 
