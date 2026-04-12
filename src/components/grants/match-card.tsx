@@ -135,7 +135,7 @@ export function MatchCard(props: MatchCardProps) {
                 href={`/grants/${props.id}`}
                 className="hover:underline flex-1 min-w-0"
               >
-                <h3 className="font-semibold text-warm-900 dark:text-warm-50 truncate">
+                <h3 className="font-semibold text-warm-900 dark:text-warm-50 line-clamp-2">
                   {props.grantName}
                 </h3>
               </Link>

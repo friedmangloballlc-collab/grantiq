@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const ENTITY_TYPES = [
-  "501(c)(3) Nonprofit",
-  "501(c)(4) Social Welfare",
-  "501(c)(6) Business Association",
-  "Government Agency",
-  "Tribal Organization",
-  "For-Profit (Social Enterprise)",
-  "Fiscal Sponsor Project",
-  "Other",
+  { value: "nonprofit_501c3", label: "501(c)(3) Nonprofit" },
+  { value: "nonprofit_other", label: "Other Nonprofit" },
+  { value: "llc", label: "LLC" },
+  { value: "corporation", label: "Corporation (S-Corp / C-Corp)" },
+  { value: "sole_prop", label: "Sole Proprietorship" },
+  { value: "partnership", label: "Partnership" },
+  { value: "municipality", label: "Government / Municipality" },
+  { value: "other", label: "Other" },
 ];
 
 const US_STATES = [
@@ -130,7 +130,7 @@ export function OrgSettingsForm({ org }: OrgSettingsFormProps) {
             >
               <option value="">Select entity type…</option>
               {ENTITY_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
           </div>
