@@ -55,14 +55,29 @@ export async function POST() {
     const profile = org.org_profiles?.[0] ?? org.org_profiles ?? {};
     const missionText = org.mission_statement ?? "";
 
-    // ── Step 1: Generate mission embedding ───────────────────────────────
+    // ── Step 1: Generate compound profile embedding ─────────────────────
+    // Combine multiple profile fields for richer semantic matching
     let embeddingGenerated = false;
-    if (missionText && !org.mission_embedding) {
+
+    const embeddingParts = [
+      missionText ? `Mission: ${missionText}` : "",
+      profile.industry ? `Industry: ${profile.industry.replace(/_/g, " ")}` : "",
+      profile.funding_use ? `Funding needs: ${profile.funding_use.replace(/_/g, " ")}` : "",
+      org.entity_type ? `Organization type: ${org.entity_type.replace(/_/g, " ")}` : "",
+      org.state ? `Located in ${org.city ? org.city + ", " : ""}${org.state}` : "",
+      profile.naics_primary ? `NAICS code: ${profile.naics_primary}` : "",
+      Array.isArray(profile.program_areas) && profile.program_areas.length > 0
+        ? `Programs: ${profile.program_areas.join(", ")}`
+        : "",
+      profile.business_stage ? `Stage: ${profile.business_stage.replace(/_/g, " ")}` : "",
+    ].filter(Boolean).join(". ");
+
+    if (embeddingParts.length > 10 && !org.mission_embedding) {
       try {
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
         const embeddingResponse = await openai.embeddings.create({
           model: "text-embedding-3-small",
-          input: missionText,
+          input: embeddingParts,
         });
         const embedding = embeddingResponse.data[0]?.embedding ?? null;
 
@@ -284,6 +299,7 @@ export async function POST() {
         orgId,
         hasMission: !!missionText,
         missionLength: missionText?.length ?? 0,
+        embeddingInputLength: embeddingParts.length,
         hasEmbedding: !!org.mission_embedding,
         embeddingGenerated,
         hasOpenAIKey: !!process.env.OPENAI_API_KEY,
