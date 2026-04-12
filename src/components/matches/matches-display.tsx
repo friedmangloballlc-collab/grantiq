@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { MatchCard } from "@/components/grants/match-card";
 import { MatchFilters, type MatchItem } from "@/components/matches/match-filters";
 import { ShareMatchCard } from "@/components/shared/share-match-card";
+import { computeMatchCriteria } from "@/lib/matching/match-criteria";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -15,12 +17,27 @@ interface UploadedDocument {
   uploadedAt: string;
 }
 
+interface OrgContext {
+  entity_type?: string | null;
+  state?: string | null;
+  city?: string | null;
+  naics_primary?: string | null;
+  sam_registration_status?: string | null;
+  federal_certifications?: string[] | null;
+  match_funds_capacity?: string | null;
+  funding_amount_min?: number | null;
+  funding_amount_max?: number | null;
+  industry?: string | null;
+  annual_budget?: number | null;
+}
+
 interface MatchesDisplayProps {
   matches: MatchItem[];
   tier: string;
   orgName: string;
   referralCode: string;
   uploadedDocs: UploadedDocument[];
+  orgContext: OrgContext;
 }
 
 const FREE_MATCH_LIMIT = 5;
@@ -31,6 +48,7 @@ export function MatchesDisplay({
   orgName,
   referralCode,
   uploadedDocs,
+  orgContext,
 }: MatchesDisplayProps) {
   const isFree = tier === "free";
   const visibleMatches = isFree ? matches.slice(0, FREE_MATCH_LIMIT) : matches;
@@ -67,21 +85,26 @@ export function MatchesDisplay({
       <MatchFilters matches={visibleMatches}>
         {(filtered) => (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((match) => (
-              <MatchCard
-                key={match.id}
-                id={match.grant_source_id}
-                grantName={match.grant_sources?.name ?? "Unknown Grant"}
-                funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
-                sourceType={match.grant_sources?.source_type ?? "federal"}
-                amountMax={match.grant_sources?.amount_max ?? null}
-                deadline={match.grant_sources?.deadline ?? null}
-                matchScore={Math.round(match.match_score)}
-                scoreBreakdown={match.score_breakdown ?? {}}
-                missingRequirements={match.missing_requirements ?? []}
-                uploadedDocs={uploadedDocs}
-              />
-            ))}
+            {filtered.map((match) => {
+              const gs = match.grant_sources as Record<string, unknown> | null;
+              const criteria = gs ? computeMatchCriteria(gs as Parameters<typeof computeMatchCriteria>[0], orgContext) : [];
+              return (
+                <MatchCard
+                  key={match.id}
+                  id={match.grant_source_id}
+                  grantName={match.grant_sources?.name ?? "Unknown Grant"}
+                  funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
+                  sourceType={match.grant_sources?.source_type ?? "federal"}
+                  amountMax={match.grant_sources?.amount_max ?? null}
+                  deadline={match.grant_sources?.deadline ?? null}
+                  matchScore={Math.round(match.match_score)}
+                  scoreBreakdown={match.score_breakdown ?? {}}
+                  missingRequirements={match.missing_requirements ?? []}
+                  matchCriteria={criteria}
+                  uploadedDocs={uploadedDocs}
+                />
+              );
+            })}
           </div>
         )}
       </MatchFilters>
@@ -101,6 +124,7 @@ export function MatchesDisplay({
                 matchScore={Math.round(match.match_score)}
                 scoreBreakdown={match.score_breakdown ?? {}}
                 missingRequirements={match.missing_requirements ?? []}
+                matchCriteria={[]}
                 uploadedDocs={uploadedDocs}
               />
             ))}

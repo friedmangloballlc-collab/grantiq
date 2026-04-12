@@ -1,41 +1,39 @@
-import { Check, AlertTriangle, Minus } from "lucide-react";
-import { cn } from "@/lib/utils";
+"use client";
 
-const CRITERIA_LABELS: Record<string, string> = {
-  mission_alignment: "Mission Alignment",
-  capacity_fit: "Capacity Fit",
-  geographic_match: "Geographic Match",
-  budget_fit: "Budget Fit",
-  competitive_advantage: "Competitive Advantage",
-  funder_history_fit: "Funder History",
+import { Check, AlertTriangle, Minus, Info } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { MatchCriterion } from "@/lib/matching/match-criteria";
+
+const STATUS_CONFIG = {
+  match: { Icon: Check, color: "text-green-600 dark:text-green-400", bg: "" },
+  partial: { Icon: AlertTriangle, color: "text-amber-500 dark:text-amber-400", bg: "" },
+  gap: { Icon: Minus, color: "text-red-500 dark:text-red-400", bg: "" },
+  info: { Icon: Info, color: "text-warm-400 dark:text-warm-500", bg: "" },
 };
 
 export function WhyMatches({
-  scoreBreakdown,
+  criteria,
   missingRequirements,
 }: {
-  scoreBreakdown: Record<string, number>;
+  criteria: MatchCriterion[];
   missingRequirements: string[];
 }) {
+  if (criteria.length === 0 && missingRequirements.length === 0) {
+    return (
+      <div className="mt-3 text-xs text-warm-400 border-t border-warm-200 dark:border-warm-800 pt-3">
+        Match based on profile similarity. Run a detailed match for specific criteria.
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-3 space-y-2 text-sm border-t border-warm-200 dark:border-warm-800 pt-3">
-      {Object.entries(scoreBreakdown).map(([key, score]) => {
-        // Scores are 1-10 integers from the match engine
-        const status = score >= 7 ? "green" : score >= 5 ? "yellow" : "gray";
-        const Icon =
-          status === "green" ? Check : status === "yellow" ? AlertTriangle : Minus;
-        const color =
-          status === "green"
-            ? "text-green-600"
-            : status === "yellow"
-              ? "text-amber-500"
-              : "text-warm-400";
+    <div className="mt-3 space-y-1.5 text-sm border-t border-warm-200 dark:border-warm-800 pt-3">
+      {criteria.map((c, i) => {
+        const { Icon, color } = STATUS_CONFIG[c.status];
         return (
-          <div key={key} className="flex items-center gap-2">
-            <Icon className={cn("h-4 w-4 shrink-0", color)} />
-            <span className="text-warm-600 dark:text-warm-400">
-              {CRITERIA_LABELS[key] || key}: {score}/10
-            </span>
+          <div key={i} className="flex items-start gap-2">
+            <Icon className={cn("h-3.5 w-3.5 shrink-0 mt-0.5", color)} />
+            <span className="text-xs text-warm-600 dark:text-warm-400">{c.label}</span>
           </div>
         );
       })}

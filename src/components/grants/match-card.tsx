@@ -14,6 +14,8 @@ import { AIDisclosure } from "@/components/shared/ai-disclosure";
 import { GrantReadinessBadge } from "@/components/vault/grant-readiness-badge";
 import type { UploadedDocument } from "@/components/vault/document-checklist";
 
+import type { MatchCriterion } from "@/lib/matching/match-criteria";
+
 interface MatchCardProps {
   id: string;
   grantName: string;
@@ -24,6 +26,7 @@ interface MatchCardProps {
   matchScore: number;
   scoreBreakdown: Record<string, number>;
   missingRequirements: string[];
+  matchCriteria?: MatchCriterion[];
   uploadedDocs?: UploadedDocument[];
 }
 
@@ -184,7 +187,7 @@ export function MatchCard(props: MatchCardProps) {
 
         {expanded && (
           <WhyMatches
-            scoreBreakdown={props.scoreBreakdown}
+            criteria={props.matchCriteria ?? []}
             missingRequirements={props.missingRequirements}
           />
         )}

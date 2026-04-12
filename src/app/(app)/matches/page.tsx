@@ -57,11 +57,11 @@ export default async function MatchesPage() {
     .single();
   const tier = (sub?.tier ?? "free") as string;
 
-  const [{ data: matches }, { data: vaultRows }, { data: orgRow }, { data: referralRows }] = await Promise.all([
+  const [{ data: matches }, { data: vaultRows }, { data: orgRow }, { data: referralRows }, { data: orgProfile }] = await Promise.all([
     db
       .from("grant_matches")
       .select(
-        "id, grant_source_id, match_score, score_breakdown, missing_requirements, grant_sources(name, funder_name, source_type, amount_max, deadline)"
+        "id, grant_source_id, match_score, score_breakdown, missing_requirements, grant_sources(name, funder_name, source_type, amount_max, amount_min, deadline, states, eligibility_types, eligible_naics, requires_sam, required_certification, match_required_pct, cost_sharing_required, category)"
       )
       .eq("org_id", orgId)
       .order("match_score", { ascending: false })
@@ -74,7 +74,7 @@ export default async function MatchesPage() {
       .limit(20),
     db
       .from("organizations")
-      .select("name")
+      .select("name, entity_type, state, city, annual_budget")
       .eq("id", orgId)
       .single(),
     db
@@ -82,6 +82,11 @@ export default async function MatchesPage() {
       .select("code")
       .eq("referrer_org_id", orgId)
       .limit(1),
+    db
+      .from("org_profiles")
+      .select("industry, naics_primary, funding_amount_min, funding_amount_max, sam_registration_status, federal_certifications, match_funds_capacity")
+      .eq("org_id", orgId)
+      .single(),
   ]);
 
   if (!matches?.length) {
@@ -101,6 +106,7 @@ export default async function MatchesPage() {
   }
 
   const orgName = (orgRow as { name?: string } | null)?.name ?? "Your Organization";
+  // orgRow and orgProfile already destructured below in orgContext
   const referralCode = (referralRows?.[0] as { code?: string } | undefined)?.code ?? "";
 
   // Deduplicate vault docs by type
@@ -127,6 +133,23 @@ export default async function MatchesPage() {
     }
   }
 
+  const org = orgRow as { name?: string; entity_type?: string; state?: string; city?: string; annual_budget?: number } | null;
+  const profile = orgProfile as { industry?: string; naics_primary?: string; funding_amount_min?: number; funding_amount_max?: number; sam_registration_status?: string; federal_certifications?: string[]; match_funds_capacity?: string } | null;
+
+  const orgContext = {
+    entity_type: org?.entity_type ?? null,
+    state: org?.state ?? null,
+    city: org?.city ?? null,
+    annual_budget: org?.annual_budget ?? null,
+    industry: profile?.industry ?? null,
+    naics_primary: profile?.naics_primary ?? null,
+    funding_amount_min: profile?.funding_amount_min ?? null,
+    funding_amount_max: profile?.funding_amount_max ?? null,
+    sam_registration_status: profile?.sam_registration_status ?? null,
+    federal_certifications: profile?.federal_certifications ?? null,
+    match_funds_capacity: profile?.match_funds_capacity ?? null,
+  };
+
   return (
     <MatchesDisplay
       matches={matches as unknown as MatchItem[]}
@@ -134,6 +157,7 @@ export default async function MatchesPage() {
       orgName={orgName}
       referralCode={referralCode}
       uploadedDocs={uploadedDocs}
+      orgContext={orgContext}
     />
   );
 }
