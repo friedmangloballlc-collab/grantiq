@@ -20,11 +20,19 @@ export interface SamGovOpportunity {
   agency_name: string;
   close_date: string | null;
   posted_date: string;
+  archive_date: string | null;
   amount_max: number | null;
   description: string;
   naics_code: string | null;
   status: string;
   url: string;
+  solicitation_number: string | null;
+  classification_code: string | null;
+  point_of_contact: { name?: string; email?: string; phone?: string; type?: string }[] | null;
+  set_aside_code: string | null;
+  place_of_performance: Record<string, unknown> | null;
+  additional_info_url: string | null;
+  raw_json: string;
 }
 
 export interface SamGovSearchResult {
@@ -44,6 +52,25 @@ interface RawSamOpportunity {
   description?: string;
   naicsCode?: string | null;
   active?: string;
+  solicitationNumber?: string | null;
+  classificationCode?: string | null;
+  pointOfContact?: Array<{
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    type?: string;
+  }> | null;
+  setAsideCode?: string | null;
+  organizationType?: string | null;
+  placeOfPerformance?: {
+    streetAddress?: string;
+    city?: { name?: string; code?: string };
+    state?: { name?: string; code?: string };
+    country?: { name?: string; code?: string };
+    zip?: string;
+  } | null;
+  additionalInfoLink?: string | null;
+  resourceLinks?: string[] | null;
 }
 
 interface RawSearchResponse {
@@ -52,19 +79,16 @@ interface RawSearchResponse {
 }
 
 function mapOpportunity(raw: RawSamOpportunity): SamGovOpportunity {
-  // close_date: split on "T" to get date portion only
   const closeDate = raw.responseDeadLine
     ? raw.responseDeadLine.split("T")[0]
     : null;
 
-  // amount_max: parse from award.amount
   let amountMax: number | null = null;
   if (raw.award?.amount != null) {
     const parsed = Number(raw.award.amount);
     amountMax = isNaN(parsed) ? null : parsed;
   }
 
-  // status: derive from active flag and archiveDate
   let status: string;
   if (raw.active === "Yes") {
     status = "active";
@@ -74,17 +98,34 @@ function mapOpportunity(raw: RawSamOpportunity): SamGovOpportunity {
     status = "inactive";
   }
 
+  const contacts = raw.pointOfContact
+    ? raw.pointOfContact.map((c) => ({
+        name: c.fullName ?? undefined,
+        email: c.email ?? undefined,
+        phone: c.phone ?? undefined,
+        type: c.type ?? undefined,
+      }))
+    : null;
+
   return {
     id: raw.noticeId,
     title: raw.title,
     agency_name: raw.fullParentPathName ?? "",
     close_date: closeDate,
     posted_date: raw.postedDate ?? "",
+    archive_date: raw.archiveDate ?? null,
     amount_max: amountMax,
     description: raw.description ?? "",
     naics_code: raw.naicsCode ?? null,
     status,
     url: `https://sam.gov/opp/${raw.noticeId}/view`,
+    solicitation_number: raw.solicitationNumber ?? null,
+    classification_code: raw.classificationCode ?? null,
+    point_of_contact: contacts,
+    set_aside_code: raw.setAsideCode ?? null,
+    place_of_performance: raw.placeOfPerformance ? { ...raw.placeOfPerformance } : null,
+    additional_info_url: raw.additionalInfoLink ?? null,
+    raw_json: JSON.stringify(raw),
   };
 }
 
