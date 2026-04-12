@@ -130,7 +130,7 @@ export function MatchesDisplay({
             ))}
           </div>
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-warm-900/80 rounded-xl">
-            <div className="text-center p-8 space-y-3">
+            <div className="text-center p-4 sm:p-8 space-y-3">
               <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
                 {lockedMatches.length} more matches available
               </p>
