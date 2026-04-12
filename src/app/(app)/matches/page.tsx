@@ -57,7 +57,7 @@ export default async function MatchesPage() {
     .single();
   const tier = (sub?.tier ?? "free") as string;
 
-  const [{ data: matches }, { data: vaultRows }, { data: orgRow }, { data: referralRows }, { data: orgProfile }] = await Promise.all([
+  const [{ data: matches }, { data: vaultRows }, { data: orgRow }, { data: referralRows }, { data: orgProfile }, { data: dismissedRows }] = await Promise.all([
     db
       .from("grant_matches")
       .select(
@@ -84,12 +84,25 @@ export default async function MatchesPage() {
       .limit(1),
     db
       .from("org_profiles")
-      .select("industry, naics_primary, funding_amount_min, funding_amount_max, sam_registration_status, federal_certifications, match_funds_capacity")
+      .select("industry, naics_primary, funding_amount_min, funding_amount_max, sam_registration_status, federal_certifications, match_funds_capacity, target_beneficiaries")
       .eq("org_id", orgId)
       .single(),
+    db
+      .from("match_feedback")
+      .select("grant_source_id")
+      .eq("org_id", orgId)
+      .eq("user_action", "dismissed"),
   ]);
 
-  if (!matches?.length) {
+  // Filter out dismissed grants
+  const dismissedIds = new Set(
+    (dismissedRows ?? []).map((d: { grant_source_id: string }) => d.grant_source_id)
+  );
+  const filteredMatches = (matches ?? []).filter(
+    (m: { grant_source_id: string }) => !dismissedIds.has(m.grant_source_id)
+  );
+
+  if (!filteredMatches?.length) {
     return (
       <div className="max-w-6xl px-4 md:px-6 py-6">
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
@@ -152,7 +165,7 @@ export default async function MatchesPage() {
 
   return (
     <MatchesDisplay
-      matches={matches as unknown as MatchItem[]}
+      matches={filteredMatches as unknown as MatchItem[]}
       tier={tier}
       orgName={orgName}
       referralCode={referralCode}

@@ -161,18 +161,27 @@ export async function POST() {
               sam_registration_status: profile.sam_registration_status ?? null,
               funding_amount_min: profile.funding_amount_min ?? null,
               funding_amount_max: profile.funding_amount_max ?? null,
+              naics_primary: profile.naics_primary ?? null,
+              federal_certifications: Array.isArray(profile.federal_certifications)
+                ? profile.federal_certifications as string[] : [],
+              target_beneficiaries: Array.isArray(profile.target_beneficiaries)
+                ? profile.target_beneficiaries as string[] : [],
             };
 
             const scored = filteredCandidates.map((c) => {
+              const cAny = c as Record<string, unknown>;
               const grantFields = {
                 similarity: c.similarity,
                 eligibility_types: c.eligibility_types ?? [],
                 states: c.states ?? [],
                 source_type: c.source_type,
-                category: (c as Record<string, unknown>).category as string | null ?? null,
-                requires_sam: (c as Record<string, unknown>).requires_sam as boolean | null ?? null,
+                category: cAny.category as string | null ?? null,
+                requires_sam: cAny.requires_sam as boolean | null ?? null,
                 amount_min: c.amount_min,
                 amount_max: c.amount_max,
+                eligible_naics: cAny.eligible_naics as string[] | null ?? null,
+                required_certification: cAny.required_certification as string | null ?? null,
+                target_beneficiaries: cAny.target_beneficiaries as string[] | null ?? null,
               };
               const score = computeWeightedScore(grantFields, orgScoreContext);
               return { candidate: c, score };
@@ -190,6 +199,7 @@ export async function POST() {
                 similarity: score.similarity_score,
                 eligibility: score.eligibility_score,
                 location: score.location_score,
+                fit: score.fit_score,
               },
               match_reasons: { why_it_matches: ["Weighted match: similarity + eligibility + location"] },
               missing_requirements: [] as string[],

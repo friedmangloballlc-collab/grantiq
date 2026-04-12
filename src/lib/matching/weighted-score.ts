@@ -19,6 +19,9 @@ interface GrantFields {
   requires_sam?: boolean | null;
   amount_min?: number | null;
   amount_max?: number | null;
+  eligible_naics?: string[] | null;
+  required_certification?: string | null;
+  target_beneficiaries?: string[] | null;
 }
 
 interface OrgFields {
@@ -28,6 +31,9 @@ interface OrgFields {
   sam_registration_status: string | null;
   funding_amount_min: number | null;
   funding_amount_max: number | null;
+  naics_primary: string | null;
+  federal_certifications: string[];
+  target_beneficiaries: string[];
 }
 
 export interface WeightedScoreResult {
@@ -35,6 +41,7 @@ export interface WeightedScoreResult {
   similarity_score: number;
   eligibility_score: number;
   location_score: number;
+  fit_score: number;
 }
 
 // Map org industries to related grant sectors
@@ -152,11 +159,48 @@ export function computeWeightedScore(grant: GrantFields, org: OrgFields): Weight
     }
   }
 
+  // ── Fit score (0-100) — NAICS, certifications, beneficiaries ────────
+  let fit_score = 50; // Default: neutral
+  let fitSignals = 0;
+
+  // NAICS match: if grant specifies eligible NAICS and org has one
+  if (grant.eligible_naics?.length && org.naics_primary) {
+    fitSignals++;
+    if (grant.eligible_naics.includes(org.naics_primary)) {
+      fit_score += 30; // Strong signal — exact industry match
+    } else {
+      fit_score -= 20; // Wrong industry
+    }
+  }
+
+  // Certification match: if grant requires a cert org has
+  if (grant.required_certification && org.federal_certifications.length > 0) {
+    fitSignals++;
+    if (org.federal_certifications.includes(grant.required_certification)) {
+      fit_score += 25; // Set-aside match — very high value
+    }
+  }
+
+  // Beneficiary match: if grant targets populations the org serves
+  if (grant.target_beneficiaries?.length && org.target_beneficiaries.length > 0) {
+    fitSignals++;
+    const overlap = grant.target_beneficiaries.filter((b: string) =>
+      org.target_beneficiaries.includes(b)
+    ).length;
+    if (overlap > 0) {
+      fit_score += Math.min(25, overlap * 10); // Each matching population = +10, cap at 25
+    }
+  }
+
+  fit_score = Math.min(100, Math.max(0, fit_score));
+
   // ── Weighted total ───────────────────────────────────────────────────
+  // Rebalanced: 55% similarity + 15% eligibility + 15% location + 15% fit
   const total = Math.round(
-    similarity_score * 0.70 +
+    similarity_score * 0.55 +
     eligibility_score * 0.15 +
-    location_score * 0.15
+    location_score * 0.15 +
+    fit_score * 0.15
   );
 
   return {
@@ -164,5 +208,6 @@ export function computeWeightedScore(grant: GrantFields, org: OrgFields): Weight
     similarity_score,
     eligibility_score,
     location_score,
+    fit_score,
   };
 }
