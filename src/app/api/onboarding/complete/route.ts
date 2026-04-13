@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { vectorRecall } from "@/lib/matching/vector-recall";
 import { applyHardFilters, type HardFilterInput } from "@/lib/matching/hard-filter";
 import { computeWeightedScore } from "@/lib/matching/weighted-score";
+import { lookupNaicsFromIndustry } from "@/lib/matching/naics-lookup";
 import { assessReadiness } from "@/lib/ai/engines/readiness";
 import { computeProfileHash } from "@/lib/ai/cache";
 import type { OrgProfileFields } from "@/lib/ai/schemas/readiness";
@@ -174,7 +175,7 @@ export async function POST() {
             has_sam_registration: capabilities.has_sam_registration ?? false,
             has_audit: capabilities.has_audit ?? false,
             years_operating: capabilities.years_operating ?? 0,
-            naics_primary: profile.naics_primary ?? null,
+            naics_primary: profile.naics_primary ?? lookupNaicsFromIndustry(profile.industry ?? "") ?? null,
             funding_amount_min: profile.funding_amount_min ?? null,
             funding_amount_max: profile.funding_amount_max ?? null,
             sam_registration_status: profile.sam_registration_status ?? null,
@@ -214,6 +215,10 @@ export async function POST() {
                 ? profile.federal_certifications as string[] : [],
               target_beneficiaries: Array.isArray(profile.target_beneficiaries)
                 ? profile.target_beneficiaries as string[] : [],
+              geographic_areas_served: Array.isArray(profile.geographic_areas_served)
+                ? profile.geographic_areas_served as string[] : [],
+              ownership_demographics: profile.ownership_demographics
+                ? String(profile.ownership_demographics).split(", ").filter(Boolean) : [],
             };
 
             const scored = filteredCandidates.map((c) => {

@@ -35,6 +35,8 @@ interface OrgFields {
   naics_primary: string | null;
   federal_certifications: string[];
   target_beneficiaries: string[];
+  geographic_areas_served: string[];
+  ownership_demographics: string[];
 }
 
 export interface WeightedScoreResult {
@@ -148,6 +150,23 @@ export function computeWeightedScore(grant: GrantFields, org: OrgFields): Weight
     }
   }
 
+  // Ownership demographics bonus: woman-owned + WOSB set-aside = boost
+  if (org.ownership_demographics.length > 0 && grant.eligibility_types.length > 0) {
+    const OWNERSHIP_TO_CERT: Record<string, string> = {
+      woman_owned: "wosb",
+      veteran_owned: "vosb",
+      minority_owned: "mbe",
+      disability_owned: "sdvosb",
+    };
+    for (const demo of org.ownership_demographics) {
+      const certMatch = OWNERSHIP_TO_CERT[demo];
+      if (certMatch && grant.eligibility_types.includes(certMatch)) {
+        eligibility_score = Math.min(100, eligibility_score + 15);
+        break; // Only one bonus
+      }
+    }
+  }
+
   // ── Location score (0-100) ───────────────────────────────────────────
   let location_score = 70; // Default: neutral (national grants get decent score)
 
@@ -156,6 +175,18 @@ export function computeWeightedScore(grant: GrantFields, org: OrgFields): Weight
       location_score = 70; // National = good but not as targeted
     } else if (org.state && grant.states.includes(org.state)) {
       location_score = 100; // Direct state match = best
+    } else if (org.geographic_areas_served.length > 0) {
+      // Check if any served area matches grant states
+      const servedStates = org.geographic_areas_served
+        .map((a) => a.toUpperCase().trim())
+        .filter((a) => /^[A-Z]{2}$/.test(a));
+      const grantStatesUpper = grant.states.map((s) => s.toUpperCase());
+      const overlap = servedStates.some((s) => grantStatesUpper.includes(s));
+      if (overlap) {
+        location_score = 90; // Serves that area even if HQ is elsewhere
+      } else {
+        location_score = 10;
+      }
     } else if (org.state) {
       location_score = 10; // Wrong state = very low
     }
