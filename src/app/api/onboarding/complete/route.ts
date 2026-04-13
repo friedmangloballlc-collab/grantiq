@@ -230,6 +230,7 @@ export async function POST() {
                 eligible_naics: cAny.eligible_naics as string[] | null ?? null,
                 required_certification: cAny.required_certification as string | null ?? null,
                 target_beneficiaries: cAny.target_beneficiaries as string[] | null ?? null,
+                deadline: c.deadline,
               };
               const score = computeWeightedScore(grantFields, orgScoreContext);
               return { candidate: c, score };
@@ -248,6 +249,7 @@ export async function POST() {
                 eligibility: score.eligibility_score,
                 location: score.location_score,
                 fit: score.fit_score,
+                timing: score.timing_score,
               },
               match_reasons: { why_it_matches: ["Weighted match: similarity + eligibility + location"] },
               missing_requirements: [] as string[],

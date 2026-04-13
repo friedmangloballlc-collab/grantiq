@@ -22,6 +22,7 @@ interface GrantFields {
   eligible_naics?: string[] | null;
   required_certification?: string | null;
   target_beneficiaries?: string[] | null;
+  deadline?: string | null;
 }
 
 interface OrgFields {
@@ -42,6 +43,7 @@ export interface WeightedScoreResult {
   eligibility_score: number;
   location_score: number;
   fit_score: number;
+  timing_score: number;
 }
 
 // Map org industries to related grant sectors
@@ -194,13 +196,40 @@ export function computeWeightedScore(grant: GrantFields, org: OrgFields): Weight
 
   fit_score = Math.min(100, Math.max(0, fit_score));
 
+  // ── Timing score (0-100) — urgency bonus for closing-soon grants ────
+  let timing_score = 50; // Default: neutral (no deadline or far out)
+
+  if (grant.deadline) {
+    const now = new Date();
+    const deadline = new Date(grant.deadline);
+    const daysUntil = Math.max(0, (deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysUntil <= 0) {
+      timing_score = 0; // Expired — should be filtered, but just in case
+    } else if (daysUntil <= 14) {
+      timing_score = 100; // Closing in 2 weeks — highest urgency
+    } else if (daysUntil <= 30) {
+      timing_score = 90; // Closing in 1 month — high urgency
+    } else if (daysUntil <= 60) {
+      timing_score = 75; // Closing in 2 months — moderate urgency
+    } else if (daysUntil <= 90) {
+      timing_score = 60; // Closing in 3 months — plan ahead
+    } else if (daysUntil <= 180) {
+      timing_score = 45; // 3-6 months — low urgency
+    } else {
+      timing_score = 30; // 6+ months — distant
+    }
+  }
+  // Rolling deadlines (null) get 50 — neutral, always available
+
   // ── Weighted total ───────────────────────────────────────────────────
-  // Rebalanced: 55% similarity + 15% eligibility + 15% location + 15% fit
+  // Balanced: 50% similarity + 15% eligibility + 12% location + 13% fit + 10% timing
   const total = Math.round(
-    similarity_score * 0.55 +
+    similarity_score * 0.50 +
     eligibility_score * 0.15 +
-    location_score * 0.15 +
-    fit_score * 0.15
+    location_score * 0.12 +
+    fit_score * 0.13 +
+    timing_score * 0.10
   );
 
   return {
@@ -209,5 +238,6 @@ export function computeWeightedScore(grant: GrantFields, org: OrgFields): Weight
     eligibility_score,
     location_score,
     fit_score,
+    timing_score,
   };
 }
