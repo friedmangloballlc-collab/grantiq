@@ -23,6 +23,7 @@ interface GrantFields {
   required_certification?: string | null;
   target_beneficiaries?: string[] | null;
   deadline?: string | null;
+  project_keywords?: string[] | null;
 }
 
 interface OrgFields {
@@ -37,6 +38,7 @@ interface OrgFields {
   target_beneficiaries: string[];
   geographic_areas_served: string[];
   ownership_demographics: string[];
+  project_description: string | null;
 }
 
 export interface WeightedScoreResult {
@@ -222,6 +224,18 @@ export function computeWeightedScore(grant: GrantFields, org: OrgFields): Weight
     ).length;
     if (overlap > 0) {
       fit_score += Math.min(25, overlap * 10); // Each matching population = +10, cap at 25
+    }
+  }
+
+  // Project keyword match: grant keywords vs org project description
+  if (grant.project_keywords?.length && org.project_description) {
+    fitSignals++;
+    const desc = org.project_description.toLowerCase();
+    const hits = grant.project_keywords.filter((k: string) =>
+      desc.includes(k.toLowerCase())
+    ).length;
+    if (hits > 0) {
+      fit_score += Math.min(20, hits * 8); // Each keyword match = +8, cap at 20
     }
   }
 

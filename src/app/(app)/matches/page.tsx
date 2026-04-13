@@ -168,6 +168,7 @@ export default async function MatchesPage() {
     <MatchesDisplay
       matches={filteredMatches as unknown as MatchItem[]}
       tier={tier}
+      orgId={orgId}
       orgName={orgName}
       referralCode={referralCode}
       uploadedDocs={uploadedDocs}

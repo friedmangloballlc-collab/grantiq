@@ -5,6 +5,7 @@ import { MatchCard } from "@/components/grants/match-card";
 import { MatchFilters, type MatchItem } from "@/components/matches/match-filters";
 import { ShareMatchCard } from "@/components/shared/share-match-card";
 import { computeMatchCriteria } from "@/lib/matching/match-criteria";
+import { RefreshMatchesButton } from "@/components/matches/refresh-matches-button";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -34,6 +35,7 @@ interface OrgContext {
 interface MatchesDisplayProps {
   matches: MatchItem[];
   tier: string;
+  orgId: string;
   orgName: string;
   referralCode: string;
   uploadedDocs: UploadedDocument[];
@@ -45,6 +47,7 @@ const FREE_MATCH_LIMIT = 5;
 export function MatchesDisplay({
   matches,
   tier,
+  orgId,
   orgName,
   referralCode,
   uploadedDocs,
@@ -74,12 +77,15 @@ export function MatchesDisplay({
             )}
           </p>
         </div>
-        <ShareMatchCard
-          matchCount={visibleMatches.length}
-          totalValue={totalValue}
-          orgName={orgName}
-          referralCode={referralCode}
-        />
+        <div className="flex items-center gap-2">
+          <RefreshMatchesButton orgId={orgId} />
+          <ShareMatchCard
+            matchCount={visibleMatches.length}
+            totalValue={totalValue}
+            orgName={orgName}
+            referralCode={referralCode}
+          />
+        </div>
       </div>
 
       <MatchFilters matches={visibleMatches}>

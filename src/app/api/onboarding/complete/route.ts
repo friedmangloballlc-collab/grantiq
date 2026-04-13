@@ -240,6 +240,7 @@ export async function POST() {
                 ? profile.geographic_areas_served as string[] : [],
               ownership_demographics: profile.ownership_demographics
                 ? String(profile.ownership_demographics).split(", ").filter(Boolean) : [],
+              project_description: profile.project_description ?? null,
             };
 
             const scored = filteredCandidates.map((c) => {
@@ -256,6 +257,7 @@ export async function POST() {
                 eligible_naics: cAny.eligible_naics as string[] | null ?? null,
                 required_certification: cAny.required_certification as string | null ?? null,
                 target_beneficiaries: cAny.target_beneficiaries as string[] | null ?? null,
+                project_keywords: cAny.project_keywords as string[] | null ?? null,
                 deadline: c.deadline,
               };
               const score = computeWeightedScore(grantFields, orgScoreContext);
