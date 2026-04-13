@@ -53,6 +53,11 @@ export function MatchesDisplay({
   uploadedDocs,
   orgContext,
 }: MatchesDisplayProps) {
+  // Debug: log first match to see data shape
+  if (typeof window !== "undefined" && matches.length > 0) {
+    console.log("First match data:", JSON.stringify(matches[0], null, 2));
+  }
+
   const isFree = tier === "free";
   const visibleMatches = isFree ? matches.slice(0, FREE_MATCH_LIMIT) : matches;
   const lockedMatches = isFree ? matches.slice(FREE_MATCH_LIMIT) : [];
@@ -103,7 +108,7 @@ export function MatchesDisplay({
                   sourceType={match.grant_sources?.source_type ?? "federal"}
                   amountMax={match.grant_sources?.amount_max ?? null}
                   deadline={match.grant_sources?.deadline ?? null}
-                  matchScore={Math.round(match.match_score)}
+                  matchScore={Math.round(Number(match.match_score) || 0)}
                   scoreBreakdown={match.score_breakdown ?? {}}
                   missingRequirements={match.missing_requirements ?? []}
                   matchCriteria={criteria}
@@ -127,7 +132,7 @@ export function MatchesDisplay({
                 sourceType={match.grant_sources?.source_type ?? "federal"}
                 amountMax={match.grant_sources?.amount_max ?? null}
                 deadline={match.grant_sources?.deadline ?? null}
-                matchScore={Math.round(match.match_score)}
+                matchScore={Math.round(Number(match.match_score) || 0)}
                 scoreBreakdown={match.score_breakdown ?? {}}
                 missingRequirements={match.missing_requirements ?? []}
                 matchCriteria={[]}
