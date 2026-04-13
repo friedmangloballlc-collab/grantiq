@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import OpenAI from "openai";
 import { logger } from "@/lib/logger";
 import { vectorRecall } from "@/lib/matching/vector-recall";
-import { applyHardFilters, type HardFilterInput } from "@/lib/matching/hard-filter";
+import { applyHardFiltersWithStats, type HardFilterInput } from "@/lib/matching/hard-filter";
 import { computeWeightedScore } from "@/lib/matching/weighted-score";
 import { lookupNaicsFromIndustry } from "@/lib/matching/naics-lookup";
 import { assessReadiness } from "@/lib/ai/engines/readiness";
@@ -197,7 +197,15 @@ export async function POST() {
             required_certification: null as string | null,
             match_required_pct: null as number | null,
           }));
-          const filteredCandidates = applyHardFilters(candidatesWithDefaults, filterInput);
+          const { passed: filteredCandidates, stats: filterStats } = applyHardFiltersWithStats(candidatesWithDefaults, filterInput);
+
+          logger.info("Match filter stats", {
+            orgId,
+            candidates: candidatesWithDefaults.length,
+            passed: filterStats.passed,
+            excluded: filterStats.excluded,
+            reasons: filterStats.reasons,
+          });
 
           if (filteredCandidates.length > 0) {
             // Weighted scoring: 70% similarity + 15% eligibility + 15% location
@@ -377,6 +385,7 @@ export async function POST() {
         hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
         matchCount,
         matchError,
+        filterStats: matchCount > 0 ? "see logs" : "no matches — check filter stats in Vercel logs",
         readinessScoring: "background",
       },
     });
