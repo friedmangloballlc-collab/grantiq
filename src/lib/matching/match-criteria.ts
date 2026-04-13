@@ -21,6 +21,8 @@ interface GrantFields {
   cost_sharing_required?: boolean | null;
   category?: string | null;
   target_beneficiaries?: string[] | null;
+  estimated_awards_count?: number | null;
+  estimated_funding?: number | null;
 }
 
 interface OrgFields {
@@ -167,6 +169,17 @@ export function computeMatchCriteria(grant: GrantFields, org: OrgFields): MatchC
   // Sector alignment
   if (grant.category && org.industry) {
     criteria.push({ status: "info", label: `Sector: ${grant.category.replace(/_/g, " ")}` });
+  }
+
+  // Competitiveness (from USAspending.gov data)
+  if (grant.estimated_awards_count != null && grant.estimated_awards_count > 0) {
+    if (grant.estimated_awards_count <= 20) {
+      criteria.push({ status: "gap", label: `Highly competitive — only ${grant.estimated_awards_count} awards last year` });
+    } else if (grant.estimated_awards_count <= 100) {
+      criteria.push({ status: "partial", label: `Competitive — ${grant.estimated_awards_count} awards last year` });
+    } else {
+      criteria.push({ status: "match", label: `Accessible — ${grant.estimated_awards_count} awards last year` });
+    }
   }
 
   return criteria;

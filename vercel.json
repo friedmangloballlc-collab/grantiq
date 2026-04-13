@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/enrich-grants",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/enrich-competitiveness",
+      "schedule": "0 12 * * *"
     }
   ]
 }
