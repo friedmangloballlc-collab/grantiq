@@ -161,6 +161,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Failed to save" }, { status: 500 });
     }
 
+    // Invalidate embedding if an embedding-relevant field changed
+    const EMBEDDING_FIELDS = new Set([
+      "mission", "project_description", "target_beneficiaries",
+      "technology_readiness_level", "past_federal_funding_level",
+      "industry", "funding_use", "entity_type", "naics_primary",
+    ]);
+    if (EMBEDDING_FIELDS.has(field)) {
+      // Clear the embedding so it gets regenerated on next match run
+      await db.from("organizations").update({ mission_embedding: null, profile_embedding: null }).eq("id", orgId);
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("Onboarding save error", { err: String(err) });

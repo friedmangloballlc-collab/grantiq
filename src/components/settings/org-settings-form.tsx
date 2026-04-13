@@ -31,13 +31,18 @@ interface OrgData {
   id?: string;
   name?: string;
   entity_type?: string;
-  mission?: string;
+  mission_statement?: string;
+  mission?: string; // Legacy alias
   state?: string;
   city?: string;
   ein?: string;
-  website?: string;
+  ein_encrypted?: string;
+  website_url?: string;
+  website?: string; // Legacy alias
   founded_year?: number;
   annual_budget?: number;
+  employee_count?: number;
+  industry?: string;
   userRole?: string;
 }
 
@@ -49,13 +54,14 @@ export function OrgSettingsForm({ org }: OrgSettingsFormProps) {
   const [form, setForm] = useState({
     name: org?.name ?? "",
     entity_type: org?.entity_type ?? "",
-    mission: org?.mission ?? "",
+    mission_statement: org?.mission_statement ?? org?.mission ?? "",
     state: org?.state ?? "",
     city: org?.city ?? "",
-    ein: org?.ein ?? "",
-    website: org?.website ?? "",
+    website_url: org?.website_url ?? org?.website ?? "",
     founded_year: org?.founded_year?.toString() ?? "",
     annual_budget: org?.annual_budget?.toString() ?? "",
+    employee_count: org?.employee_count?.toString() ?? "",
+    industry: org?.industry ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -136,22 +142,11 @@ export function OrgSettingsForm({ org }: OrgSettingsFormProps) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ein">EIN (Tax ID)</Label>
-            <Input
-              id="ein"
-              value={form.ein}
-              onChange={(e) => update("ein", e.target.value)}
-              placeholder="12-3456789"
-              disabled={!isAdmin}
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="mission">Mission Statement</Label>
             <Textarea
               id="mission"
-              value={form.mission}
-              onChange={(e) => update("mission", e.target.value)}
+              value={form.mission_statement}
+              onChange={(e) => update("mission_statement", e.target.value)}
               placeholder="Describe your organization's mission and primary programs…"
               rows={4}
               disabled={!isAdmin}
@@ -198,8 +193,8 @@ export function OrgSettingsForm({ org }: OrgSettingsFormProps) {
             <Label htmlFor="website">Website</Label>
             <Input
               id="website"
-              value={form.website}
-              onChange={(e) => update("website", e.target.value)}
+              value={form.website_url}
+              onChange={(e) => update("website_url", e.target.value)}
               placeholder="https://example.org"
               type="url"
               disabled={!isAdmin}
