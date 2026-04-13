@@ -57,7 +57,7 @@ export default async function MatchesPage() {
     .single();
   const tier = (sub?.tier ?? "free") as string;
 
-  const [{ data: matches }, { data: vaultRows }, { data: orgRow }, { data: referralRows }, { data: orgProfile }, { data: dismissedRows }] = await Promise.all([
+  const results = await Promise.all([
     db
       .from("grant_matches")
       .select(
@@ -93,6 +93,13 @@ export default async function MatchesPage() {
       .eq("org_id", orgId)
       .eq("user_action", "dismissed"),
   ]);
+
+  const matches = results[0]?.data;
+  const vaultRows = results[1]?.data;
+  const orgRow = results[2]?.data;
+  const referralRows = results[3]?.data;
+  const orgProfile = results[4]?.data;
+  const dismissedRows = results[5]?.data;
 
   // Filter out dismissed grants
   const dismissedIds = new Set(
