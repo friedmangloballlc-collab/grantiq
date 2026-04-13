@@ -171,15 +171,20 @@ export default async function MatchesPage() {
     target_beneficiaries: profile?.target_beneficiaries ?? null,
   };
 
+  // Serialize data to plain JSON to prevent React hydration issues
+  const safeMatches = JSON.parse(JSON.stringify(filteredMatches));
+  const safeOrgContext = JSON.parse(JSON.stringify(orgContext));
+  const safeDocs = JSON.parse(JSON.stringify(uploadedDocs));
+
   return (
     <MatchesDisplay
-      matches={filteredMatches as unknown as MatchItem[]}
+      matches={safeMatches as MatchItem[]}
       tier={tier}
       orgId={orgId}
       orgName={orgName}
       referralCode={referralCode}
-      uploadedDocs={uploadedDocs}
-      orgContext={orgContext}
+      uploadedDocs={safeDocs}
+      orgContext={safeOrgContext}
     />
   );
 }
