@@ -49,7 +49,17 @@ const ENRICHMENT_PROMPT = `You are classifying grant opportunities. For each gra
 
 4. nonprofit_only: true/false — is this ONLY for nonprofits?
 
-Return a JSON array with one object per grant: { id, eligible_org_types, sector, for_profit_eligible, nonprofit_only }`;
+5. target_beneficiaries: Who does this grant aim to help? Array of:
+   "children_youth", "veterans", "low_income", "minorities", "women_girls",
+   "rural", "immigrants", "disabilities", "seniors", "small_businesses",
+   "students", "general_public"
+   Empty array if not population-specific.
+
+6. project_keywords: 3-5 keywords describing what activities this grant funds.
+   Examples: ["workforce training", "equipment purchase", "research", "construction"]
+   Extract from the description — these should be specific funded activities, not generic topics.
+
+Return a JSON array: { id, eligible_org_types, sector, for_profit_eligible, nonprofit_only, target_beneficiaries, project_keywords }`;
 
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
@@ -69,7 +79,7 @@ export async function GET(request: NextRequest) {
       .from("grant_sources")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true)
-      .or("eligibility_types.eq.{},eligibility_types.is.null");
+      .or("eligibility_types.eq.{},eligibility_types.is.null,target_beneficiaries.eq.[],target_beneficiaries.is.null");
 
     logger.info("Grant enrichment started", { pendingCount: count });
 
@@ -79,7 +89,7 @@ export async function GET(request: NextRequest) {
         .from("grant_sources")
         .select("id, name, funder_name, source_type, description, category, states")
         .eq("is_active", true)
-        .or("eligibility_types.eq.{},eligibility_types.is.null")
+        .or("eligibility_types.eq.{},eligibility_types.is.null,target_beneficiaries.eq.[],target_beneficiaries.is.null")
         .order("created_at", { ascending: false })
         .range(0, BATCH_SIZE - 1);
 
@@ -124,6 +134,14 @@ export async function GET(request: NextRequest) {
 
           if (result.sector) {
             updateData.category = result.sector;
+          }
+
+          if (Array.isArray(result.target_beneficiaries) && result.target_beneficiaries.length > 0) {
+            updateData.target_beneficiaries = result.target_beneficiaries;
+          }
+
+          if (Array.isArray(result.project_keywords) && result.project_keywords.length > 0) {
+            updateData.project_keywords = result.project_keywords;
           }
 
           if (Object.keys(updateData).length > 0) {

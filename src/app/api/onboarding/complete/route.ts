@@ -109,12 +109,60 @@ export async function POST() {
     let matchCount = 0;
     let matchError: string | null = null;
 
-    if (org.mission_embedding) {
+    if (org.mission_embedding || missionText || profile.industry) {
       try {
         const profileHash = computeProfileHash({ ...capabilities, ...profile });
 
-        // Vector recall — top 200 by cosine similarity
-        const vectorResults = await vectorRecall(org.mission_embedding);
+        let vectorResults: Awaited<ReturnType<typeof vectorRecall>> = [];
+
+        if (org.mission_embedding) {
+          // Primary: vector recall — top 200 by cosine similarity
+          vectorResults = await vectorRecall(org.mission_embedding);
+        }
+
+        // Fallback: if no embedding or vector returned 0, use keyword search
+        if (vectorResults.length === 0) {
+          const searchTerms = [
+            profile.industry ?? "",
+            profile.funding_use ?? "",
+            org.entity_type ?? "",
+            missionText?.slice(0, 200) ?? "",
+          ].filter(Boolean).join(" ").trim();
+
+          if (searchTerms.length > 3) {
+            const { data: searchResults } = await db.rpc("search_grants", {
+              query: searchTerms,
+              p_type: null,
+              p_state: org.state ?? null,
+              p_amount_min: null,
+              p_amount_max: null,
+              p_limit: 200,
+              p_offset: 0,
+            });
+
+            // Convert search results to vector recall format (similarity = 0.5 default)
+            vectorResults = (searchResults ?? []).map((g: Record<string, unknown>) => ({
+              id: g.id as string,
+              name: (g.name as string) ?? "",
+              funder_name: (g.funder_name as string) ?? "",
+              source_type: (g.source_type as string) ?? "federal",
+              category: (g.category as string) ?? null,
+              eligibility_types: (g.eligibility_types as string[]) ?? [],
+              states: (g.states as string[]) ?? [],
+              amount_min: g.amount_min as number | null,
+              amount_max: g.amount_max as number | null,
+              deadline: g.deadline as string | null,
+              deadline_type: null,
+              description: g.description as string | null,
+              status: "open",
+              url: null,
+              cfda_number: null,
+              cost_sharing_required: false,
+              funder_id: null,
+              similarity: 0.5, // Default similarity for keyword matches
+            }));
+          }
+        }
 
         if (vectorResults.length > 0) {
           // Hard filters
