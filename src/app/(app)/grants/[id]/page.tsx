@@ -17,6 +17,7 @@ import { ClipboardList, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApplicationChecklist } from "@/components/pipeline/application-checklist";
 import { ReportIssueButton } from "@/components/grants/report-issue-button";
+import { TRLPrompt } from "@/components/shared/deferred-question-prompt";
 import type { ReadinessCategory } from "@/components/grants/readiness-gauge";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -377,7 +378,7 @@ export default async function GrantDetailPage({ params }: Props) {
           .single(),
         admin
           .from("org_profiles")
-          .select("grant_history_level, outcomes_tracking")
+          .select("grant_history_level, outcomes_tracking, technology_readiness_level")
           .eq("org_id", membership.org_id)
           .single(),
         admin
@@ -521,6 +522,11 @@ export default async function GrantDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* TRL Deferred Prompt — shown when grant requires TRL and org hasn't set it */}
+      {grant.required_trl_min != null && !(profileRow as unknown as Record<string, unknown>)?.technology_readiness_level && (
+        <TRLPrompt requiredTrl={grant.required_trl_min} />
+      )}
 
       {/* Readiness Gauge */}
       <Card className="border-warm-200 dark:border-warm-800">
