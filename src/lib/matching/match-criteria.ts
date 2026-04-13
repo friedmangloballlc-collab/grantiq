@@ -20,6 +20,7 @@ interface GrantFields {
   match_required_pct?: number | null;
   cost_sharing_required?: boolean | null;
   category?: string | null;
+  target_beneficiaries?: string[] | null;
 }
 
 interface OrgFields {
@@ -34,6 +35,7 @@ interface OrgFields {
   funding_amount_max?: number | null;
   industry?: string | null;
   annual_budget?: number | null;
+  target_beneficiaries?: string[] | null;
 }
 
 const MATCH_CAPACITY_TO_PCT: Record<string, number> = {
@@ -143,6 +145,28 @@ export function computeMatchCriteria(grant: GrantFields, org: OrgFields): MatchC
   // Cost sharing
   if (grant.cost_sharing_required) {
     criteria.push({ status: "info", label: "Cost sharing required" });
+  }
+
+  // Beneficiary population match
+  if (grant.target_beneficiaries?.length && org.target_beneficiaries?.length) {
+    const BENEFICIARY_LABELS: Record<string, string> = {
+      children_youth: "Children & Youth", veterans: "Veterans", low_income: "Low-Income",
+      minorities: "Minorities", women_girls: "Women & Girls", rural: "Rural Communities",
+      immigrants: "Immigrants", disabilities: "People with Disabilities", seniors: "Seniors",
+      small_businesses: "Small Businesses", students: "Students", general_public: "General Public",
+    };
+    const overlap = (grant.target_beneficiaries as string[]).filter((b) =>
+      (org.target_beneficiaries as string[]).includes(b)
+    );
+    if (overlap.length > 0) {
+      const names = overlap.map((b) => BENEFICIARY_LABELS[b] ?? b.replace(/_/g, " ")).join(", ");
+      criteria.push({ status: "match", label: `Serves ${names} — matches your beneficiaries` });
+    }
+  }
+
+  // Sector alignment
+  if (grant.category && org.industry) {
+    criteria.push({ status: "info", label: `Sector: ${grant.category.replace(/_/g, " ")}` });
   }
 
   return criteria;

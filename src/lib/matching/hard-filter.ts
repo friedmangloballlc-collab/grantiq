@@ -165,6 +165,24 @@ export function checkGrant(grant: GrantCandidate, org: HardFilterInput): FilterR
       return { pass: false, reason: "insufficient_federal_experience", detail: `Requires ${grant.required_federal_experience}, org has ${org.past_federal_funding_level}` };
   }
 
+  // Sector mismatch: exclude when grant has a specific sector AND org has an industry
+  // that clearly doesn't match. Only for strong mismatches — if either is null/general, pass.
+  if (grant.category && org.industry && grant.category !== "general") {
+    const SECTOR_EXCLUSIONS: Record<string, Set<string>> = {
+      agriculture: new Set(["computer_software", "computer_security", "it_services", "financial_services", "legal_services", "entertainment", "film", "music"]),
+      health: new Set(["construction", "mining_metals", "oil_energy", "defense_space", "shipbuilding"]),
+      arts_culture: new Set(["mining_metals", "oil_energy", "chemicals", "defense_space", "semiconductors"]),
+      transportation: new Set(["performing_arts", "fine_art", "music", "film", "animation"]),
+      energy: new Set(["performing_arts", "fine_art", "music", "film", "entertainment", "hospitality", "restaurants"]),
+      veterans: new Set([]), // Veterans grants can apply to any industry
+      education: new Set(["mining_metals", "oil_energy", "chemicals"]),
+    };
+    const excluded = SECTOR_EXCLUSIONS[grant.category];
+    if (excluded?.has(org.industry)) {
+      return { pass: false, reason: "sector_mismatch", detail: `Grant sector: ${grant.category}, org industry: ${org.industry}` };
+    }
+  }
+
   return { pass: true };
 }
 

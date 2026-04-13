@@ -147,7 +147,7 @@ export default async function MatchesPage() {
   }
 
   const org = orgRow as { name?: string; entity_type?: string; state?: string; city?: string; annual_budget?: number } | null;
-  const profile = orgProfile as { industry?: string; naics_primary?: string; funding_amount_min?: number; funding_amount_max?: number; sam_registration_status?: string; federal_certifications?: string[]; match_funds_capacity?: string } | null;
+  const profile = orgProfile as { industry?: string; naics_primary?: string; funding_amount_min?: number; funding_amount_max?: number; sam_registration_status?: string; federal_certifications?: string[]; match_funds_capacity?: string; target_beneficiaries?: string[] } | null;
 
   const orgContext = {
     entity_type: org?.entity_type ?? null,
@@ -161,6 +161,7 @@ export default async function MatchesPage() {
     sam_registration_status: profile?.sam_registration_status ?? null,
     federal_certifications: profile?.federal_certifications ?? null,
     match_funds_capacity: profile?.match_funds_capacity ?? null,
+    target_beneficiaries: profile?.target_beneficiaries ?? null,
   };
 
   return (
