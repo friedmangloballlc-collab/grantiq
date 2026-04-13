@@ -29,7 +29,8 @@ export function useRealtimeNotifications(userId: string) {
       .eq("user_id", userId)
       .order("sent_at", { ascending: false })
       .limit(20)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) return; // Silently handle RLS/permission errors
         if (data) {
           setNotifications(data as NotificationRecord[]);
           setUnreadCount(data.filter((n) => !n.opened_at).length);
