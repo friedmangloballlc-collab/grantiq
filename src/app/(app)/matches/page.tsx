@@ -61,7 +61,7 @@ export default async function MatchesPage() {
     db
       .from("grant_matches")
       .select(
-        "id, grant_source_id, match_score, score_breakdown, missing_requirements, grant_sources(name, funder_name, source_type, amount_max, amount_min, deadline, states, eligibility_types, requires_sam, cost_sharing_required, category)"
+        "id, grant_source_id, match_score, grant_sources(name, funder_name, source_type, amount_max, deadline)"
       )
       .eq("org_id", orgId)
       .order("match_score", { ascending: false })

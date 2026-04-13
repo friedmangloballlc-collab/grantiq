@@ -96,26 +96,22 @@ export function MatchesDisplay({
       <MatchFilters matches={visibleMatches}>
         {(filtered) => (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((match) => {
-              const gs = match.grant_sources as Record<string, unknown> | null;
-              const criteria = gs ? computeMatchCriteria(gs as Parameters<typeof computeMatchCriteria>[0], orgContext) : [];
-              return (
-                <MatchCard
-                  key={match.id}
-                  id={match.grant_source_id}
-                  grantName={match.grant_sources?.name ?? "Unknown Grant"}
-                  funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
-                  sourceType={match.grant_sources?.source_type ?? "federal"}
-                  amountMax={match.grant_sources?.amount_max ?? null}
-                  deadline={match.grant_sources?.deadline ?? null}
-                  matchScore={Math.round(Number(match.match_score) || 0)}
-                  scoreBreakdown={match.score_breakdown ?? {}}
-                  missingRequirements={match.missing_requirements ?? []}
-                  matchCriteria={criteria}
-                  uploadedDocs={uploadedDocs}
-                />
-              );
-            })}
+            {filtered.map((match) => (
+              <MatchCard
+                key={match.id}
+                id={match.grant_source_id}
+                grantName={match.grant_sources?.name ?? "Unknown Grant"}
+                funderName={match.grant_sources?.funder_name ?? "Unknown Funder"}
+                sourceType={match.grant_sources?.source_type ?? "federal"}
+                amountMax={match.grant_sources?.amount_max ?? null}
+                deadline={match.grant_sources?.deadline ?? null}
+                matchScore={Math.round(Number(match.match_score) || 0)}
+                scoreBreakdown={{}}
+                missingRequirements={[]}
+                matchCriteria={[]}
+                uploadedDocs={uploadedDocs}
+              />
+            ))}
           </div>
         )}
       </MatchFilters>
