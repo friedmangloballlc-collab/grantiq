@@ -54,6 +54,15 @@ export function LibrarySearch() {
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalGrantCount, setTotalGrantCount] = useState<number>(0);
+
+  // Fetch total count on mount
+  useEffect(() => {
+    fetch("/api/library/count")
+      .then((r) => r.json())
+      .then((d) => { if (d.count) setTotalGrantCount(d.count); })
+      .catch(() => {});
+  }, []);
   const abortRef = useRef<AbortController | null>(null);
 
   const debouncedQ = useDebounce(filters.q, 350);
@@ -128,7 +137,7 @@ export function LibrarySearch() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-400 pointer-events-none" />
         <input
           type="text"
-          placeholder="Search 2,344 grants by name, funder, or keyword…"
+          placeholder={`Search ${totalGrantCount > 0 ? totalGrantCount.toLocaleString() : ""} grants by name, funder, or keyword…`}
           value={filters.q}
           onChange={(e) => handleFilterChange("q", e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-warm-200 dark:border-warm-700 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal"
