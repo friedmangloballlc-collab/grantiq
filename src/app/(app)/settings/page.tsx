@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { OrgSettingsForm } from "@/components/settings/org-settings-form";
+import { EnrichProfileButton } from "@/components/settings/enrich-profile-button";
 import { ExportDataButton } from "@/components/settings/export-data-button";
 import { DeleteAccountDialog } from "@/components/settings/delete-account-dialog";
 
@@ -61,11 +62,14 @@ export default async function OrgSettingsPage() {
         ))}
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50">Organization Settings</h2>
-        <p className="text-sm text-warm-500 mt-1">
-          This information is used to find and match grants.
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50">Organization Settings</h2>
+          <p className="text-sm text-warm-500 mt-1">
+            This information is used to find and match grants.
+          </p>
+        </div>
+        <EnrichProfileButton />
       </div>
       <OrgSettingsForm org={org} />
 
