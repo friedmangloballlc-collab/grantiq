@@ -3,7 +3,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import OpenAI from "openai";
 import { logger } from "@/lib/logger";
-import { vectorRecall } from "@/lib/matching/vector-recall";
+import { multiFacetRecall, type VectorRecallResult } from "@/lib/matching/vector-recall";
+import { buildOrgPurposeText, buildOrgProfileText } from "@/lib/matching/multi-facet-embed";
 import { applyHardFiltersWithStats, type HardFilterInput } from "@/lib/matching/hard-filter";
 import { computeWeightedScore } from "@/lib/matching/weighted-score";
 import { lookupNaicsFromIndustry } from "@/lib/matching/naics-lookup";
@@ -56,49 +57,61 @@ export async function POST() {
     const profile = org.org_profiles?.[0] ?? org.org_profiles ?? {};
     const missionText = org.mission_statement ?? "";
 
-    // ── Step 1: Generate compound profile embedding ─────────────────────
-    // Combine multiple profile fields for richer semantic matching
+    // ── Step 1: Generate multi-facet embeddings ─────────────────────────
     let embeddingGenerated = false;
+    let profileEmbedding: number[] | null = org.profile_embedding ?? null;
 
-    const embeddingParts = [
-      missionText ? `Mission: ${missionText}` : "",
-      profile.project_description ? `Project: ${profile.project_description}` : "",
-      Array.isArray(profile.target_beneficiaries) && profile.target_beneficiaries.length > 0
-        ? `Serves: ${(profile.target_beneficiaries as string[]).map((b: string) => b.replace(/_/g, " ")).join(", ")}`
-        : "",
-      Array.isArray(profile.impact_metrics) && profile.impact_metrics.length > 0
-        ? `Impact: ${(profile.impact_metrics as string[]).map((m: string) => m.replace(/_/g, " ")).join(", ")}`
-        : "",
-      profile.industry ? `Industry: ${profile.industry.replace(/_/g, " ")}` : "",
-      profile.funding_use ? `Funding needs: ${profile.funding_use.replace(/_/g, " ")}` : "",
-      org.entity_type ? `Organization type: ${org.entity_type.replace(/_/g, " ")}` : "",
-      org.state ? `Located in ${org.city ? org.city + ", " : ""}${org.state}` : "",
-      profile.naics_primary ? `NAICS code: ${profile.naics_primary}` : "",
-      Array.isArray(profile.program_areas) && profile.program_areas.length > 0
-        ? `Programs: ${profile.program_areas.join(", ")}`
-        : "",
-      profile.business_stage ? `Stage: ${profile.business_stage.replace(/_/g, " ")}` : "",
-      profile.technology_readiness_level ? `Technology readiness: TRL ${profile.technology_readiness_level}` : "",
-      profile.past_federal_funding_level && profile.past_federal_funding_level !== "none"
-        ? `Past federal funding: ${profile.past_federal_funding_level.replace(/_/g, " ")}`
-        : "",
-    ].filter(Boolean).join(". ");
+    const orgData = {
+      name: org.name,
+      entity_type: org.entity_type ?? "other",
+      mission_statement: missionText,
+      state: org.state,
+      city: org.city,
+      annual_budget: org.annual_budget,
+      employee_count: org.employee_count,
+      industry: profile.industry ?? null,
+      naics_primary: profile.naics_primary ?? null,
+      funding_use: profile.funding_use ?? null,
+      project_description: profile.project_description ?? null,
+      target_beneficiaries: Array.isArray(profile.target_beneficiaries) ? profile.target_beneficiaries as string[] : [],
+      impact_metrics: Array.isArray(profile.impact_metrics) ? profile.impact_metrics as string[] : [],
+      program_areas: profile.program_areas ?? [],
+      business_stage: profile.business_stage ?? null,
+      federal_certifications: Array.isArray(profile.federal_certifications) ? profile.federal_certifications as string[] : [],
+      sam_registration_status: profile.sam_registration_status ?? null,
+      match_funds_capacity: profile.match_funds_capacity ?? null,
+      past_federal_funding_level: profile.past_federal_funding_level ?? null,
+      technology_readiness_level: profile.technology_readiness_level ?? null,
+      ownership_demographics: profile.ownership_demographics ?? "",
+    };
 
-    if (embeddingParts.length > 10 && !org.mission_embedding) {
+    const purposeText = buildOrgPurposeText(orgData);
+    const profileText = buildOrgProfileText(orgData);
+
+    if ((purposeText.length > 10 || profileText.length > 10) && !org.mission_embedding) {
       try {
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+        // Generate both embeddings in one batch call
+        const textsToEmbed = [purposeText || profileText, profileText || purposeText];
         const embeddingResponse = await openai.embeddings.create({
           model: "text-embedding-3-small",
-          input: embeddingParts,
+          input: textsToEmbed,
         });
-        const embedding = embeddingResponse.data[0]?.embedding ?? null;
 
-        if (embedding) {
+        const purposeEmb = embeddingResponse.data[0]?.embedding ?? null;
+        const profileEmb = embeddingResponse.data[1]?.embedding ?? null;
+
+        if (purposeEmb) {
           await db
             .from("organizations")
-            .update({ mission_embedding: embedding })
+            .update({
+              mission_embedding: purposeEmb,
+              ...(profileEmb ? { profile_embedding: profileEmb } : {}),
+            })
             .eq("id", orgId);
-          org.mission_embedding = embedding;
+          org.mission_embedding = purposeEmb;
+          profileEmbedding = profileEmb;
           embeddingGenerated = true;
         }
       } catch (embeddingErr) {
@@ -114,11 +127,11 @@ export async function POST() {
       try {
         const profileHash = computeProfileHash({ ...capabilities, ...profile });
 
-        let vectorResults: Awaited<ReturnType<typeof vectorRecall>> = [];
+        let vectorResults: VectorRecallResult[] = [];
 
         if (org.mission_embedding) {
-          // Primary: vector recall — top 200 by cosine similarity
-          vectorResults = await vectorRecall(org.mission_embedding);
+          // Multi-facet recall: purpose similarity + profile boost
+          vectorResults = await multiFacetRecall(org.mission_embedding, profileEmbedding);
         }
 
         // Fallback: if no embedding or vector returned 0, use keyword search
@@ -378,7 +391,7 @@ export async function POST() {
         orgId,
         hasMission: !!missionText,
         missionLength: missionText?.length ?? 0,
-        embeddingInputLength: embeddingParts.length,
+        embeddingInputLength: purposeText.length + profileText.length,
         hasEmbedding: !!org.mission_embedding,
         embeddingGenerated,
         hasOpenAIKey: !!process.env.OPENAI_API_KEY,
