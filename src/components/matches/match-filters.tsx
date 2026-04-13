@@ -70,10 +70,14 @@ function getTimeSnapshot() {
   return Date.now();
 }
 
+function getServerTimeSnapshot() {
+  return 0;
+}
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export function MatchFilters({ matches, children }: MatchFiltersProps) {
-  const now = useSyncExternalStore(subscribeToTime, getTimeSnapshot, getTimeSnapshot);
+  const now = useSyncExternalStore(subscribeToTime, getTimeSnapshot, getServerTimeSnapshot) || Date.now();
   const [sourceType, setSourceType] = useState<SourceTypeFilter>("all");
   const [sortBy, setSortBy] = useState<SortBy>("match_score");
   const [deadlineRange, setDeadlineRange] = useState<DeadlineRange>("all");
