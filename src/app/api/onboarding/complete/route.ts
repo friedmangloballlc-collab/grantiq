@@ -154,8 +154,9 @@ export async function POST() {
               p_offset: 0,
             });
 
-            // Convert search results to vector recall format (similarity = 0.5 default)
-            vectorResults = (searchResults ?? []).map((g: Record<string, unknown>) => ({
+            // Convert search results to vector recall format with position-based ranking
+            const totalResults = (searchResults ?? []).length;
+            vectorResults = (searchResults ?? []).map((g: Record<string, unknown>, idx: number) => ({
               id: g.id as string,
               name: (g.name as string) ?? "",
               funder_name: (g.funder_name as string) ?? "",
@@ -173,7 +174,7 @@ export async function POST() {
               cfda_number: null,
               cost_sharing_required: false,
               funder_id: null,
-              similarity: 0.5, // Default similarity for keyword matches
+              similarity: Math.max(0.2, 0.7 - (idx / totalResults) * 0.5), // Position-based: first result = 0.7, last = 0.2
             }));
           }
         }

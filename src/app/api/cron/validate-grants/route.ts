@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     amount_flagged: 0,
     duplicates_deactivated: 0,
     invalid_funder_deactivated: 0,
+    stale_archived: 0,
   };
 
   try {
@@ -175,7 +176,23 @@ export async function GET(request: NextRequest) {
     }
 
     // -----------------------------------------------------------------------
-    // 5. Return summary
+    // 5. Deactivate stale grants (not updated in 180+ days, no deadline)
+    // -----------------------------------------------------------------------
+    const staleDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: staleGrants, error: staleError } = await supabase
+      .from("grant_sources")
+      .update({ is_active: false, status: "archived" })
+      .eq("is_active", true)
+      .is("deadline", null)
+      .lt("created_at", staleDate)
+      .select("id");
+
+    if (!staleError && staleGrants) {
+      counts.stale_archived = staleGrants.length;
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. Return summary
     // -----------------------------------------------------------------------
     const summary = {
       success: true,

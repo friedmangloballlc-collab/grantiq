@@ -113,8 +113,19 @@ export function checkGrant(grant: GrantCandidate, org: HardFilterInput): FilterR
   if (grant.deadline && new Date(grant.deadline) < now)
     return { pass: false, reason: "expired", detail: `Deadline: ${grant.deadline}` };
 
-  if (grant.amount_min && org.annual_budget && grant.amount_min > org.annual_budget * 10)
+  if (grant.amount_min && org.annual_budget && grant.amount_min > org.annual_budget * 5)
     return { pass: false, reason: "budget_mismatch", detail: `Min award $${grant.amount_min} vs budget $${org.annual_budget}` };
+
+  // 501(c)(3) requirement: many foundation grants require it
+  if (grant.eligibility_types.includes("nonprofit_501c3") && !org.has_501c3) {
+    return { pass: false, reason: "no_501c3", detail: "Grant requires 501(c)(3) status" };
+  }
+
+  // Years operating: some grants require established orgs (3+ years)
+  if (org.years_operating > 0 && org.years_operating < 1 && grant.source_type === "federal") {
+    // Very new orgs (<1 year) are unlikely to win federal grants — soft signal, not hard block
+    // Only block if grant explicitly requires experience (handled by federal_experience filter)
+  }
 
   if (grant.eligible_naics?.length && org.naics_primary) {
     if (!grant.eligible_naics.includes(org.naics_primary))

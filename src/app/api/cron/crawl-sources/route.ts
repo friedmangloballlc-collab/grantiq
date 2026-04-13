@@ -141,22 +141,30 @@ export async function GET(request: NextRequest) {
         }
 
         // ── Deduplicate against existing grants ──────────────────────
-        // Check by name + funder_name combination
+        // Check by name + funder_name AND by cfda_number if available
         const grantNames = grants.map((g) => g.name);
         const { data: existing } = await supabase
           .from("grant_sources")
-          .select("name, funder_name")
+          .select("name, funder_name, cfda_number, external_id")
           .in("name", grantNames);
 
-        const existingSet = new Set(
+        const existingByName = new Set(
           (existing ?? []).map((e: { name: string; funder_name: string }) =>
-            `${e.name.toLowerCase()}|||${e.funder_name.toLowerCase()}`
+            `${e.name.toLowerCase().trim()}|||${e.funder_name.toLowerCase().trim()}`
           )
         );
-
-        const newGrants = grants.filter(
-          (g) => !existingSet.has(`${g.name.toLowerCase()}|||${g.funder_name.toLowerCase()}`)
+        const existingByCfda = new Set(
+          (existing ?? [])
+            .filter((e: { cfda_number: string | null }) => e.cfda_number)
+            .map((e: { cfda_number: string }) => e.cfda_number)
         );
+
+        const newGrants = grants.filter((g) => {
+          const nameKey = `${g.name.toLowerCase().trim()}|||${g.funder_name.toLowerCase().trim()}`;
+          if (existingByName.has(nameKey)) return false;
+          if (g.cfda_number && existingByCfda.has(g.cfda_number)) return false;
+          return true;
+        });
 
         grantsSkipped += grants.length - newGrants.length;
 

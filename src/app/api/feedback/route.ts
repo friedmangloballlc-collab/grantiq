@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { grant_source_id, user_action, match_score, relevance_rating, scorecard_overrides } = body;
+    const { grant_source_id, user_action, match_score, relevance_rating, scorecard_overrides, dismiss_reason } = body;
 
     if (!grant_source_id) {
       return NextResponse.json({ error: "grant_source_id is required" }, { status: 400 });
@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
         match_score: match_score ?? null,
         user_relevance_rating: relevance_rating ?? null,
         scorecard_overrides: scorecard_overrides ?? null,
+        dismiss_reason: dismiss_reason ?? null,
       })
       .select()
       .single();
