@@ -73,32 +73,29 @@ export async function multiFacetRecall(
     resultMap.set(r.id, { ...r, similarity: r.similarity * 0.6 }); // 60% weight for purpose
   }
 
-  // Facet 2: Profile matching (org profile vs grant eligibility profile)
-  // Only if profile embedding exists AND purpose_embedding column is populated
+  // Facet 2: Profile matching (org profile embedding vs grant purpose_embedding)
   if (profileEmbedding) {
     try {
-      const { data: profileResults } = await db
-        .from("grant_sources")
-        .select("id, name, funder_name, source_type, category, eligibility_types, states, amount_min, amount_max, deadline, deadline_type, description, status, url, cfda_number, cost_sharing_required, funder_id")
-        .eq("is_active", true)
-        .in("status", ["open", "forecasted"])
-        .not("description_embedding", "is", null)
-        .limit(200);
+      // Use purpose_embedding column for profile-to-eligibility matching
+      const { data: profileResults, error: err2 } = await db.rpc("vector_recall_grants_profile", {
+        query_embedding: JSON.stringify(profileEmbedding),
+        match_count: 200,
+      });
 
-      // For now, profile matching uses the same description_embedding
-      // Full implementation would use purpose_embedding column
-      // This is a placeholder for when purpose_embedding is populated
-      if (profileResults) {
+      if (!err2 && profileResults) {
         for (const r of profileResults as VectorRecallResult[]) {
           const existing = resultMap.get(r.id);
           if (existing) {
-            // Boost grants that appear in both searches
-            existing.similarity = Math.min(1, existing.similarity + 0.15);
+            // Boost: grant matched on BOTH purpose AND profile
+            existing.similarity = Math.min(1, existing.similarity + r.similarity * 0.4);
+          } else {
+            // New: grant matched only on profile (40% weight)
+            resultMap.set(r.id, { ...r, similarity: r.similarity * 0.4 });
           }
         }
       }
     } catch {
-      // Profile search failed — continue with purpose results only
+      // Profile recall not available (RPC may not exist yet) — continue with purpose only
     }
   }
 

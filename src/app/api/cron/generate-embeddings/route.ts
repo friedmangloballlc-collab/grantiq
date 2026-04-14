@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       // Fetch batch of grants without embeddings
       const { data: grants, error: fetchError } = await supabase
         .from("grant_sources")
-        .select("id, name, description, funder_name, category")
+        .select("id, name, description, funder_name, category, eligibility_types, states, eligible_naics, requires_sam")
         .eq("is_active", true)
         .is("description_embedding", null)
         .not("description", "is", null)
@@ -67,29 +67,52 @@ export async function GET(request: NextRequest) {
 
       if (!grants || grants.length === 0) break;
 
-      // Build text for each grant — combine name + description + funder for richer embedding
-      const texts = grants.map((g) => {
+      // Build TWO texts per grant — description (purpose) + profile (eligibility)
+      const descTexts = grants.map((g) => {
         const parts = [g.name, g.description];
         if (g.funder_name) parts.push(`Funder: ${g.funder_name}`);
         if (g.category) parts.push(`Category: ${g.category}`);
-        return parts.filter(Boolean).join(". ").slice(0, 8000); // Cap at ~8K chars
+        return parts.filter(Boolean).join(". ").slice(0, 8000);
+      });
+
+      const profileTexts = grants.map((g) => {
+        const parts = [
+          `Funder: ${g.funder_name ?? "Unknown"}`,
+          g.category ? `Sector: ${g.category}` : "",
+          (g as Record<string, unknown>).eligibility_types
+            ? `Eligible: ${((g as Record<string, unknown>).eligibility_types as string[]).join(", ")}`
+            : "",
+          (g as Record<string, unknown>).states
+            ? `Geography: ${((g as Record<string, unknown>).states as string[]).join(", ") || "National"}`
+            : "National",
+          (g as Record<string, unknown>).requires_sam ? "Requires SAM.gov" : "",
+          (g as Record<string, unknown>).eligible_naics
+            ? `NAICS: ${((g as Record<string, unknown>).eligible_naics as string[]).join(", ")}`
+            : "",
+        ];
+        return parts.filter(Boolean).join(". ").slice(0, 4000);
       });
 
       try {
-        // Batch embedding call — OpenAI supports up to 2048 inputs at once
+        // Batch both description + profile embeddings in one call
+        const allTexts = [...descTexts, ...profileTexts];
         const embeddingResponse = await openai.embeddings.create({
           model: "text-embedding-3-small",
-          input: texts,
+          input: allTexts,
         });
 
-        // Update each grant with its embedding
+        // Update each grant with both embeddings
         for (let i = 0; i < grants.length; i++) {
-          const embedding = embeddingResponse.data[i]?.embedding;
-          if (!embedding) continue;
+          const descEmb = embeddingResponse.data[i]?.embedding;
+          const profileEmb = embeddingResponse.data[i + grants.length]?.embedding;
+          if (!descEmb) continue;
+
+          const updateData: Record<string, unknown> = { description_embedding: descEmb };
+          if (profileEmb) updateData.purpose_embedding = profileEmb;
 
           const { error: updateError } = await supabase
             .from("grant_sources")
-            .update({ description_embedding: embedding })
+            .update(updateData)
             .eq("id", grants[i].id);
 
           if (updateError) {
