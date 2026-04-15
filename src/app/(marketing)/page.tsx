@@ -2,6 +2,7 @@ import { Hero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { Features } from "@/components/marketing/features";
 import { HowWeWork } from "@/components/marketing/how-we-work";
+import { GrantServices } from "@/components/marketing/grant-services";
 import { PricingTable } from "@/components/marketing/pricing-table";
 import { FAQ } from "@/components/marketing/faq";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ export default async function LandingPage() {
       <HowItWorks />
       <Features />
       <HowWeWork />
+      <GrantServices />
 
       {/* Free Tools CTA */}
       <section className="py-16 px-4 bg-brand-teal/5 dark:bg-brand-teal/10">

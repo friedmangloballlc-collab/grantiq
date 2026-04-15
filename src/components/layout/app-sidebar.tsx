@@ -16,6 +16,8 @@ import {
   BarChart3,
   Users,
   ShieldCheck,
+  ClipboardCheck,
+  FileSearch,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -114,6 +116,36 @@ export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
                   aria-label="New"
                 />
               )}
+            </Link>
+          );
+        })}
+
+        {/* Services — always visible */}
+        <div className="pt-2 pb-1">
+          <p className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Services
+          </p>
+        </div>
+        {[
+          { href: "/services/eligibility-status", label: "Eligibility Status", icon: ClipboardCheck },
+          { href: "/services/readiness-diagnostic", label: "Readiness Diagnostic", icon: FileSearch },
+        ].map(({ href, label, icon: Icon }) => {
+          const isActive = pathname === href || pathname.startsWith(href + "/");
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                "focus-visible:ring-2 focus-visible:ring-brand-teal focus-visible:ring-offset-2 focus-visible:outline-none",
+                isActive
+                  ? "bg-[var(--color-brand-teal)] text-white"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="flex-1">{label}</span>
             </Link>
           );
         })}
