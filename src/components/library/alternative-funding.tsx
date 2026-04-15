@@ -196,7 +196,7 @@ function FundingSection({ title, description, icon, programs }: SectionProps) {
         ))}
       </div>
       <p className="text-xs text-warm-400 dark:text-warm-500 italic">
-        This is a curated reference list. Full database integration coming soon.
+        This is a curated reference list of alternative funding sources. Programs and eligibility may change — verify before applying.
       </p>
     </div>
   );

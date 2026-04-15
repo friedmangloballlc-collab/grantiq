@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (!["starter", "pro", "enterprise"].includes(tier)) {
+  if (!["starter", "pro", "growth", "enterprise"].includes(tier)) {
     return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
   }
   if (!["month", "year"].includes(interval)) {

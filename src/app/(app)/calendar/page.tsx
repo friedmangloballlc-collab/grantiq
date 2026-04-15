@@ -6,7 +6,7 @@ import { ProactiveAlerts } from "@/components/calendar/proactive-alerts";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const TIER_ORDER = ["free", "starter", "pro", "enterprise"];
+import { TIER_ORDER } from "@/components/shared/upgrade-gate";
 
 export default async function CalendarPage() {
   const ctx = await getOrgContext();

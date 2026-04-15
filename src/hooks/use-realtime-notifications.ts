@@ -30,7 +30,10 @@ export function useRealtimeNotifications(userId: string) {
       .order("sent_at", { ascending: false })
       .limit(20)
       .then(({ data, error }) => {
-        if (error) return; // Silently handle RLS/permission errors
+        if (error) {
+          console.warn("[notifications] Query failed:", error.message);
+          return;
+        }
         if (data) {
           setNotifications(data as NotificationRecord[]);
           setUnreadCount(data.filter((n) => !n.opened_at).length);

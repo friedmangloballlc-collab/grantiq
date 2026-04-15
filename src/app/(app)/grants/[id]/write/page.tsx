@@ -255,7 +255,7 @@ export default function GrantWritePage({ params }: PageProps) {
         const msg =
           stripeErr instanceof Error ? stripeErr.message : String(stripeErr);
         if (msg === "stripe_not_configured") {
-          // Gracefully fall through — payment setup coming soon
+          // Stripe not configured — redirect to draft with pending payment status
           router.push(`/writing/${purchaseData.draft_id}?payment=pending`);
           return;
         }

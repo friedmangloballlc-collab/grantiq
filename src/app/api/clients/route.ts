@@ -30,7 +30,7 @@ export async function GET() {
     const orgIds = memberships.map((m) => m.org_id);
 
     // Enrich with pipeline counts and readiness scores
-    const [subResult, pipelineResult, profileResult] = await Promise.all([
+    const [subResult, pipelineResult, profileResult, readinessResult] = await Promise.all([
       admin
         .from("subscriptions")
         .select("org_id, tier")
@@ -44,6 +44,11 @@ export async function GET() {
         .from("org_profiles")
         .select("org_id, updated_at")
         .in("org_id", orgIds),
+      admin
+        .from("readiness_scores")
+        .select("org_id, overall_score")
+        .in("org_id", orgIds)
+        .order("created_at", { ascending: false }),
     ]);
 
     const subMap = new Map<string, string>(
@@ -56,6 +61,10 @@ export async function GET() {
     const lastActivityMap = new Map<string, string>(
       (profileResult.data ?? []).map((p) => [p.org_id, p.updated_at])
     );
+    const readinessMap = new Map<string, number>();
+    for (const r of readinessResult.data ?? []) {
+      if (!readinessMap.has(r.org_id)) readinessMap.set(r.org_id, r.overall_score ?? 0);
+    }
 
     const clients = memberships.map((m) => {
       const org = m.organizations as unknown as {
@@ -74,8 +83,7 @@ export async function GET() {
         tier: subMap.get(m.org_id) ?? "free",
         activePipelineCount: pipelineCountMap.get(m.org_id) ?? 0,
         lastActivity: lastActivityMap.get(m.org_id) ?? null,
-        // Readiness score placeholder — use a heuristic for now
-        readinessScore: 0,
+        readinessScore: readinessMap.get(m.org_id) ?? 0,
       };
     });
 

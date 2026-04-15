@@ -162,7 +162,7 @@ export default function GrantLOIPage({ params }: PageProps) {
             {stripeConfigured === false && (
               <div className="flex items-start gap-2 text-sm bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2 text-blue-800 dark:text-blue-200">
                 <Info className="h-4 w-4 mt-0.5 shrink-0" />
-                Payment setup coming soon — LOI generation is free during beta.
+                LOI generation is included with your plan.
               </div>
             )}
 

@@ -172,11 +172,12 @@ export default async function DraftViewerPage({
           <CreditCard className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
           <div className="text-sm">
             <span className="font-semibold text-amber-800 dark:text-amber-300">
-              Payment setup coming soon.
+              Payment pending.
             </span>{" "}
             <span className="text-amber-700 dark:text-amber-400">
-              Your draft has been created. Payment processing will be enabled
-              once Stripe is configured.
+              Your draft has been created. Contact{" "}
+              <a href="mailto:hello@grantaq.com" className="underline">hello@grantaq.com</a>{" "}
+              to complete payment and unlock your draft.
             </span>
           </div>
         </div>

@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import Link from "next/link";
 
-export const TIER_ORDER = ["free", "starter", "pro", "growth", "enterprise"];
+// Re-export as mutable array for backwards compatibility with indexOf(string)
+import { TIER_ORDER as _TIER_ORDER } from "@/lib/billing/feature-gates";
+export const TIER_ORDER: string[] = [..._TIER_ORDER];
 
 interface UpgradeGateProps {
   /** The feature identifier shown in the upgrade prompt, e.g. "AI Writing" */

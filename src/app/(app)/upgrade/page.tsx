@@ -143,18 +143,18 @@ export default function UpgradePage() {
         </div>
       </div>
 
-      {/* Mock mode banner */}
+      {/* Contact to upgrade banner */}
       {isMockMode && (
-        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 text-center">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-            Payment setup coming soon — contact us to upgrade.
+        <div className="rounded-lg bg-brand-teal/5 border border-brand-teal/20 p-4 text-center">
+          <p className="text-sm font-medium text-foreground">
+            Ready to upgrade? Contact us and we&apos;ll get you set up today.
           </p>
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-            Reach out at{" "}
-            <a href="mailto:hello@grantaq.com" className="underline">
+          <p className="text-xs text-muted-foreground mt-1">
+            Email{" "}
+            <a href="mailto:hello@grantaq.com" className="underline text-brand-teal">
               hello@grantaq.com
             </a>{" "}
-            and we will get you set up.
+            or book a call.
           </p>
         </div>
       )}

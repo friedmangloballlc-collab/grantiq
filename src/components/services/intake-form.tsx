@@ -631,7 +631,7 @@ export function IntakeForm({ serviceType, prefill, onComplete, submitting }: Int
                 <p className="text-sm text-muted-foreground mt-1">
                   {serviceType === "eligibility_status"
                     ? "After you submit, our AI will analyze your information and deliver your Grant Eligibility Status report instantly."
-                    : "After you submit, our AI will run a comprehensive 10-step analysis. You\u2019ll receive your full Grant Eligibility & Readiness Diagnostic within 48 hours."}
+                    : "After you submit, our AI will run a comprehensive 10-step analysis. Your full Grant Eligibility & Readiness Diagnostic will be ready in about 30 seconds."}
                 </p>
               </div>
             </>

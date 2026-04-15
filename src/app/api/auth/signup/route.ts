@@ -110,5 +110,14 @@ export async function POST(request: NextRequest) {
     if (error) logger.error("[signup] Failed to enqueue sequence email job", { message: error.message });
   });
 
+  // 7. Mark lead as converted (if they came through /check)
+  await supabase
+    .from("leads")
+    .update({ converted: true, converted_user_id: userId })
+    .eq("email", email)
+    .then(({ error }) => {
+      if (error) logger.error("[signup] Failed to mark lead converted", { message: error.message });
+    });
+
   return NextResponse.json({ success: true, userId, orgId: org.id });
 }
