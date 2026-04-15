@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { aiCall } from "@/lib/ai/call";
-import { MODELS } from "@/lib/ai/client";
-import { buildReadinessDiagnosticPrompt } from "@/lib/ai/services/readiness-diagnostic-prompt";
+import { runParallelDiagnostic } from "@/lib/ai/services/diagnostic-parallel";
+import { precomputeEligibilitySignals } from "@/lib/ai/services/precompute-eligibility";
+import { getCachedReport } from "@/lib/ai/services/report-cache";
 import { logger } from "@/lib/logger";
 
-export const maxDuration = 120; // 2 minutes — comprehensive diagnostic
+export const maxDuration = 120; // 2 minutes
 
 export async function POST() {
   try {
@@ -34,6 +34,17 @@ export async function POST() {
     }
     const orgId = membership.org_id;
 
+    // Check cache first — return existing report if generated in last 24h
+    const cached = await getCachedReport(db, orgId, "readiness_diagnostic");
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        order_id: cached.id,
+        report: cached.report_data,
+        cached: true,
+      });
+    }
+
     // Fetch full org profile data from all tables
     const [orgResult, profileResult, capResult] = await Promise.all([
       db.from("organizations").select("*").eq("id", orgId).single(),
@@ -41,7 +52,7 @@ export async function POST() {
       db.from("org_capabilities").select("*").eq("org_id", orgId).single(),
     ]);
 
-    const orgData = {
+    const orgData: Record<string, unknown> = {
       ...(orgResult.data ?? {}),
       ...(profileResult.data ?? {}),
       ...(capResult.data ?? {}),
@@ -72,58 +83,27 @@ export async function POST() {
       return NextResponse.json({ error: `Failed to create order: ${orderError?.message ?? "unknown"}` }, { status: 500 });
     }
 
-    // Build prompt and call AI — use GPT-4o for comprehensive output
-    const { system, user: userPrompt } = buildReadinessDiagnosticPrompt(orgData);
+    // Pre-compute deterministic eligibility signals
+    const signals = precomputeEligibilitySignals(orgData);
 
-    const tier = orgResult.data?.subscription_tier ?? "free";
+    // Run parallel diagnostic (4 mini calls + 1 synthesis)
+    const result = await runParallelDiagnostic(orgData, signals);
 
-    const result = await aiCall({
-      model: MODELS.STRATEGY, // GPT-4o for quality on this comprehensive diagnostic
-      systemPrompt: system,
-      userInput: userPrompt,
-      orgId,
-      userId: user.id,
-      tier,
-      actionType: "readiness_diagnostic",
-      maxTokens: 16384, // Large output for comprehensive report
-      temperature: 0.1,
-      skipUsageCheck: true,
+    logger.info("Diagnostic complete", {
+      orderId: order.id,
+      durationMs: result.durationMs,
+      inputTokens: result.totalInputTokens,
+      outputTokens: result.totalOutputTokens,
+      costCents: result.totalCostCents,
     });
 
-    // Parse the response
-    let reportData;
-    try {
-      reportData = JSON.parse(result.content);
-    } catch {
-      // Try to extract JSON from the response
-      const jsonMatch = result.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        reportData = JSON.parse(jsonMatch[0]);
-      } else {
-        // If parsing fails entirely, store raw content
-        reportData = {
-          executive_summary: {
-            verdict: "not_eligible",
-            readiness_score: 0,
-            competitive_score: 0,
-            controls_score: 0,
-            audit_readiness_score: 0,
-            confidence: "low",
-            addressable_universe: { low: 0, high: 0, program_count: 0 },
-            summary: "Unable to parse diagnostic results. Please try again.",
-          },
-          full_report_markdown: result.content,
-        };
-      }
-    }
-
-    // Extract scores for the scores column
-    const es = reportData.executive_summary ?? {};
+    // Extract scores
+    const es = (result.reportData.executive_summary as Record<string, unknown>) ?? {};
     const scores = {
-      readiness_score: es.readiness_score ?? 0,
-      competitive_score: es.competitive_score ?? 0,
-      controls_score: es.controls_score ?? 0,
-      audit_readiness_score: es.audit_readiness_score ?? 0,
+      readiness_score: (es.readiness_score as number) ?? 0,
+      competitive_score: (es.competitive_score as number) ?? 0,
+      controls_score: ((result.reportData.controls_score as number) ?? (es.controls_score as number)) ?? 0,
+      audit_readiness_score: ((result.reportData.audit_readiness_score as number) ?? (es.audit_readiness_score as number)) ?? 0,
     };
 
     // Update order with results
@@ -131,7 +111,7 @@ export async function POST() {
       .from("service_orders")
       .update({
         status: "completed",
-        report_data: reportData,
+        report_data: result.reportData,
         scores,
         completed_at: new Date().toISOString(),
       })
@@ -140,12 +120,12 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       order_id: order.id,
-      report: reportData,
+      report: result.reportData,
+      duration_ms: result.durationMs,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("Readiness diagnostic generation failed", { error: message });
-
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

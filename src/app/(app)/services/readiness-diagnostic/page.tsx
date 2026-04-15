@@ -371,25 +371,28 @@ export default function ReadinessDiagnosticPage() {
                 { key: "layer5_programmatic", title: "Layer 5 — Programmatic & Competitive", icon: Target },
               ].map(({ key, title, icon }) => {
                 const items = report.layered_audit[key as keyof typeof report.layered_audit];
-                if (!items?.length) return null;
                 return (
                   <CollapsibleSection key={key} title={title} icon={icon}>
-                    <div className="space-y-3">
-                      {items.map((item, i) => (
-                        <div key={i} className="rounded border border-border p-3 text-sm">
-                          <div className="flex items-center gap-2 mb-1">
-                            <StatusBadge status={item.status} />
-                            <span className="font-medium">{item.item}</span>
+                    {items?.length ? (
+                      <div className="space-y-3">
+                        {items.map((item, i) => (
+                          <div key={i} className="rounded border border-border p-3 text-sm">
+                            <div className="flex items-center gap-2 mb-1">
+                              <StatusBadge status={item.status} />
+                              <span className="font-medium">{item.item}</span>
+                            </div>
+                            {item.gap && <p className="text-muted-foreground text-xs">{item.gap}</p>}
+                            {item.remediation && <p className="text-xs mt-1"><span className="font-medium">Fix:</span> {item.remediation}</p>}
+                            <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                              {item.time && <span>{item.time}</span>}
+                              {item.cost && <span>{item.cost}</span>}
+                            </div>
                           </div>
-                          {item.gap && <p className="text-muted-foreground text-xs">{item.gap}</p>}
-                          {item.remediation && <p className="text-xs mt-1"><span className="font-medium">Fix:</span> {item.remediation}</p>}
-                          <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                            {item.time && <span>{item.time}</span>}
-                            {item.cost && <span>{item.cost}</span>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Not applicable to your organization type.</p>
+                    )}
                   </CollapsibleSection>
                 );
               })}

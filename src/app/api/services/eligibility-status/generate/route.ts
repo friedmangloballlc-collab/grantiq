@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { aiCall } from "@/lib/ai/call";
 import { MODELS } from "@/lib/ai/client";
 import { buildEligibilityStatusPrompt } from "@/lib/ai/services/eligibility-status-prompt";
+import { precomputeEligibilitySignals, formatSignalsForPrompt } from "@/lib/ai/services/precompute-eligibility";
+import { getCachedReport } from "@/lib/ai/services/report-cache";
 import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
@@ -33,6 +35,17 @@ export async function POST() {
       return NextResponse.json({ error: "No active org membership" }, { status: 403 });
     }
     const orgId = membership.org_id;
+
+    // Check cache first — return existing report if generated in last 24h
+    const cached = await getCachedReport(db, orgId, "eligibility_status");
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        order_id: cached.id,
+        report: cached.report_data,
+        cached: true,
+      });
+    }
 
     // Fetch full org profile data
     const [orgResult, profileResult, capResult] = await Promise.all([
@@ -72,13 +85,20 @@ export async function POST() {
       return NextResponse.json({ error: `Failed to create order: ${orderError?.message ?? "unknown"}` }, { status: 500 });
     }
 
-    // Build prompt and call AI
-    const { system, user: userPrompt } = buildEligibilityStatusPrompt(orgData);
+    // Pre-compute deterministic eligibility signals
+    const signals = precomputeEligibilitySignals(orgData);
+    const signalsText = formatSignalsForPrompt(signals);
+
+    // Build prompt with pre-computed signals injected
+    const { system, user: userPrompt } = buildEligibilityStatusPrompt({
+      ...orgData,
+      _precomputed_signals: signalsText,
+    });
 
     const tier = orgResult.data?.subscription_tier ?? "free";
 
     const result = await aiCall({
-      model: MODELS.STRATEGY, // Use GPT-4o for quality
+      model: MODELS.SCORING, // GPT-4o-mini — fast + cheap for structured categorization
       systemPrompt: system,
       userInput: userPrompt,
       orgId,
@@ -88,21 +108,10 @@ export async function POST() {
       maxTokens: 4096,
       temperature: 0.1,
       skipUsageCheck: true,
+      responseFormat: { type: "json_object" },
     });
 
-    // Parse the response
-    let reportData;
-    try {
-      reportData = JSON.parse(result.content);
-    } catch {
-      // Try to extract JSON from the response
-      const jsonMatch = result.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        reportData = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("Failed to parse AI response as JSON");
-      }
-    }
+    const reportData = JSON.parse(result.content);
 
     // Update order with results
     const scores = {

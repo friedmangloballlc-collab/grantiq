@@ -29,6 +29,8 @@ export interface AiCallOptions {
   skipUsageCheck?: boolean;
   /** Temperature — defaults to 0 for deterministic scoring */
   temperature?: number;
+  /** Response format — use { type: "json_object" } for guaranteed valid JSON */
+  responseFormat?: { type: "json_object" | "text" };
 }
 
 export interface AiCallResult {
@@ -67,6 +69,7 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
     maxTokens = 2048,
     skipUsageCheck = false,
     temperature = 0,
+    responseFormat,
   } = options;
 
   // 1. Prompt injection detection (on raw input before sanitization)
@@ -101,6 +104,7 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
       { role: "system", content: systemPrompt },
       { role: "user", content: sanitized },
     ],
+    ...(responseFormat ? { response_format: responseFormat } : {}),
   });
 
   const content = response.choices[0]?.message?.content ?? "";

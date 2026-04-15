@@ -61,7 +61,13 @@ Rules:
 - Quick wins must each be under $500 and doable within 30 days.
 - Always include 3-5 quick wins.`;
 
-  const user = `Intake Form Data:\n${JSON.stringify(orgData, null, 2)}`;
+  const precomputed = orgData._precomputed_signals as string | undefined;
+  const cleaned = { ...orgData };
+  delete cleaned._precomputed_signals;
+
+  const user = precomputed
+    ? `${precomputed}\n\nIntake Form Data:\n${JSON.stringify(cleaned, null, 2)}`
+    : `Intake Form Data:\n${JSON.stringify(cleaned, null, 2)}`;
 
   return { system, user };
 }
