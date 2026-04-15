@@ -19,9 +19,16 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IntakeForm, type IntakeData } from "@/components/services/intake-form";
+
+interface AuditItem {
+  item: string; status: string; gap: string; remediation: string; time: string; cost: string;
+  what_to_do?: string; where_to_do_it?: string; who_does_it?: string;
+  dependencies?: string; risk_of_skipping?: string; our_firm_covers?: string;
+}
 
 interface DiagnosticReport {
   executive_summary: {
@@ -35,27 +42,29 @@ interface DiagnosticReport {
     summary: string;
   };
   quick_wins: Array<{ action: string; where: string; time: string; cost: string }>;
-  red_flags: Array<{ flag: string; blocked_categories: string[]; remediation: string; severity: string }>;
+  red_flags: Array<{ flag: string; blocked_categories: string[]; remediation: string; severity: string; what_to_do?: string; where_to_do_it?: string; who_does_it?: string; estimated_time?: string; estimated_cost?: string; dependencies?: string; risk_of_skipping?: string; our_firm_covers?: string }>;
   first_timer_reality_check: {
     track_record: string;
     operating_history: string;
     win_rate: string;
     timeline: string;
   };
-  eligibility_by_category: Array<{ category: string; status: string; reason: string }>;
+  eligibility_by_category: Array<{ category: string; status: string; reason: string; path_to_yes?: string }>;
   demographic_eligibility: Record<string, string>;
   layered_audit: {
-    layer1_universal: Array<{ item: string; status: string; gap: string; remediation: string; time: string; cost: string }>;
-    layer2_federal: Array<{ item: string; status: string; gap: string; remediation: string; time: string; cost: string }>;
-    layer3_nonprofit: Array<{ item: string; status: string; gap: string; remediation: string; time: string; cost: string }>;
-    layer4_forprofit: Array<{ item: string; status: string; gap: string; remediation: string; time: string; cost: string }>;
-    layer5_programmatic: Array<{ item: string; status: string; gap: string; remediation: string; time: string; cost: string }>;
+    layer1_universal: Array<AuditItem>;
+    layer2_federal: Array<AuditItem>;
+    layer3_nonprofit: Array<AuditItem>;
+    layer4_forprofit: Array<AuditItem>;
+    layer5_programmatic: Array<AuditItem>;
   };
   controls_assessment: Array<{ component: string; rating: number; findings: string }>;
   site_visit_simulation: Array<{ document: string; status: string; gap: string }>;
   funder_matches: Array<{ rank: number; funder: string; fit_score: number; award_range: string; cycle: string; first_timer_friendly: string; rationale: string }>;
   remediation_roadmap: Array<{ phase: string; actions: Array<{ action: string; owner: string; timeline: string; cost: string; dependency: string }> }>;
   recommended_tier: { tier: number; name: string; justification: string };
+  restructuring_options?: Array<{ option: string; what_it_unlocks: string; cost: string; timeline: string; tradeoffs: string }>;
+  bootstrap_path?: Array<{ action: string; cost: string; time: string; where: string }>;
   full_report_markdown: string;
 }
 
@@ -329,12 +338,24 @@ export default function ReadinessDiagnosticPage() {
                           {rf.severity}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{rf.remediation}</p>
                       {rf.blocked_categories?.length > 0 && (
                         <p className="text-xs text-red-600 mt-1">
                           Blocks: {rf.blocked_categories.join(", ")}
                         </p>
                       )}
+                      {/* Full remediation block */}
+                      <div className="mt-2 rounded bg-amber-50 dark:bg-amber-950/20 px-3 py-2 space-y-1 text-xs">
+                        {rf.what_to_do && <p><span className="font-medium">What to do:</span> {rf.what_to_do}</p>}
+                        {!rf.what_to_do && rf.remediation && <p><span className="font-medium">Fix:</span> {rf.remediation}</p>}
+                        {rf.where_to_do_it && <p><span className="font-medium">Where:</span> {rf.where_to_do_it}</p>}
+                        {rf.who_does_it && <p><span className="font-medium">Who:</span> {rf.who_does_it}</p>}
+                        {(rf.estimated_time || rf.estimated_cost) && (
+                          <p>{rf.estimated_time}{rf.estimated_time && rf.estimated_cost ? " · " : ""}{rf.estimated_cost}</p>
+                        )}
+                        {rf.dependencies && <p><span className="font-medium">Depends on:</span> {rf.dependencies}</p>}
+                        {rf.risk_of_skipping && <p className="text-red-600 dark:text-red-400"><span className="font-medium">Risk:</span> {rf.risk_of_skipping}</p>}
+                        {rf.our_firm_covers && <p className="font-medium text-brand-teal">We cover this in: {rf.our_firm_covers}</p>}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -361,15 +382,24 @@ export default function ReadinessDiagnosticPage() {
             </Card>
           )}
 
-          {/* Eligibility by Category */}
+          {/* Eligibility by Category — with Path to Yes */}
           {report.eligibility_by_category?.length > 0 && (
             <CollapsibleSection title="Grant Eligibility by Category" icon={Shield} defaultOpen>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {report.eligibility_by_category.map((cat, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm py-2 border-b border-border last:border-0">
-                    <StatusBadge status={cat.status} />
-                    <span className="font-medium flex-1">{cat.category}</span>
-                    <span className="text-xs text-muted-foreground max-w-[300px] text-right">{cat.reason}</span>
+                  <div key={i} className="rounded border border-border p-3 text-sm">
+                    <div className="flex items-center gap-3">
+                      <StatusBadge status={cat.status} />
+                      <span className="font-medium flex-1">{cat.category}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{cat.reason}</p>
+                    {cat.path_to_yes && cat.status !== "eligible" && (
+                      <div className="mt-2 rounded bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2">
+                        <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                          Path to Yes: <span className="font-normal">{cat.path_to_yes}</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -398,11 +428,26 @@ export default function ReadinessDiagnosticPage() {
                               <span className="font-medium">{item.item}</span>
                             </div>
                             {item.gap && <p className="text-muted-foreground text-xs">{item.gap}</p>}
-                            {item.remediation && <p className="text-xs mt-1"><span className="font-medium">Fix:</span> {item.remediation}</p>}
-                            <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                              {item.time && <span>{item.time}</span>}
-                              {item.cost && <span>{item.cost}</span>}
-                            </div>
+                            {/* Full "If Not Ready" remediation block */}
+                            {item.status !== "ready" && (item.what_to_do || item.remediation) && (
+                              <div className="mt-2 rounded bg-amber-50 dark:bg-amber-950/20 px-3 py-2 space-y-1">
+                                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">If Not Ready:</p>
+                                {item.what_to_do && <p className="text-xs"><span className="font-medium">What to do:</span> {item.what_to_do}</p>}
+                                {!item.what_to_do && item.remediation && <p className="text-xs"><span className="font-medium">Fix:</span> {item.remediation}</p>}
+                                {item.where_to_do_it && <p className="text-xs"><span className="font-medium">Where:</span> {item.where_to_do_it}</p>}
+                                {item.who_does_it && <p className="text-xs"><span className="font-medium">Who:</span> {item.who_does_it}</p>}
+                                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                                  {(item.time || item.cost) && (
+                                    <span>{item.time}{item.time && item.cost ? " · " : ""}{item.cost}</span>
+                                  )}
+                                </div>
+                                {item.dependencies && <p className="text-xs"><span className="font-medium">Depends on:</span> {item.dependencies}</p>}
+                                {item.risk_of_skipping && <p className="text-xs text-red-600 dark:text-red-400"><span className="font-medium">Risk of skipping:</span> {item.risk_of_skipping}</p>}
+                                {item.our_firm_covers && (
+                                  <p className="text-xs font-medium text-brand-teal">We cover this in: {item.our_firm_covers}</p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -511,6 +556,79 @@ export default function ReadinessDiagnosticPage() {
                 ))}
               </div>
             </CollapsibleSection>
+          )}
+
+          {/* Restructuring Options — for "Not Eligible" verdicts */}
+          {report.restructuring_options && report.restructuring_options.length > 0 && (
+            <Card className="border-amber-200 dark:border-amber-800">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Target className="h-4 w-4 text-amber-500" />
+                  Restructuring Options
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  If grants aren&apos;t the right fit today, here are structural changes that could unlock eligibility.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-muted-foreground border-b">
+                        <th className="py-2 pr-3">Option</th>
+                        <th className="py-2 pr-3">Unlocks</th>
+                        <th className="py-2 pr-3">Cost</th>
+                        <th className="py-2 pr-3">Timeline</th>
+                        <th className="py-2">Tradeoffs</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.restructuring_options.map((ro, i) => (
+                        <tr key={i} className="border-b border-border last:border-0">
+                          <td className="py-2 pr-3 font-medium">{ro.option}</td>
+                          <td className="py-2 pr-3 text-xs">{ro.what_it_unlocks}</td>
+                          <td className="py-2 pr-3 text-xs whitespace-nowrap">{ro.cost}</td>
+                          <td className="py-2 pr-3 text-xs whitespace-nowrap">{ro.timeline}</td>
+                          <td className="py-2 text-xs text-muted-foreground">{ro.tradeoffs}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Bootstrap Path — for low-budget orgs */}
+          {report.bootstrap_path && report.bootstrap_path.length > 0 && (
+            <Card className="border-emerald-200 dark:border-emerald-800">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-emerald-500" />
+                  Bootstrap Path — Get Grant-Ready on a Tight Budget
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  No-cost and low-cost actions you can take right now. When you&apos;re ready to move faster, come back for Tier 2 or 3.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {report.bootstrap_path.map((bp, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm">
+                      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold shrink-0">
+                        {i + 1}
+                      </span>
+                      <div>
+                        <p className="font-medium">{bp.action}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {bp.where} &middot; {bp.time} &middot; {bp.cost}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Recommended Service Tier */}
