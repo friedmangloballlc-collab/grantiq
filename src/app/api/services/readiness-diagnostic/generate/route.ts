@@ -68,8 +68,8 @@ export async function POST() {
       .single();
 
     if (orderError || !order) {
-      logger.error("Failed to create diagnostic order", { error: orderError?.message });
-      return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+      logger.error("Failed to create diagnostic order", { error: orderError?.message, code: orderError?.code });
+      return NextResponse.json({ error: `Failed to create order: ${orderError?.message ?? "unknown"}` }, { status: 500 });
     }
 
     // Build prompt and call AI — use GPT-4o for comprehensive output
