@@ -13,7 +13,6 @@ const NAV_LINKS = [
   { href: "/blog", label: "Blog" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/tools", label: "Free Tools" },
-  { href: "/grant-directory", label: "Grant Directory" },
   { href: "/signup/nonprofit", label: "Start a Nonprofit" },
 ];
 

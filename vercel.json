@@ -27,6 +27,10 @@
     {
       "path": "/api/cron/enrich-competitiveness",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/send-lead-nurture",
+      "schedule": "0 13 * * *"
     }
   ]
 }
