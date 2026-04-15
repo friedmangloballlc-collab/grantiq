@@ -13,6 +13,7 @@ import {
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "getreachmediallc@gmail.com";
 
 const QUICK_LINKS = [
+  { href: "/admin/leads", label: "Leads", description: "View leads from public eligibility checks — hot, warm, cold" },
   { href: "/admin/corrections", label: "Review Corrections", description: "Approve or reject user-submitted grant data fixes" },
   { href: "/admin/users", label: "Manage Users", description: "View users, orgs, tiers, and subscriptions" },
 ];

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getOpenAIClient, MODELS, estimateCostCents } from "@/lib/ai/client";
 import { buildEligibilityStatusPrompt } from "@/lib/ai/services/eligibility-status-prompt";
 import { precomputeEligibilitySignals, formatSignalsForPrompt } from "@/lib/ai/services/precompute-eligibility";
+import { sendLeadReportEmail, sendHotLeadAlert } from "@/lib/email/send-lead-report";
 import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
@@ -106,6 +107,22 @@ export async function POST(req: NextRequest) {
       verdict: reportData.verdict,
       costCents,
     });
+
+    // Fire-and-forget: send report email + hot lead alert
+    sendLeadReportEmail(
+      body.email,
+      body.full_name ?? "",
+      body.company_name,
+      reportData
+    ).catch(() => {});
+
+    sendHotLeadAlert(
+      body.email,
+      body.company_name,
+      reportData.verdict ?? "unknown",
+      reportData.readiness_score ?? 0,
+      body.annual_revenue ?? null
+    ).catch(() => {});
 
     return NextResponse.json({
       success: true,

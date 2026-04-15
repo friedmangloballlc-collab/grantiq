@@ -643,8 +643,16 @@ export default function ReadinessDiagnosticPage() {
             </Card>
           )}
 
-          {/* Regenerate */}
-          <div className="flex justify-center pt-4">
+          {/* Actions */}
+          <div className="flex items-center justify-center gap-3 pt-4">
+            {report.full_report_markdown && (
+              <a href="/services/report" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  Download PDF
+                </Button>
+              </a>
+            )}
             <Button variant="outline" onClick={handleRegenerate} disabled={generating} className="gap-2">
               {generating ? (
                 <>
