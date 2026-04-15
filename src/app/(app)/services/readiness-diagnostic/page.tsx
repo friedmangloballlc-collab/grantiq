@@ -21,6 +21,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IntakeForm, type IntakeData } from "@/components/services/intake-form";
 
 interface DiagnosticReport {
   executive_summary: {
@@ -146,7 +147,38 @@ export default function ReadinessDiagnosticPage() {
 
   useEffect(() => { loadOrders(); }, []);
 
-  async function handleGenerate() {
+  async function handleIntakeComplete(intakeData: IntakeData) {
+    setGenerating(true);
+    setError(null);
+    try {
+      // Step 1: Save intake data
+      const saveRes = await fetch("/api/services/intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(intakeData),
+      });
+      if (!saveRes.ok) {
+        const saveErr = await saveRes.json();
+        setError(saveErr.error ?? "Failed to save intake data");
+        return;
+      }
+
+      // Step 2: Generate diagnostic
+      const res = await fetch("/api/services/readiness-diagnostic/generate", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to generate diagnostic");
+        return;
+      }
+      await loadOrders();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleRegenerate() {
     setGenerating(true);
     setError(null);
     try {
@@ -191,36 +223,20 @@ export default function ReadinessDiagnosticPage() {
         </p>
       </div>
 
-      {/* Generate CTA */}
+      {/* Intake Form — shown when no report exists */}
       {!report && (
-        <Card className="mb-8">
-          <CardContent className="py-10 text-center">
-            <FileSearch className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Run Your Full Diagnostic</h2>
-            <p className="text-sm text-muted-foreground mb-2 max-w-lg mx-auto">
-              We&apos;ll analyze your organization across 5 readiness layers, screen for red flags,
-              assess internal controls, simulate an audit site visit, match you with first-timer-friendly
-              funders, and produce a complete remediation roadmap.
-            </p>
-            <p className="text-xs text-muted-foreground mb-6">
-              Takes about 1-2 minutes to generate.
-            </p>
-            {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
-            <Button onClick={handleGenerate} disabled={generating} size="lg" className="gap-2">
-              {generating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating Diagnostic...
-                </>
-              ) : (
-                <>
-                  Run Full Diagnostic
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="mb-8">
+          {error && (
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-4 mb-4">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          <IntakeForm
+            serviceType="readiness_diagnostic"
+            onComplete={handleIntakeComplete}
+            submitting={generating}
+          />
+        </div>
       )}
 
       {/* Report Display */}
@@ -511,7 +527,7 @@ export default function ReadinessDiagnosticPage() {
 
           {/* Regenerate */}
           <div className="flex justify-center pt-4">
-            <Button variant="outline" onClick={handleGenerate} disabled={generating} className="gap-2">
+            <Button variant="outline" onClick={handleRegenerate} disabled={generating} className="gap-2">
               {generating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />

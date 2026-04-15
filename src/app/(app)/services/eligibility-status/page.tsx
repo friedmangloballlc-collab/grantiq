@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IntakeForm, type IntakeData } from "@/components/services/intake-form";
 
 interface EligibilityReport {
   verdict: string;
@@ -71,7 +72,39 @@ export default function EligibilityStatusPage() {
 
   useEffect(() => { loadOrders(); }, []);
 
-  async function handleGenerate() {
+  async function handleIntakeComplete(intakeData: IntakeData) {
+    setGenerating(true);
+    setError(null);
+    try {
+      // Step 1: Save intake data to org profile
+      const saveRes = await fetch("/api/services/intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(intakeData),
+      });
+      if (!saveRes.ok) {
+        const saveErr = await saveRes.json();
+        setError(saveErr.error ?? "Failed to save intake data");
+        return;
+      }
+
+      // Step 2: Generate eligibility report
+      const res = await fetch("/api/services/eligibility-status/generate", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to generate report");
+        return;
+      }
+      // Reload orders to show the new report
+      await loadOrders();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleRegenerate() {
     setGenerating(true);
     setError(null);
     try {
@@ -81,9 +114,8 @@ export default function EligibilityStatusPage() {
         setError(data.error ?? "Failed to generate report");
         return;
       }
-      // Reload orders to show the new report
       await loadOrders();
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setGenerating(false);
@@ -112,34 +144,20 @@ export default function EligibilityStatusPage() {
         </p>
       </div>
 
-      {/* Generate / Regenerate CTA */}
+      {/* Intake Form — shown when no report exists */}
       {!report && (
-        <Card className="mb-8">
-          <CardContent className="py-10 text-center">
-            <ClipboardCheck className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Check Your Eligibility</h2>
-            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-              We&apos;ll analyze your organization profile against grant requirements across federal,
-              state, foundation, and corporate programs. Takes about 30 seconds.
-            </p>
-            {error && (
-              <p className="text-sm text-red-600 mb-4">{error}</p>
-            )}
-            <Button onClick={handleGenerate} disabled={generating} size="lg" className="gap-2">
-              {generating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  Run Eligibility Check
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="mb-8">
+          {error && (
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-4 mb-4">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          <IntakeForm
+            serviceType="eligibility_status"
+            onComplete={handleIntakeComplete}
+            submitting={generating}
+          />
+        </div>
       )}
 
       {/* Report Display */}
@@ -298,7 +316,7 @@ export default function EligibilityStatusPage() {
 
           {/* Regenerate */}
           <div className="flex justify-center pt-4">
-            <Button variant="outline" onClick={handleGenerate} disabled={generating} className="gap-2">
+            <Button variant="outline" onClick={handleRegenerate} disabled={generating} className="gap-2">
               {generating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />

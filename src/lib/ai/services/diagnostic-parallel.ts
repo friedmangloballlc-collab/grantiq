@@ -58,18 +58,33 @@ Layer 5 (Programmatic): Mission/theory of change, logic model, SMART objectives,
 
 For each item: status (ready/partial/not_ready/insufficient), gap, remediation, time, cost.
 
-STEP 2 — RISK & RED FLAG SCREEN: Check for federal debt, litigation, bankruptcy, exclusion list, IRS issues, co-mingled finances, under 1 year, no formal entity, for-profit seeking nonprofit grants, mission misalignment, unfundable industry, no defined project.
+MANDATORY "IF NOT READY" PROTOCOL:
+For EVERY item marked partial, not_ready, or insufficient, you MUST include a complete remediation block with ALL of these fields:
+- what_to_do: Specific action in plain language
+- where_to_do_it: Exact URL, agency, vendor type, or office (e.g., "IRS.gov/EIN", "SAM.gov", "state Secretary of State website", "commercial insurance broker")
+- who_does_it: DIY / bookkeeper / accountant / CPA / attorney / insurance broker / our firm (Tier 2 or Tier 3)
+- estimated_time: Hours, days, or weeks
+- estimated_cost: Specific dollar range or "Free" — separate filing fees from professional fees
+- dependencies: What must happen first
+- risk_of_skipping: Specific funding categories or programs blocked
+- our_firm_covers: Tier 1 (diagnosis only) / Tier 2 (roadmap + templates) / Tier 3 (we do it for you)
+
+When multiple items share the same remediation, group them and note the bundled efficiency.
+
+STEP 2 — RISK & RED FLAG SCREEN: Check for federal debt, litigation, bankruptcy, exclusion list, IRS issues, co-mingled finances, under 1 year, no formal entity, for-profit seeking nonprofit grants, mission misalignment, unfundable industry, no defined project. For each flag, include the full remediation block above.
+
+"IF NOT ELIGIBLE TODAY" — for each blocked grant category, include a one-line "path_to_yes" field describing what to fix and estimated cost to unlock that category.
 
 Output JSON:
 {
   "layered_audit": {
-    "layer1_universal": [{ "item": "...", "status": "...", "gap": "...", "remediation": "...", "time": "...", "cost": "..." }],
+    "layer1_universal": [{ "item": "...", "status": "...", "gap": "...", "remediation": "...", "time": "...", "cost": "...", "what_to_do": "...", "where_to_do_it": "...", "who_does_it": "...", "dependencies": "...", "risk_of_skipping": "...", "our_firm_covers": "..." }],
     "layer2_federal": [...],
     "layer3_nonprofit": [...],
     "layer4_forprofit": [...],
     "layer5_programmatic": [...]
   },
-  "red_flags": [{ "flag": "...", "blocked_categories": ["..."], "remediation": "...", "severity": "critical|moderate|minor" }]
+  "red_flags": [{ "flag": "...", "blocked_categories": ["..."], "remediation": "...", "severity": "critical|moderate|minor", "what_to_do": "...", "where_to_do_it": "...", "who_does_it": "...", "estimated_time": "...", "estimated_cost": "...", "dependencies": "...", "risk_of_skipping": "...", "our_firm_covers": "..." }]
 }`,
     user: `${signals}\n\nOrganization Data:\n${orgJson}`,
   };
@@ -119,10 +134,14 @@ STEP 6 — ADDRESSABLE GRANT UNIVERSE: Conservative estimate of annual grant dol
 
 Also produce:
 - Eligibility verdict: eligible_now / conditionally_eligible / eligible_after_remediation / not_eligible
-- Quick wins: 3-5 actions under $500, doable in 30 days
-- Eligibility by category (10 categories with status and reason)
+- Quick wins: 3-5 actions under $500, doable in 30 days. Each must include: action, where (specific URL/resource), time, cost.
+- Eligibility by category (10 categories). For each NOT ELIGIBLE category, include a "path_to_yes" field: what to fix and estimated cost to unlock that category.
 - Demographic eligibility (MBE, WOSB, EDWOSB, VOSB, SDVOSB, HUBZone, 8a, Opportunity Zone, Rural, LMI)
 - First-timer reality check (track_record, operating_history, win_rate, timeline)
+
+IF VERDICT IS "not_eligible": produce a "restructuring_options" array with options like: form 501(c)(3) affiliate, use fiscal sponsorship, reincorporate in different state, pursue demographic certification. Each with: option, what_it_unlocks, cost, timeline, tradeoffs.
+
+IF BUDGET IS LOW (pre-revenue or under $100K revenue): produce a "bootstrap_path" array of no-cost/low-cost actions: EIN (free, 15 min, IRS.gov), UEI + SAM.gov (free, 2-4 weeks), free policy templates (BoardSource, National Council of Nonprofits), free SBA Learning Center courses, SCORE mentor (free), Grants.gov account (free), starter grants (Amber, Hello Alice, Comcast RISE).
 
 Output JSON:
 {
@@ -135,9 +154,11 @@ Output JSON:
     "summary": "one paragraph"
   },
   "quick_wins": [{ "action": "...", "where": "...", "time": "...", "cost": "..." }],
-  "eligibility_by_category": [{ "category": "...", "status": "eligible|conditional|not_eligible", "reason": "..." }],
+  "eligibility_by_category": [{ "category": "...", "status": "eligible|conditional|not_eligible", "reason": "...", "path_to_yes": "..." }],
   "demographic_eligibility": { "MBE": "yes|no|verify", ... },
-  "first_timer_reality_check": { "track_record": "...", "operating_history": "...", "win_rate": "...", "timeline": "..." }
+  "first_timer_reality_check": { "track_record": "...", "operating_history": "...", "win_rate": "...", "timeline": "..." },
+  "restructuring_options": [{ "option": "...", "what_it_unlocks": "...", "cost": "...", "timeline": "...", "tradeoffs": "..." }],
+  "bootstrap_path": [{ "action": "...", "cost": "...", "time": "...", "where": "..." }]
 }`,
     user: `${signals}\n\nOrganization Data:\n${orgJson}`,
   };
