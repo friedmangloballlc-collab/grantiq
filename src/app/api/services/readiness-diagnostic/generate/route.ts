@@ -19,18 +19,19 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    const db = createAdminClient();
+
+    const { data: membership } = await db
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
       .eq("status", "active")
+      .limit(1)
       .single();
 
     if (!membership) {
       return NextResponse.json({ error: "No active org membership" }, { status: 403 });
     }
-
-    const db = createAdminClient();
     const orgId = membership.org_id;
 
     // Fetch full org profile data from all tables
