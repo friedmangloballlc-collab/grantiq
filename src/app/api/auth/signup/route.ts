@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     password,
-    // TODO: Change to email_confirm: false once the Resend sending domain is
-    // verified in production. Until then, auto-confirm keeps the flow unblocked.
-    email_confirm: true, // Auto-confirm so they can sign in immediately
+    // Auto-confirm so users can sign in immediately after signup.
+    // Set to false if you want email verification first (requires verified Resend domain).
+    email_confirm: true,
   });
 
   if (authError || !authData.user) {
