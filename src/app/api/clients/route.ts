@@ -185,13 +185,34 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
-    // Optionally invite the client contact as a viewer
+    // Invite the client contact as a viewer
     if (inviteClient && contactEmail) {
-      // Best-effort: if Supabase inviteUserByEmail is available we'd use it here.
-      // For now we record the intent — a background job can send the invite.
+      // Send invite via Supabase Auth
+      const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(contactEmail, {
+        data: { invited_org_id: newOrgId, invited_by: user.id, role: "viewer" },
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://grantaq.com"}/dashboard`,
+      });
+
+      if (inviteError) {
+        // If Supabase invite fails (e.g., user already exists), send via Resend
+        logger.warn("Supabase invite failed, sending via Resend", { error: inviteError.message });
+        try {
+          const { Resend } = await import("resend");
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL ?? "GrantAQ <noreply@grantaq.com>",
+            to: contactEmail,
+            subject: `You've been invited to GrantAQ by your grant consultant`,
+            html: `<p>Your grant consultant has set up a GrantAQ workspace for <strong>${orgName}</strong>.</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://grantaq.com"}/signup?org=${newOrgId}">Click here to create your account and get started.</a></p>`,
+          });
+        } catch (emailErr) {
+          logger.error("Client invite email failed", { error: String(emailErr) });
+        }
+      }
+
       await admin.from("user_events").insert({
         org_id: newOrgId,
-        event_type: "client_invite_pending",
+        event_type: "client_invited",
         metadata: { email: contactEmail, invited_by: user.id },
       });
     }

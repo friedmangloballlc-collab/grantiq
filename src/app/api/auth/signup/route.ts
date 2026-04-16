@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const { email, password, orgName, termsAccepted } = await request.json();
+  const { email, password, orgName, termsAccepted, referralCode } = await request.json();
 
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
@@ -118,6 +118,15 @@ export async function POST(request: NextRequest) {
     .then(({ error }) => {
       if (error) logger.error("[signup] Failed to mark lead converted", { message: error.message });
     });
+
+  // 8. Track referral if code provided
+  if (referralCode) {
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/referrals`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ referral_code: referralCode, referred_email: email, referred_user_id: userId }),
+    }).catch((err) => logger.error("[signup] Referral tracking failed", { error: String(err) }));
+  }
 
   return NextResponse.json({ success: true, userId, orgId: org.id });
 }

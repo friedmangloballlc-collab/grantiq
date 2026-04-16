@@ -43,9 +43,17 @@ export const getOrgContext = cache(async () => {
 
   const { data: sub } = await admin
     .from("subscriptions")
-    .select("tier")
+    .select("tier, trial_ends_at")
     .eq("org_id", membership.org_id)
     .single();
+
+  // During active trial, elevate free users to "pro" (Strategist)
+  let effectiveTier = sub?.tier ?? "free";
+  const trialEndsAt = sub?.trial_ends_at ?? null;
+  const trialActive = trialEndsAt ? new Date(trialEndsAt) > new Date() : false;
+  if (trialActive && effectiveTier === "free") {
+    effectiveTier = "starter"; // Trial gives Seeker access
+  }
 
   return {
     userId: user.id,
@@ -53,6 +61,8 @@ export const getOrgContext = cache(async () => {
     orgId: membership.org_id,
     orgName: (membership.organizations as { name?: string } | null)?.name ?? "My Organization",
     role: membership.role,
-    tier: sub?.tier ?? "free",
+    tier: effectiveTier,
+    trialActive,
+    trialEndsAt,
   };
 });

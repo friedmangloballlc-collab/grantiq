@@ -6,9 +6,9 @@ export const REFERRAL_REWARDS = {
     { count: 10, reward: "Grant Insider badge + priority support for life", type: "badge" },
   ],
   referred: {
-    reward: "14-day Strategist trial (instead of Explorer)",
+    reward: "7-day Strategist trial (instead of Explorer)",
     trialTier: "pro",
-    trialDays: 14,
+    trialDays: 7,
     bonusMatches: 10, // See 10 matches instead of 5
   },
 } as const;
