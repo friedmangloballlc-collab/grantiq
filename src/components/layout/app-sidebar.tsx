@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   ClipboardCheck,
   FileSearch,
+  Shield,
+  Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -129,6 +131,8 @@ export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
         {[
           { href: "/services/eligibility-status", label: "Eligibility Status", icon: ClipboardCheck },
           { href: "/services/readiness-diagnostic", label: "Readiness Diagnostic", icon: FileSearch },
+          { href: "/compliance", label: "Compliance Calendar", icon: Shield },
+          { href: "/portfolio-tracker", label: "Grant Portfolio", icon: Wallet },
         ].map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + "/");
           return (
