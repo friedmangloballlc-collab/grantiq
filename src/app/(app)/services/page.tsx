@@ -1,138 +1,114 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ClipboardCheck, FileSearch, ArrowRight, Clock, Shield, Zap } from "lucide-react";
+import {
+  ClipboardCheck, FileSearch, ArrowRight, Shield, Award, Building,
+  FileText, Eye, GitBranch, ClipboardList, Zap, PenLine, Wallet,
+} from "lucide-react";
 
-const SERVICES = [
-  {
-    id: "eligibility-status",
-    title: "Grant Eligibility Status",
-    description:
-      "Get a quick, AI-powered assessment of whether your organization is grant-ready. Receive a clear verdict, eligible grant categories, blockers, and quick wins you can act on immediately.",
-    icon: ClipboardCheck,
-    href: "/services/eligibility-status",
-    highlights: [
-      "Clear eligibility verdict",
-      "Grant categories you qualify for",
-      "Top blockers with fixes",
-      "Quick wins under $500",
-      "Estimated grant universe",
-    ],
-    turnaround: "Instant (AI-generated)",
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
-  },
-  {
-    id: "readiness-diagnostic",
-    title: "Grant Eligibility & Readiness Diagnostic",
-    description:
-      "A comprehensive 10-step diagnostic designed for first-time grant seekers. Covers legal, financial, compliance, internal controls, audit readiness, funder matching, and a full remediation roadmap.",
-    icon: FileSearch,
-    href: "/services/readiness-diagnostic",
-    highlights: [
-      "5-layer readiness audit",
-      "Risk & red flag screen",
-      "COSO internal controls assessment",
-      "Audit & site-visit simulation",
-      "4 scored dimensions (0-100)",
-      "Top funder matches (first-timer focus)",
-      "Sequenced remediation roadmap",
-      "Service tier recommendation",
-    ],
-    turnaround: "AI-generated in ~2 minutes",
-    color: "text-blue-600",
-    bgColor: "bg-blue-50 dark:bg-blue-950/30",
-  },
+const ICON_MAP: Record<string, React.ElementType> = {
+  ClipboardCheck, FileSearch, Shield, Award, Building, FileText,
+  Eye, GitBranch, ClipboardList, Zap, PenLine, Wallet,
+};
+
+interface ServiceItem {
+  title: string;
+  description: string;
+  href: string;
+  icon: string;
+  price: string;
+  tag?: string;
+  tagColor?: string;
+}
+
+const FREE_SERVICES: ServiceItem[] = [
+  { title: "Grant Eligibility Status", description: "Quick AI assessment of grant readiness with verdict and quick wins", href: "/services/eligibility-status", icon: "ClipboardCheck", price: "Free", tag: "Instant", tagColor: "bg-emerald-100 text-emerald-700" },
+  { title: "Readiness Diagnostic", description: "10-step diagnostic: audit, controls, site-visit sim, funder matches, roadmap", href: "/services/readiness-diagnostic", icon: "FileSearch", price: "Free", tag: "Instant", tagColor: "bg-emerald-100 text-emerald-700" },
+  { title: "Compliance Calendar", description: "Auto-generated deadlines for SAM renewal, 990, state filings, insurance", href: "/compliance", icon: "Shield", price: "Free", tag: "Auto-generated", tagColor: "bg-blue-100 text-blue-700" },
+  { title: "Grant Portfolio Tracker", description: "Track active grants, spending vs budget, and reporting deadlines", href: "/portfolio-tracker", icon: "Wallet", price: "Free" },
 ];
+
+const PAID_SERVICES: ServiceItem[] = [
+  { title: "Starter Grant Package", description: "AI writes 3-5 starter grant applications to build your track record", href: "/services/starter-grants", icon: "Award", price: "$299", tag: "7-10 days" },
+  { title: "501(c)(3) Formation", description: "Guided nonprofit formation with articles, bylaws, and Form 1023 prep", href: "/services/nonprofit-formation", icon: "Building", price: "$1,500-$3,500", tag: "2-4 weeks" },
+  { title: "SAM.gov Registration", description: "Done-for-you SAM.gov and UEI registration — #1 federal grant blocker", href: "/services/sam-registration", icon: "Shield", price: "$750-$1,500", tag: "2-6 weeks" },
+  { title: "Policy Drafting Package", description: "8 AI-customized grant compliance policies ready for board adoption", href: "/services/policy-drafting", icon: "FileText", price: "$500-$1,000", tag: "3-5 days" },
+  { title: "Application Review", description: "Expert AI + human review of your completed grant application", href: "/services/application-review", icon: "Eye", price: "$199-$499", tag: "3-5 days" },
+  { title: "Logic Model Builder", description: "AI builds logic model, theory of change, SMART objectives, KPIs", href: "/services/logic-model", icon: "GitBranch", price: "$99", tag: "Instant", tagColor: "bg-emerald-100 text-emerald-700" },
+  { title: "Compliance Audit Prep", description: "Prepare for a funder site visit with mock Q&A and document checklist", href: "/services/audit-prep", icon: "ClipboardList", price: "$497", tag: "5-7 days" },
+  { title: "Grant-Ready Certification", description: "Official badge + verification URL after completing Tier 2 or 3", href: "/certified", icon: "Award", price: "Included in Tier 2/3", tag: "1 year valid", tagColor: "bg-amber-100 text-amber-700" },
+];
+
+const TIER_SERVICES: ServiceItem[] = [
+  { title: "Tier 1 — Readiness Review", description: "Full diagnostic + 45-min walkthrough call with grant strategist", href: "/services", icon: "ClipboardCheck", price: "$497", tag: "5-7 days" },
+  { title: "Tier 2 — Remediation Roadmap", description: "Playbook, templates, vendor directory, 2 strategy calls, 30-day support", href: "/services", icon: "FileSearch", price: "$1,997", tag: "Most Popular", tagColor: "bg-brand-teal/10 text-brand-teal" },
+  { title: "Tier 3 — Readiness Accelerator", description: "Done-for-you: SAM, policies, first app drafted, weekly sessions", href: "/services", icon: "Zap", price: "$4,997", tag: "60-120 days" },
+  { title: "Strategic Restructuring", description: "For 'Not Eligible' verdicts — structural analysis + alternative capital", href: "/services", icon: "Building", price: "$1,497", tag: "2-4 weeks" },
+];
+
+function ServiceCard({ service }: { service: ServiceItem }) {
+  const Icon = ICON_MAP[service.icon] ?? ClipboardCheck;
+  return (
+    <Link href={service.href}>
+      <Card className="h-full hover:border-brand-teal/50 transition-colors cursor-pointer">
+        <CardContent className="py-5">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-lg bg-brand-teal/10 flex items-center justify-center shrink-0">
+              <Icon className="h-5 w-5 text-brand-teal" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-sm">{service.title}</h3>
+                {service.tag && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${service.tagColor ?? "bg-gray-100 text-gray-600"}`}>
+                    {service.tag}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
+              <p className="text-xs font-semibold text-brand-teal mt-2">{service.price}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
 
 export default function ServicesPage() {
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6 max-w-5xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">
-          Grant Services
-        </h1>
-        <p className="text-sm text-warm-500 mt-1">
-          One-time services to assess your grant eligibility and readiness.
-          Powered by AI with expert-level analysis.
-        </p>
+        <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Grant Services</h1>
+        <p className="text-sm text-warm-500 mt-1">Everything you need to become grant-ready, from eligibility check to application submission.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {SERVICES.map((service) => {
-          const Icon = service.icon;
-          return (
-            <Card key={service.id} className="flex flex-col">
-              <CardHeader>
-                <div className={`inline-flex items-center justify-center h-12 w-12 rounded-lg ${service.bgColor} mb-3`}>
-                  <Icon className={`h-6 w-6 ${service.color}`} />
-                </div>
-                <CardTitle className="text-lg">{service.title}</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {service.description}
-                </p>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <ul className="space-y-2 mb-6 flex-1">
-                  {service.highlights.map((h) => (
-                    <li key={h} className="flex items-start gap-2 text-sm">
-                      <Shield className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>{h}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>{service.turnaround}</span>
-                </div>
-
-                <Link href={service.href}>
-                  <Button className="w-full gap-2">
-                    Get Started
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* Free Services */}
+      <h2 className="text-base font-semibold mb-3">Free Services</h2>
+      <div className="grid gap-3 sm:grid-cols-2 mb-8">
+        {FREE_SERVICES.map((s) => <ServiceCard key={s.title} service={s} />)}
       </div>
 
-      {/* Value proposition */}
-      <div className="mt-10 rounded-lg border border-border bg-background p-6">
-        <h2 className="text-lg font-semibold mb-4">Why Get Assessed?</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="flex gap-3">
-            <Zap className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium">Stop Guessing</p>
-              <p className="text-xs text-muted-foreground">
-                Know exactly which grants you qualify for before spending hours on applications.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Shield className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium">First-Timer Focused</p>
-              <p className="text-xs text-muted-foreground">
-                Designed for organizations that have never won a grant. Honest, clear, actionable.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <FileSearch className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium">Expert-Level Analysis</p>
-              <p className="text-xs text-muted-foreground">
-                Same methodology used by senior grant strategists, delivered instantly by AI.
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Service Tiers */}
+      <h2 className="text-base font-semibold mb-3">Service Engagements</h2>
+      <div className="grid gap-3 sm:grid-cols-2 mb-8">
+        {TIER_SERVICES.map((s) => <ServiceCard key={s.title} service={s} />)}
+      </div>
+
+      {/* Paid Add-On Services */}
+      <h2 className="text-base font-semibold mb-3">Add-On Services</h2>
+      <div className="grid gap-3 sm:grid-cols-2 mb-8">
+        {PAID_SERVICES.map((s) => <ServiceCard key={s.title} service={s} />)}
+      </div>
+
+      {/* Writing CTA */}
+      <div className="rounded-lg border border-brand-teal/20 bg-brand-teal/5 p-6 text-center">
+        <PenLine className="h-8 w-8 text-brand-teal mx-auto mb-3" />
+        <h3 className="font-semibold mb-1">Need Help Writing a Grant Application?</h3>
+        <p className="text-sm text-muted-foreground mb-4">AI-powered writing from $149/grant. Expert review available. Full Confidence option: $0 upfront, pay only if you win.</p>
+        <Link href="/writing"><Button className="gap-2">View Writing Options <ArrowRight className="h-4 w-4" /></Button></Link>
       </div>
     </div>
   );

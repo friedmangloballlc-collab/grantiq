@@ -17,6 +17,7 @@ import { generateReferralCode } from "@/lib/referral";
 import { TopFunders } from "@/components/dashboard/top-funders";
 import { MonthlyImpact, type MonthActivity } from "@/components/dashboard/monthly-impact";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
+import { ActivationChecklist } from "@/components/dashboard/activation-checklist";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -501,6 +502,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-6xl px-4 md:px-6 py-6">
+      {/* Activation Checklist — guides new users through first 5 milestones */}
+      <ActivationChecklist />
       <div>
         <h1 className="text-2xl font-bold text-warm-900 dark:text-warm-50">Dashboard</h1>
         <p className="text-sm text-warm-500 mt-1">

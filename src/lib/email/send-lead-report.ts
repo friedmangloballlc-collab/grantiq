@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 const FROM_ADDRESS = "GrantAQ <noreply@grantaq.com>";
+const UNSUBSCRIBE_URL = "https://grantaq.com/unsubscribe";
 
 function formatCurrency(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -65,6 +66,10 @@ export async function sendLeadReportEmail(
       to: email,
       subject: `Your Grant Eligibility Report — ${verdictLabels[verdict] ?? verdict} | ${companyName}`,
       html,
+      headers: {
+        "List-Unsubscribe": `<${UNSUBSCRIBE_URL}?email=${encodeURIComponent(email)}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
 
     logger.info("Lead report email sent", { email, verdict });

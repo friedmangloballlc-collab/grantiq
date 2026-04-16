@@ -160,6 +160,11 @@ export default function PublicCheckPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<EligibilityReport | null>(null);
+  const [utmSource] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("utm_source") ?? params.get("ref") ?? "";
+  });
   const [form, setForm] = useState<FormData>({
     full_name: "", email: "", company_name: "", entity_type: "", state_of_formation: "", year_formed: "", industry: "",
     annual_revenue: "", employee_count: "", dedicated_bank_account: "", accounting_system: "", sam_registered: "", compliance_docs: [],
@@ -185,7 +190,7 @@ export default function PublicCheckPage() {
       const res = await fetch("/api/services/public-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, utm_source: utmSource }),
       });
       const data = await res.json();
       if (!res.ok) {
