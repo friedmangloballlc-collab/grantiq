@@ -266,10 +266,10 @@ export default function ServicesMarketingPage() {
           <h3 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-4">Service Engagements</h3>
           <div className="grid sm:grid-cols-2 gap-4 mb-10">
             {[
-              { title: "Tier 1 — Readiness Review", price: "$497", desc: "Full diagnostic + 45-minute walkthrough call with grant strategist", time: "5-7 days" },
-              { title: "Tier 2 — Remediation Roadmap", price: "$1,997", desc: "Step-by-step playbook, templates, vendor directory, 2 strategy calls, 30-day support", time: "2-3 weeks", popular: true },
-              { title: "Tier 3 — Readiness Accelerator", price: "$4,997", desc: "Done-for-you: SAM/UEI, policies, logic model, first application drafted, weekly sessions", time: "60-120 days" },
-              { title: "Strategic Restructuring", price: "$1,497", desc: "For orgs not currently eligible — structural analysis + alternative capital roadmap", time: "2-4 weeks" },
+              { title: "Tier 1 — Readiness Review", price: "$997", desc: "Full diagnostic + 45-minute walkthrough call with grant strategist", time: "5-7 days" },
+              { title: "Tier 2 — Remediation Roadmap", price: "$2,997", desc: "Step-by-step playbook, templates, vendor directory, 2 strategy calls, 30-day support", time: "2-3 weeks", popular: true },
+              { title: "Tier 3 — Readiness Accelerator", price: "$7,497", desc: "Done-for-you: SAM/UEI, policies, logic model, first application drafted, weekly sessions", time: "60-120 days" },
+              { title: "Strategic Restructuring", price: "$2,497", desc: "For orgs not currently eligible — structural analysis + alternative capital roadmap", time: "2-4 weeks" },
             ].map((s) => (
               <div key={s.title} className="rounded-xl border border-warm-200 dark:border-warm-700 p-6 relative">
                 {s.popular && <span className="absolute -top-3 left-4 px-3 py-0.5 bg-brand-teal text-white text-xs font-semibold rounded-full">Most Popular</span>}
@@ -284,12 +284,12 @@ export default function ServicesMarketingPage() {
           <h3 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-4">Add-On Services</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
             {[
-              { title: "Starter Grant Package", price: "$299", desc: "AI writes 3-5 first-timer-friendly grant applications" },
-              { title: "501(c)(3) Formation", price: "$1,500-$3,500", desc: "Guided nonprofit formation with AI-generated documents" },
-              { title: "SAM.gov Registration", price: "$750-$1,500", desc: "Done-for-you SAM.gov + UEI registration" },
-              { title: "Policy Drafting Package", price: "$500-$1,000", desc: "8 AI-customized grant compliance policies" },
-              { title: "Application Review", price: "$199-$499", desc: "Expert AI review of your completed application" },
-              { title: "Logic Model Builder", price: "$99", desc: "AI-built logic model, theory of change, SMART objectives" },
+              { title: "Starter Grant Package", price: "$497", desc: "AI writes 3-5 first-timer-friendly grant applications" },
+              { title: "501(c)(3) Formation", price: "$3,997", desc: "Guided nonprofit formation with AI-generated documents" },
+              { title: "SAM.gov Registration", price: "$1,497", desc: "Done-for-you SAM.gov + UEI registration" },
+              { title: "Policy Drafting Package", price: "$997", desc: "8 AI-customized grant compliance policies" },
+              { title: "Application Review", price: "$497-$997", desc: "Expert AI review of your completed application" },
+              { title: "Logic Model Builder", price: "$197", desc: "AI-built logic model, theory of change, SMART objectives" },
               { title: "Audit Preparation", price: "$497", desc: "Mock site-visit, document checklist, 30-day prep plan" },
               { title: "Grant-Ready Certification", price: "Included in T2/T3", desc: "Official badge + verification URL for your website" },
               { title: "Compliance Calendar", price: "Free", desc: "Auto-generated deadlines: SAM, 990, state filings, insurance" },
@@ -305,9 +305,9 @@ export default function ServicesMarketingPage() {
           <h3 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-4">Grant Writing</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
-              { title: "AI Only", price: "$149-$499", desc: "AI-generated draft with compliance check" },
-              { title: "AI + Expert Audit", price: "$249-$749", desc: "AI draft + human expert review" },
-              { title: "Expert-Led", price: "$499-$1,749", desc: "Professional writer + AI + 2 revisions" },
+              { title: "AI Only", price: "$497-$1,497", desc: "AI-generated draft with compliance check" },
+              { title: "AI + Expert Audit", price: "$497-$1,497", desc: "AI draft + human expert review" },
+              { title: "Expert-Led", price: "$997-$2,997", desc: "Professional writer + AI + 2 revisions" },
               { title: "Full Confidence", price: "$0 upfront", desc: "3-10% success fee — pay only if you win" },
             ].map((s) => (
               <div key={s.title} className="rounded-lg border border-warm-200 dark:border-warm-700 p-4">

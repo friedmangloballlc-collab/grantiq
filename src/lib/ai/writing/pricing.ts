@@ -9,22 +9,22 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const PRICING_MATRIX: Record<WritingTier, Record<GrantType, number>> = {
   tier1_ai_only: {
-    state_foundation: 14900,   // $149
-    federal: 34900,            // $349
-    sbir_sttr: 49900,          // $499
-  },
-  tier2_ai_audit: {
     state_foundation: 24900,   // $249
-    federal: 54900,            // $549
+    federal: 49900,            // $499
     sbir_sttr: 74900,          // $749
   },
+  tier2_ai_audit: {
+    state_foundation: 49700,   // $497
+    federal: 99700,            // $997
+    sbir_sttr: 149700,         // $1,497
+  },
   tier3_expert: {
-    state_foundation: 49900,   // $499
-    federal: 124900,           // $1,249
-    sbir_sttr: 174900,         // $1,749
+    state_foundation: 99700,   // $997
+    federal: 199700,           // $1,997
+    sbir_sttr: 299700,         // $2,997
   },
   full_confidence: {
-    state_foundation: 0,       // $0 upfront
+    state_foundation: 0,       // $0 upfront — 5-15% success fee
     federal: 0,
     sbir_sttr: 0,
   },

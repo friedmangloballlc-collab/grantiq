@@ -1,46 +1,51 @@
 export const SUBSCRIPTION_PRODUCTS = {
   starter: {
     name: "Seeker",
-    monthlyPrice: 4900, // cents — $49/mo
-    annualPrice: 47000, // cents — $470/yr
+    monthlyPrice: 7900, // cents — $79/mo
+    annualPrice: 79000, // cents — $790/yr
     features: [
-      "Full grant library",
+      "Full grant library (6,300+ grants)",
       "10 pipeline items",
-      "Calendar",
-      "5 docs",
+      "Grant calendar",
+      "5 vault docs",
+      "15 AI chats/day",
+      "Unlimited diagnostics",
     ],
   },
   pro: {
     name: "Strategist",
-    monthlyPrice: 9900, // cents — $99/mo
-    annualPrice: 95000, // cents — $950/yr
+    monthlyPrice: 14900, // cents — $149/mo
+    annualPrice: 149000, // cents — $1,490/yr
     features: [
       "Unlimited scorecard",
-      "Document vault",
+      "Document vault (20 docs)",
       "30 Grantie chats/day",
+      "Analytics dashboard",
       "A-Z Readiness tracking",
     ],
   },
   growth: {
     name: "Applicant",
-    monthlyPrice: 19900, // cents — $199/mo
-    annualPrice: 191000, // cents — $1,910/yr
+    monthlyPrice: 24900, // cents — $249/mo
+    annualPrice: 249000, // cents — $2,490/yr
     features: [
-      "AI writing + compliance",
+      "AI writing (5 drafts/mo)",
+      "Expert review available",
       "Unlimited pipeline",
-      "Budget narratives",
+      "Narrative memory",
       "Full Confidence eligible",
     ],
   },
   enterprise: {
     name: "Organization",
-    monthlyPrice: 39900, // cents — $399/mo
-    annualPrice: 383000, // cents — $3,830/yr
+    monthlyPrice: 49900, // cents — $499/mo
+    annualPrice: 499000, // cents — $4,990/yr
     features: [
       "Unlimited team members",
-      "5 AI drafts/mo",
+      "Dedicated grant writer",
       "API access",
-      "Priority support",
+      "White-label exports",
+      "Customer success manager",
     ],
   },
 } as const;

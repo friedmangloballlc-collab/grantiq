@@ -31,21 +31,21 @@ const FREE_SERVICES: ServiceItem[] = [
 ];
 
 const PAID_SERVICES: ServiceItem[] = [
-  { title: "Starter Grant Package", description: "AI writes 3-5 starter grant applications to build your track record", href: "/services/starter-grants", icon: "Award", price: "$299", tag: "7-10 days" },
-  { title: "501(c)(3) Formation", description: "Guided nonprofit formation with articles, bylaws, and Form 1023 prep", href: "/services/nonprofit-formation", icon: "Building", price: "$1,500-$3,500", tag: "2-4 weeks" },
+  { title: "Starter Grant Package", description: "AI writes 3-5 starter grant applications to build your track record", href: "/services/starter-grants", icon: "Award", price: "$497", tag: "7-10 days" },
+  { title: "501(c)(3) Formation", description: "Guided nonprofit formation with articles, bylaws, and Form 1023 prep", href: "/services/nonprofit-formation", icon: "Building", price: "$3,997", tag: "2-4 weeks" },
   { title: "SAM.gov Registration", description: "Done-for-you SAM.gov and UEI registration — #1 federal grant blocker", href: "/services/sam-registration", icon: "Shield", price: "$750-$1,500", tag: "2-6 weeks" },
-  { title: "Policy Drafting Package", description: "8 AI-customized grant compliance policies ready for board adoption", href: "/services/policy-drafting", icon: "FileText", price: "$500-$1,000", tag: "3-5 days" },
-  { title: "Application Review", description: "Expert AI + human review of your completed grant application", href: "/services/application-review", icon: "Eye", price: "$199-$499", tag: "3-5 days" },
-  { title: "Logic Model Builder", description: "AI builds logic model, theory of change, SMART objectives, KPIs", href: "/services/logic-model", icon: "GitBranch", price: "$99", tag: "Instant", tagColor: "bg-emerald-100 text-emerald-700" },
-  { title: "Compliance Audit Prep", description: "Prepare for a funder site visit with mock Q&A and document checklist", href: "/services/audit-prep", icon: "ClipboardList", price: "$497", tag: "5-7 days" },
+  { title: "Policy Drafting Package", description: "8 AI-customized grant compliance policies ready for board adoption", href: "/services/policy-drafting", icon: "FileText", price: "$997", tag: "3-5 days" },
+  { title: "Application Review", description: "Expert AI + human review of your completed grant application", href: "/services/application-review", icon: "Eye", price: "$497-$997", tag: "3-5 days" },
+  { title: "Logic Model Builder", description: "AI builds logic model, theory of change, SMART objectives, KPIs", href: "/services/logic-model", icon: "GitBranch", price: "$197", tag: "Instant", tagColor: "bg-emerald-100 text-emerald-700" },
+  { title: "Compliance Audit Prep", description: "Prepare for a funder site visit with mock Q&A and document checklist", href: "/services/audit-prep", icon: "ClipboardList", price: "$997", tag: "5-7 days" },
   { title: "Grant-Ready Certification", description: "Official badge + verification URL after completing Tier 2 or 3", href: "/certified", icon: "Award", price: "Included in Tier 2/3", tag: "1 year valid", tagColor: "bg-amber-100 text-amber-700" },
 ];
 
 const TIER_SERVICES: ServiceItem[] = [
-  { title: "Tier 1 — Readiness Review", description: "Full diagnostic + 45-min walkthrough call with grant strategist", href: "/services", icon: "ClipboardCheck", price: "$497", tag: "5-7 days" },
-  { title: "Tier 2 — Remediation Roadmap", description: "Playbook, templates, vendor directory, 2 strategy calls, 30-day support", href: "/services", icon: "FileSearch", price: "$1,997", tag: "Most Popular", tagColor: "bg-brand-teal/10 text-brand-teal" },
-  { title: "Tier 3 — Readiness Accelerator", description: "Done-for-you: SAM, policies, first app drafted, weekly sessions", href: "/services", icon: "Zap", price: "$4,997", tag: "60-120 days" },
-  { title: "Strategic Restructuring", description: "For 'Not Eligible' verdicts — structural analysis + alternative capital", href: "/services", icon: "Building", price: "$1,497", tag: "2-4 weeks" },
+  { title: "Tier 1 — Readiness Review", description: "Full diagnostic + 45-min walkthrough call with grant strategist", href: "/services", icon: "ClipboardCheck", price: "$997", tag: "5-7 days" },
+  { title: "Tier 2 — Remediation Roadmap", description: "Playbook, templates, vendor directory, 2 strategy calls, 30-day support", href: "/services", icon: "FileSearch", price: "$2,997", tag: "Most Popular", tagColor: "bg-brand-teal/10 text-brand-teal" },
+  { title: "Tier 3 — Readiness Accelerator", description: "Done-for-you: SAM, policies, first app drafted, weekly sessions", href: "/services", icon: "Zap", price: "$7,497", tag: "60-120 days" },
+  { title: "Strategic Restructuring", description: "For 'Not Eligible' verdicts — structural analysis + alternative capital", href: "/services", icon: "Building", price: "$2,497", tag: "2-4 weeks" },
 ];
 
 function ServiceCard({ service }: { service: ServiceItem }) {
@@ -107,7 +107,7 @@ export default function ServicesPage() {
       <div className="rounded-lg border border-brand-teal/20 bg-brand-teal/5 p-6 text-center">
         <PenLine className="h-8 w-8 text-brand-teal mx-auto mb-3" />
         <h3 className="font-semibold mb-1">Need Help Writing a Grant Application?</h3>
-        <p className="text-sm text-muted-foreground mb-4">AI-powered writing from $149/grant. Expert review available. Full Confidence option: $0 upfront, pay only if you win.</p>
+        <p className="text-sm text-muted-foreground mb-4">AI-powered writing from $249/grant. Expert review available. Full Confidence option: $0 upfront, pay only if you win.</p>
         <Link href="/writing"><Button className="gap-2">View Writing Options <ArrowRight className="h-4 w-4" /></Button></Link>
       </div>
     </div>
