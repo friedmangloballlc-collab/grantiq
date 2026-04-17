@@ -62,11 +62,13 @@ interface EligibilityReport {
 // Field components
 // ---------------------------------------------------------------------------
 
+let fieldCounter = 0;
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const id = `check-field-${++fieldCounter}`;
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-warm-900 dark:text-warm-50">{label}</label>
-      {children}
+      <label htmlFor={id} className="text-sm font-medium text-warm-900 dark:text-warm-50">{label}</label>
+      <div id={`${id}-wrapper`}>{children}</div>
     </div>
   );
 }
@@ -76,6 +78,7 @@ function TextInput({ value, onChange, placeholder, type = "text" }: {
 }) {
   return (
     <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+      aria-label={placeholder}
       className="w-full rounded-md border border-warm-200 dark:border-warm-700 bg-white dark:bg-warm-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal" />
   );
 }

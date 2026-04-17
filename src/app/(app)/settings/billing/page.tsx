@@ -14,10 +14,10 @@ const TIER_LABELS: Record<string, string> = {
 
 const TIER_PRICES: Record<string, string> = {
   free: "$0/mo",
-  starter: "$49/mo",
-  pro: "$99/mo",
-  growth: "$199/mo",
-  enterprise: "$399/mo",
+  starter: "$79/mo",
+  pro: "$149/mo",
+  growth: "$249/mo",
+  enterprise: "$499/mo",
 };
 
 const TIER_LIMITS: Record<string, { matches: number; chat_messages: number; readiness: number; strategy_reports: number }> = {

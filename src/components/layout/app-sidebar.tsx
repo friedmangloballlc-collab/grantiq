@@ -120,7 +120,7 @@ export function AppSidebar({ userPhase = 1, certCriteria, isAdmin = false }: App
           );
         })}
 
-        {/* Services — always visible */}
+        {/* Services — key items always visible, rest under "All Services" */}
         <div className="pt-2 pb-1">
           <p className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Services
@@ -128,11 +128,8 @@ export function AppSidebar({ userPhase = 1, certCriteria, isAdmin = false }: App
         </div>
         {[
           { href: "/services", label: "All Services", icon: ClipboardCheck },
-          { href: "/services/eligibility-status", label: "Eligibility Status", icon: ClipboardCheck },
-          { href: "/services/readiness-diagnostic", label: "Readiness Diagnostic", icon: FileSearch },
           { href: "/compliance", label: "Compliance Calendar", icon: Shield },
           { href: "/portfolio-tracker", label: "Grant Portfolio", icon: Wallet },
-          { href: "/certified", label: "Certification", icon: Shield },
         ].map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + "/");
           return (

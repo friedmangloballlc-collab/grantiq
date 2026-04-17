@@ -1,3 +1,7 @@
+// NOTE: In-memory rate limiting has limited effectiveness on Vercel serverless
+// (each invocation gets fresh memory). This provides burst protection within a
+// single instance but not cross-instance. For production scale, upgrade to
+// Upstash Redis (@upstash/ratelimit) — free tier covers most use cases.
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(key: string, maxRequests: number, windowMs: number): { allowed: boolean; remaining: number } {
