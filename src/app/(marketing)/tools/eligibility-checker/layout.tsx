@@ -1,15 +1,7 @@
 import type { Metadata } from "next";
-
 export const metadata: Metadata = {
-  title: "Grant Eligibility Checker — GrantAQ",
-  description:
-    "Select your organization type and instantly see which grant categories you qualify for — federal, foundation, SBIR, CDBG, state, and corporate grants. Free, no account required.",
+  title: "Free Grant Eligibility Checker | GrantAQ",
+  description: "Check if your organization is eligible for grants. Free tool covers federal, state, foundation, and corporate programs.",
+  alternates: { canonical: "https://grantaq.com/tools/eligibility-checker" },
 };
-
-export default function EligibilityCheckerLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
-}
+export default function Layout({ children }: { children: React.ReactNode }) { return <>{children}</>; }

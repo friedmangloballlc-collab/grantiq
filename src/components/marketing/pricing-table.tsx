@@ -22,7 +22,7 @@ const TIERS = [
   },
   {
     name: "Seeker",
-    price: "$49",
+    price: "$79",
     period: "/month",
     features: [
       "Full grant library",
@@ -37,7 +37,7 @@ const TIERS = [
   },
   {
     name: "Strategist",
-    price: "$99",
+    price: "$149",
     period: "/month",
     features: [
       "Unlimited scorecard evaluations",
@@ -52,7 +52,7 @@ const TIERS = [
   },
   {
     name: "Applicant",
-    price: "$199",
+    price: "$249",
     period: "/month",
     features: [
       "AI writing + compliance",
@@ -68,7 +68,7 @@ const TIERS = [
   },
   {
     name: "Organization",
-    price: "$399",
+    price: "$499",
     period: "/month",
     features: [
       "Everything in Applicant",

@@ -35,6 +35,7 @@ export default function UpgradePage() {
   const [interval, setInterval] = useState<"month" | "year">("year");
   const [loading, setLoading] = useState<SubscriptionTierKey | null>(null);
   const [isMockMode, setIsMockMode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [downgradeConfirm, setDowngradeConfirm] = useState<SubscriptionTierKey | null>(null);
 
   async function handleSelectTier(tier: SubscriptionTierKey) {
@@ -62,7 +63,7 @@ export default function UpgradePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        console.error("Checkout error:", data.error);
+        setError(data.error ?? "Failed to start checkout. Please try again.");
         setLoading(null);
         return;
       }
@@ -142,6 +143,13 @@ export default function UpgradePage() {
           </button>
         </div>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-4 text-center">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       {/* Contact to upgrade banner */}
       {isMockMode && (

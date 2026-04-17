@@ -4,6 +4,7 @@ import { getOpenAIClient, MODELS, estimateCostCents } from "@/lib/ai/client";
 import { buildEligibilityStatusPrompt } from "@/lib/ai/services/eligibility-status-prompt";
 import { precomputeEligibilitySignals, formatSignalsForPrompt } from "@/lib/ai/services/precompute-eligibility";
 import { sendLeadReportEmail, sendHotLeadAlert } from "@/lib/email/send-lead-report";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
@@ -15,9 +16,21 @@ export const maxDuration = 60;
  */
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 3 checks per hour per IP to prevent abuse
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const { allowed } = checkRateLimit(`public-check:${ip}`, 3, 3600000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
 
-    if (!body.email || !body.company_name) {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!body.email || !emailRegex.test(body.email) || !body.company_name) {
       return NextResponse.json({ error: "Email and company name are required" }, { status: 400 });
     }
 

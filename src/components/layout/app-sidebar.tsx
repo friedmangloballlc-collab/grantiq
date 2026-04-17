@@ -69,15 +69,13 @@ export const NAV_ITEMS: NavItem[] = [
 interface AppSidebarProps {
   userPhase?: 1 | 2 | 3;
   certCriteria?: CertCriteria;
+  isAdmin?: boolean;
 }
 
-const ADMIN_EMAIL = "getreachmediallc@gmail.com";
-
-export function AppSidebar({ userPhase = 1, certCriteria }: AppSidebarProps) {
+export function AppSidebar({ userPhase = 1, certCriteria, isAdmin = false }: AppSidebarProps) {
   const pathname = usePathname();
-  const { tier, email } = useOrg();
+  const { tier } = useOrg();
   const isEnterprise = tier === "enterprise";
-  const isAdmin = email === ADMIN_EMAIL;
 
   // Enterprise always sees all items
   const effectivePhase: 1 | 2 | 3 = isEnterprise ? 3 : userPhase;

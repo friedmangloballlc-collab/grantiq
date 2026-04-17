@@ -47,24 +47,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // ---------------------------------------------------------------------------
-  // Cross-reference pages — only generate where >= 3 grants exist
+  // Cross-reference pages — batch query instead of N+1
   // ---------------------------------------------------------------------------
   const crossRefPages: MetadataRoute.Sitemap = [];
+
+  // Single query: get all category+state combos with 3+ grants
+  const { data: crossRefData } = await supabase
+    .from("grant_sources")
+    .select("category, states")
+    .eq("is_active", true)
+    .not("category", "is", null);
+
+  // Build a map of category+state → count
+  const crossRefCounts = new Map<string, number>();
+  for (const g of crossRefData ?? []) {
+    if (!g.category || !g.states) continue;
+    for (const state of g.states as string[]) {
+      const key = `${g.category}::${state}`;
+      crossRefCounts.set(key, (crossRefCounts.get(key) ?? 0) + 1);
+    }
+  }
 
   for (const industry of TOP_30_INDUSTRIES) {
     const meta = INDUSTRY_META[industry];
     for (const stateCode of ALL_STATE_CODES) {
-      const { count } = await supabase
-        .from("grant_sources")
-        .select("id", { count: "exact", head: true })
-        .eq("is_active", true)
-        .in(
-          "category",
-          meta.categories.map((c) => c.toLowerCase())
-        )
-        .contains("states", [stateCode]);
-
-      if ((count ?? 0) >= 3) {
+      const total = meta.categories.reduce(
+        (sum, cat) => sum + (crossRefCounts.get(`${cat.toLowerCase()}::${stateCode}`) ?? 0), 0
+      );
+      if (total >= 3) {
         crossRefPages.push({
           url: `https://grantaq.com/grants/industry/${industry}/${stateCode.toLowerCase()}`,
           lastModified: new Date(),
@@ -127,10 +137,70 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: "https://grantaq.com/check",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
+      url: "https://grantaq.com/grant-services",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
+      url: "https://grantaq.com/signup",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: "https://grantaq.com/tools",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: "https://grantaq.com/tools/readiness-quiz",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
       url: "https://grantaq.com/tools/funding-gap",
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: "https://grantaq.com/tools/budget-estimator",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: "https://grantaq.com/tools/grant-timeline",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: "https://grantaq.com/tools/eligibility-checker",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: "https://grantaq.com/privacy",
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: "https://grantaq.com/terms",
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
     // Blog
     ...blogIndexPage,

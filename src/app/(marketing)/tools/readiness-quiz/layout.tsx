@@ -1,15 +1,7 @@
 import type { Metadata } from "next";
-
 export const metadata: Metadata = {
-  title: "Grant Readiness Quiz — GrantAQ",
-  description:
-    "Answer 10 questions to find out if your organization is ready to apply for grants. Get a readiness score and a personalized action plan — free, no account required.",
+  title: "Free Grant Readiness Quiz | GrantAQ",
+  description: "Take our free grant readiness quiz to see how prepared your organization is for grant funding. Instant results, no account needed.",
+  alternates: { canonical: "https://grantaq.com/tools/readiness-quiz" },
 };
-
-export default function ReadinessQuizLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
-}
+export default function Layout({ children }: { children: React.ReactNode }) { return <>{children}</>; }

@@ -46,15 +46,15 @@ export function UpgradeGate({
         </div>
         <div>
           <p className="text-base font-semibold text-warm-900 dark:text-warm-50">
-            Upgrade to {tierLabel} to unlock {feature}
+            Start your free trial to unlock {feature}
           </p>
           <p className="text-sm text-warm-500 mt-1">
-            This feature is available on the {tierLabel} plan and above.
+            Try the {tierLabel} plan free for 7 days. No credit card required.
           </p>
         </div>
         <Button
           className="bg-brand-teal hover:bg-brand-teal-dark text-white"
-          render={<Link href="/upgrade">Upgrade to {tierLabel}</Link>}
+          render={<Link href="/upgrade">Start Free Trial</Link>}
         />
       </div>
     );

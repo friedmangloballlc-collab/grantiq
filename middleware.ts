@@ -5,11 +5,13 @@ const PUBLIC_ROUTES = [
   "/login", "/signup", "/onboarding", "/nonprofit-formation",
   "/", "/pricing", "/leaderboard", "/tools", "/grant-directory",
   "/ref", "/blog", "/partners", "/privacy", "/terms",
-  "/reset-password", "/update-password",
+  "/reset-password", "/update-password", "/verify-email",
   "/embed", "/score", "/share",
+  "/check", "/grant-services", "/unsubscribe",
   "/grants/state", "/grants/states", "/grants/industry",
   "/api/auth", "/api/onboarding", "/api/webhooks", "/api/health",
   "/api/tools", "/api/embed", "/api/cron", "/api/partners",
+  "/api/services/public-check", "/api/services/unsubscribe",
   "/sitemap.xml", "/robots.txt",
 ];
 
