@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 import { detectPromptInjection, sanitizeInput } from "@/lib/ai/sanitize";
 import {
   checkUsageLimit,
+  checkTokenCeiling,
   recordUsage,
   UsageLimitError,
   type AiActionType,
@@ -326,7 +327,7 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
     ? sanitizeInput(cacheableContext)
     : undefined;
 
-  // 3. Check usage limits
+  // 3a. Row-based usage check (one count per call)
   if (!skipUsageCheck) {
     const usageCheck = await checkUsageLimit(orgId, actionType, tier);
     if (!usageCheck.allowed) {
@@ -337,6 +338,18 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
         tier
       );
     }
+
+    // 3b. Token-budget check (Unit 6 / R13a)
+    // Conservative pre-flight estimate: chars / 4 + maxTokens. Calibrated for
+    // English; non-English content under-estimates (CJK ~1-1.5 chars/token).
+    // Throws TokenCeilingError on per-call cap (>200K) or monthly ceiling.
+    const estimatedTokens = Math.ceil(
+      (systemPrompt.length +
+        (sanitizedCacheableContext?.length ?? 0) +
+        sanitizedUserInput.length) /
+        4
+    ) + maxTokens;
+    await checkTokenCeiling(orgId, tier, estimatedTokens);
   }
 
   // 4. Provider dispatch

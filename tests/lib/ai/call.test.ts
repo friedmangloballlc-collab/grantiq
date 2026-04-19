@@ -52,7 +52,7 @@ vi.mock("@/lib/ai/sanitize", () => ({
 }));
 
 vi.mock("@/lib/ai/usage", async (importOriginal) => {
-  // Preserve real types/exports (AiActionType, AI_ACTION_TYPES, UsageLimitError)
+  // Preserve real types/exports (AiActionType, AI_ACTION_TYPES, UsageLimitError, TokenCeilingError)
   const actual = await importOriginal<typeof import("@/lib/ai/usage")>();
   return {
     ...actual,
@@ -62,6 +62,7 @@ vi.mock("@/lib/ai/usage", async (importOriginal) => {
       limit: null,
       remaining: null,
     }),
+    checkTokenCeiling: vi.fn().mockResolvedValue(undefined),
     recordUsage: vi.fn().mockResolvedValue(undefined),
   };
 });

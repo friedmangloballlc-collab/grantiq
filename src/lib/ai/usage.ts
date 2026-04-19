@@ -54,11 +54,122 @@ export class UsageLimitError extends Error {
   }
 }
 
+/**
+ * Thrown when a call would push the org over its monthly token ceiling
+ * (Unit 6 / R13a) OR exceeds the per-call hard cap of 200K tokens.
+ *
+ * The row-based UsageLimitError counts CALLS per feature per month; this
+ * counts TOKENS per org per month. They're orthogonal — a single oversized
+ * call can pass the row gate and bust the token gate, or vice versa.
+ */
+export class TokenCeilingError extends Error {
+  constructor(
+    public spent: number,
+    public estimate: number,
+    public ceiling: number,
+    public tier: string,
+    public reason: "monthly_ceiling" | "per_call_cap"
+  ) {
+    super(
+      reason === "per_call_cap"
+        ? `Per-call token cap exceeded: estimate ${estimate} > ${ceiling}. Reduce input size or break into smaller calls.`
+        : `Monthly token ceiling reached: ${spent} spent + ${estimate} estimated > ${ceiling} ceiling on ${tier} tier. Upgrade for more.`
+    );
+    this.name = "TokenCeilingError";
+  }
+}
+
+/** Per-call hard cap regardless of monthly budget (Unit 6 / R13a). */
+export const PER_CALL_TOKEN_CAP = 200000;
+
 interface UsageCheckResult {
   allowed: boolean;
   used: number;
   limit: number | null;
   remaining: number | null;
+}
+
+/**
+ * Pre-flight token-budget check (Unit 6 / R13a).
+ *
+ * Two failure modes:
+ *   1. Per-call hard cap (200K) — rejected before any DB query
+ *   2. Monthly ceiling — sums tokens_input + tokens_output across the current
+ *      billing period; rejects when spent + estimate > ceiling
+ *
+ * Conservative estimation note: the caller passes
+ * estimatedTokens = (systemPrompt + cacheableContext + userInput) / 4 + maxTokens.
+ * The /4 ratio is calibrated for English; non-English content (CJK ~1-1.5
+ * chars/token, Spanish/French ~3.5) under-estimates. Caller can pass a
+ * pre-counted value via Anthropic's /v1/messages/count_tokens for non-English
+ * accuracy.
+ *
+ * Throws TokenCeilingError on either failure mode. Returns silently on pass.
+ */
+export async function checkTokenCeiling(
+  orgId: string,
+  tier: string,
+  estimatedTokens: number
+): Promise<void> {
+  // 1. Per-call hard cap — no DB query needed
+  if (estimatedTokens > PER_CALL_TOKEN_CAP) {
+    throw new TokenCeilingError(
+      0,
+      estimatedTokens,
+      PER_CALL_TOKEN_CAP,
+      tier,
+      "per_call_cap"
+    );
+  }
+
+  const db = createAdminClient();
+
+  // 2. Look up the tier's monthly_token_ceiling. Any tier_limits row for this
+  //    tier suffices since the ceiling is per-tier (not per-feature).
+  const { data: limitRow, error: limitError } = await db
+    .from("tier_limits")
+    .select("monthly_token_ceiling")
+    .eq("tier", tier)
+    .not("monthly_token_ceiling", "is", null)
+    .limit(1)
+    .maybeSingle();
+
+  // No row OR null ceiling = unlimited (matches monthly_limit convention)
+  if (limitError || !limitRow || limitRow.monthly_token_ceiling === null) {
+    return;
+  }
+
+  const ceiling = limitRow.monthly_token_ceiling as number;
+
+  // 3. Sum current-period token spend
+  const now = new Date();
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .split("T")[0];
+  const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    .toISOString()
+    .split("T")[0];
+
+  const { data: usageRows, error: usageError } = await db
+    .from("ai_usage")
+    .select("tokens_input, tokens_output")
+    .eq("org_id", orgId)
+    .gte("billing_period", periodStart)
+    .lt("billing_period", periodEnd);
+
+  if (usageError) {
+    logger.error("Token ceiling query failed", { err: String(usageError) });
+    return; // fail-open like checkUsageLimit's error path
+  }
+
+  const spent = (usageRows ?? []).reduce(
+    (sum, row) => sum + (row.tokens_input ?? 0) + (row.tokens_output ?? 0),
+    0
+  );
+
+  if (spent + estimatedTokens > ceiling) {
+    throw new TokenCeilingError(spent, estimatedTokens, ceiling, tier, "monthly_ceiling");
+  }
 }
 
 export async function checkUsageLimit(

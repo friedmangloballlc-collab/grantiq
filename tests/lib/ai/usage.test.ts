@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   checkUsageLimit,
+  checkTokenCeiling,
   recordUsage,
   UsageLimitError,
+  TokenCeilingError,
+  PER_CALL_TOKEN_CAP,
   AI_ACTION_TYPES,
   type AiActionType,
 } from "@/lib/ai/usage";
@@ -377,6 +380,152 @@ describe("recordUsage with sessionId (Unit 5)", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+});
+
+// --------------------------------------------------------------------------
+// checkTokenCeiling (Unit 6 / R13a)
+// --------------------------------------------------------------------------
+describe("checkTokenCeiling", () => {
+  beforeEach(() => {
+    mockFrom.mockReset();
+  });
+
+  it("throws TokenCeilingError when estimate exceeds the per-call hard cap", async () => {
+    const oversized = PER_CALL_TOKEN_CAP + 1;
+
+    await expect(checkTokenCeiling("org-1", "pro", oversized)).rejects.toBeInstanceOf(
+      TokenCeilingError
+    );
+    // Should NOT have queried the DB — short-circuits before
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it("returns silently when no tier_limits row has a token ceiling (unlimited)", async () => {
+    // tier_limits query returns no row matching `monthly_token_ceiling IS NOT NULL`
+    const tierLimitsChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    };
+    mockFrom.mockReturnValueOnce(tierLimitsChain);
+
+    await expect(checkTokenCeiling("org-1", "enterprise", 50000)).resolves.toBeUndefined();
+  });
+
+  it("returns silently when ceiling exists and spent + estimate is under it", async () => {
+    const tierLimitsChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { monthly_token_ceiling: 100000 },
+        error: null,
+      }),
+    };
+    const usageChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      lt: vi.fn().mockResolvedValue({
+        data: [
+          { tokens_input: 10000, tokens_output: 5000 },
+          { tokens_input: 8000, tokens_output: 2000 },
+        ],
+        error: null,
+      }),
+    };
+    mockFrom.mockReturnValueOnce(tierLimitsChain).mockReturnValueOnce(usageChain);
+
+    // spent=25000, estimate=10000, ceiling=100000 → under
+    await expect(checkTokenCeiling("org-1", "pro", 10000)).resolves.toBeUndefined();
+  });
+
+  it("throws TokenCeilingError when spent + estimate exceeds monthly ceiling", async () => {
+    const tierLimitsChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { monthly_token_ceiling: 100000 },
+        error: null,
+      }),
+    };
+    const usageChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      lt: vi.fn().mockResolvedValue({
+        data: [{ tokens_input: 90000, tokens_output: 5000 }],
+        error: null,
+      }),
+    };
+    mockFrom.mockReturnValueOnce(tierLimitsChain).mockReturnValueOnce(usageChain);
+
+    // spent=95000, estimate=10000, ceiling=100000 → 105000 > 100000 → reject
+    await expect(checkTokenCeiling("org-1", "pro", 10000)).rejects.toBeInstanceOf(
+      TokenCeilingError
+    );
+  });
+
+  it("error message distinguishes per_call_cap from monthly_ceiling", async () => {
+    let perCallErr: TokenCeilingError | null = null;
+    try {
+      await checkTokenCeiling("org-1", "pro", PER_CALL_TOKEN_CAP + 1);
+    } catch (e) {
+      perCallErr = e as TokenCeilingError;
+    }
+    expect(perCallErr?.reason).toBe("per_call_cap");
+    expect(perCallErr?.message).toContain("Per-call token cap exceeded");
+  });
+
+  it("fail-open on usage query error (matches checkUsageLimit error path)", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const tierLimitsChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { monthly_token_ceiling: 100000 },
+        error: null,
+      }),
+    };
+    const usageChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      lt: vi.fn().mockResolvedValue({ data: null, error: { message: "db error" } }),
+    };
+    mockFrom.mockReturnValueOnce(tierLimitsChain).mockReturnValueOnce(usageChain);
+
+    await expect(checkTokenCeiling("org-1", "pro", 50000)).resolves.toBeUndefined();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Token ceiling query failed")
+    );
+    consoleSpy.mockRestore();
+  });
+});
+
+describe("TokenCeilingError", () => {
+  it("captures spent, estimate, ceiling, tier, and reason", () => {
+    const err = new TokenCeilingError(80000, 30000, 100000, "pro", "monthly_ceiling");
+    expect(err.name).toBe("TokenCeilingError");
+    expect(err.spent).toBe(80000);
+    expect(err.estimate).toBe(30000);
+    expect(err.ceiling).toBe(100000);
+    expect(err.tier).toBe("pro");
+    expect(err.reason).toBe("monthly_ceiling");
+    expect(err.message).toContain("Monthly token ceiling reached");
+  });
+
+  it("is an instance of Error", () => {
+    const err = new TokenCeilingError(0, 250000, 200000, "pro", "per_call_cap");
+    expect(err).toBeInstanceOf(Error);
   });
 });
 
