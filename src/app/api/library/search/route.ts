@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Library requires Starter plan or above" }, { status: 403 });
     }
 
-    // Tier-based result limits
+    // Tier-based result limits (per-query)
     const TIER_LIMITS: Record<string, number> = {
       starter: 50,
       pro: 200,
@@ -48,6 +48,46 @@ export async function GET(req: NextRequest) {
       enterprise: 1000,
     };
     const maxResults = TIER_LIMITS[tier] ?? (trialActive ? 200 : 50);
+
+    // Tier-based per-day SEARCH-COUNT limits (Unit 8 / library-rate-limit
+    // 2026-04-19). Defends against scraping. Free is already blocked
+    // above; enterprise is unlimited (no cap entry).
+    const DAILY_SEARCH_CAP: Record<string, number> = {
+      starter: 50,
+      pro: 200,
+      growth: 1000,
+    };
+    const dailyCap = DAILY_SEARCH_CAP[tier];
+    if (dailyCap !== undefined) {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count: searchesToday, error: auditError } = await db
+        .from("library_search_audit")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", membership.org_id)
+        .gte("searched_at", since);
+
+      if (auditError) {
+        // Fail-open on audit-table query error so legit users don't get
+        // blocked by a transient DB hiccup. Log it.
+        logger.error("library_search_audit query failed", { err: String(auditError) });
+      } else if ((searchesToday ?? 0) >= dailyCap) {
+        return NextResponse.json(
+          {
+            error: "Daily library search limit reached",
+            tier,
+            cap: dailyCap,
+            used: searchesToday,
+          },
+          { status: 429 }
+        );
+      }
+
+      // Best-effort audit insert — don't block the search on failure
+      void db.from("library_search_audit").insert({
+        org_id: membership.org_id,
+        user_id: user.id,
+      });
+    }
 
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") ?? null;

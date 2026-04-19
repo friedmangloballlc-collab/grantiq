@@ -11,20 +11,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createAdminClient();
 
   // ---------------------------------------------------------------------------
-  // Individual grant detail pages
+  // Individual grant detail pages — INTENTIONALLY OMITTED from sitemap
+  // (2026-04-19). The 6,356 individual grant URLs at /grant-directory/[slug]
+  // are no longer publicly indexed; pages now require login. Removing the
+  // URLs from the sitemap stops Google from re-crawling stale public versions.
+  // The supabase grants query is also removed for the same reason.
   // ---------------------------------------------------------------------------
-  const { data: grants } = await supabase
-    .from("grant_sources")
-    .select("id, last_verified")
-    .eq("is_active", true)
-    .limit(50000);
-
-  const grantPages = (grants ?? []).map((g) => ({
-    url: `https://grantaq.com/grant-directory/${g.id}`,
-    lastModified: g.last_verified ?? new Date().toISOString(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
 
   // ---------------------------------------------------------------------------
   // Industry hub pages
@@ -113,12 +105,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: "https://grantaq.com/grant-directory",
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
       url: "https://grantaq.com/grants/states",
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -130,12 +116,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
-    {
-      url: "https://grantaq.com/leaderboard",
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.6,
-    },
+    // Removed from sitemap (2026-04-19) per business decision:
+    // - /grant-directory and individual grant detail URLs (auth-gated now)
+    // - /leaderboard (page deleted entirely)
     {
       url: "https://grantaq.com/check",
       lastModified: new Date(),
@@ -205,11 +188,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Blog
     ...blogIndexPage,
     ...blogPostPages,
-    // Programmatic SEO pages
+    // Programmatic SEO pages (kept — drive organic signups; show
+    // teaser content only, full grant details require login)
     ...industryPages,
     ...statePages,
     ...crossRefPages,
-    // Individual grant pages
-    ...grantPages,
+    // Individual grant pages REMOVED from sitemap (2026-04-19)
   ];
 }

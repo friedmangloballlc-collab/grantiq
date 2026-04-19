@@ -11,7 +11,6 @@ const NAV_LINKS = [
   { href: "/grant-services", label: "Services" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
-  { href: "/leaderboard", label: "Leaderboard" },
   { href: "/tools", label: "Free Tools" },
   { href: "/signup/nonprofit", label: "Start a Nonprofit" },
 ];
