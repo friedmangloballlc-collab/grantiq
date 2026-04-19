@@ -126,10 +126,21 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       ? await retrieveNarrativeExamples(input.org_id, org.mission_embedding, sectionTypes)
       : [];
 
+    // 5a. Look up subscription tier (required by aiCall pre-flight gates after Unit 7).
+    // Falls back to 'free' if no subscription row exists; the gates handle missing
+    // tier_limits gracefully (allow with null limit).
+    const { data: subRow } = await supabase
+      .from("subscriptions")
+      .select("tier")
+      .eq("org_id", input.org_id)
+      .maybeSingle();
+    const subscriptionTier: string = (subRow?.tier as string | undefined) ?? "free";
+
     // 5. Build writing context
     const context: WritingContext = {
       org_id: input.org_id,
       user_id: input.user_id,
+      subscription_tier: subscriptionTier,
       rfp_analysis: rfpAnalysis,
       funder_analysis: funderAnalysis || {
         funder_name: rfpAnalysis.funder_name,

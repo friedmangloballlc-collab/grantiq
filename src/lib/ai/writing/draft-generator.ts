@@ -1,6 +1,28 @@
 // grantaq/src/lib/ai/writing/draft-generator.ts
+//
+// Unit 7 of the LLMGateway extension plan. Migrated from direct
+// `new Anthropic()` SDK calls to `aiCall({ provider: 'anthropic', ... })`.
+//
+// What this migration buys:
+//   - Anthropic prompt caching (60-70% cost cut at 70%+ hit rate per
+//     ProjectDiscovery's pattern)
+//   - Pre-flight injection detection on userInput AND cacheableContext
+//   - Pre-flight usage gate (row-based + token-based)
+//   - Per-call audit trail to ai_generations with prompt_id +
+//     cache_creation_tokens + cache_read_tokens
+//   - Session-based dedup so a 6-section drafting run = 1 ai_usage row
+//     against the org's monthly cap (not 6)
+//   - Sentry tripwire on recording failures
+//
+// What stayed the same:
+//   - Sequential section execution (the for-loop in generateDraft).
+//     Parallelization was deliberately deferred to a separate unit
+//     because it requires careful orchestration of progress updates
+//     and would obscure the BD-1/cache wins by mixing concerns.
+//   - The Zod-validated retry loop for section output. Anthropic-side
+//     retry (5xx/529) lives in aiCall now; the Zod-shape retry stays
+//     local to this module.
 
-import Anthropic from "@anthropic-ai/sdk";
 import {
   DraftSectionOutputSchema,
   BudgetTableOutputSchema,
@@ -8,11 +30,16 @@ import {
   type BudgetTableOutput,
   type RfpParseOutput,
 } from "./schemas";
-import { buildDraftSectionPrompt, BUDGET_GENERATOR_SYSTEM_PROMPT } from "./prompts";
+import {
+  DRAFT_SECTION_SYSTEM_PROMPT,
+  buildSectionUserSegment,
+  BUDGET_GENERATOR_SYSTEM_PROMPT,
+} from "./prompts";
 import type { WritingContext } from "@/types/writing";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const anthropic = new Anthropic();
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
+import { canonicalStringify } from "@/lib/ai/stringify";
 
 // Map RFP section names to our section_type taxonomy
 const SECTION_TYPE_MAP: Record<string, string> = {
@@ -65,37 +92,63 @@ export function classifySectionType(sectionName: string): string {
 }
 
 /**
- * Builds the user message for a section generation call, including
- * all context the writer needs: RFP, funder intel, org profile, and examples.
+ * Builds the SESSION-STABLE cacheable context block.
+ *
+ * Contains everything that does NOT vary across the sections of one drafting
+ * run: org profile, org capabilities, funder intel, and the RFP analysis.
+ * This block is cached by Anthropic with 5-minute TTL — sections 2..N pay
+ * the cache-read rate (10% of input cost) for this content instead of the
+ * non-cached rate.
+ *
+ * Serialized via canonicalStringify (Unit 2) so the byte-identical guarantee
+ * holds even when the upstream object's key order varies between Supabase
+ * query paths. Without canonical serialization, the cache key drifts and
+ * hit rate silently drops to 0%.
+ */
+function buildCacheableContext(context: WritingContext): string {
+  return canonicalStringify({
+    org_profile: context.org_profile,
+    org_capabilities: context.org_capabilities,
+    funder_analysis: context.funder_analysis,
+    rfp_analysis: context.rfp_analysis,
+  }) ?? "";
+}
+
+/**
+ * Builds the per-section VOLATILE user-message body.
+ *
+ * Contains only the section-specific content: the structured section
+ * preamble (Unit 3 / R18 — section_name, type, limits, scoring criteria,
+ * special instructions) plus the filtered narrative examples for this
+ * section type. Flows through aiCall as `userInput` — never cached.
+ *
+ * Examples are filtered to the matching section type and capped at 3 to
+ * keep per-call token cost bounded.
  */
 function buildSectionUserMessage(
   section: RfpParseOutput["required_sections"][0],
   context: WritingContext
 ): string {
+  const sectionType = classifySectionType(section.section_name);
+  const sectionUserSegment = buildSectionUserSegment({
+    section_name: section.section_name,
+    section_type: sectionType,
+    section_description: section.description,
+    page_limit: section.page_limit,
+    word_limit: section.word_limit,
+    special_instructions: section.special_instructions,
+    scoring_criteria: context.rfp_analysis.scoring_criteria,
+  });
+
   const examplesForType = context.narrative_examples
-    .filter(ex => ex.segment_type === classifySectionType(section.section_name))
+    .filter(ex => ex.segment_type === sectionType)
     .slice(0, 3);
 
   const examplesBlock = examplesForType.length > 0
     ? `\n## Prior Successful Examples (use as style/quality reference ONLY — do NOT copy)\n${examplesForType.map((ex, i) => `### Example ${i + 1} (quality: ${ex.quality_score}/10)\n${ex.text}`).join("\n\n")}`
     : "";
 
-  return `## RFP Analysis
-${JSON.stringify(context.rfp_analysis, null, 2)}
-
-## Funder Intelligence
-${JSON.stringify(context.funder_analysis, null, 2)}
-
-## Organization Profile
-Name: ${context.org_profile.name}
-Mission: ${context.org_profile.mission_statement}
-Entity Type: ${context.org_profile.entity_type}
-Population Served: ${context.org_profile.population_served.join(", ")}
-Program Areas: ${context.org_profile.program_areas.join(", ")}
-${context.org_profile.voice_profile ? `Voice Profile: ${JSON.stringify(context.org_profile.voice_profile)}` : ""}
-
-## Organization Capabilities
-${JSON.stringify(context.org_capabilities, null, 2)}
+  return `${sectionUserSegment}
 ${examplesBlock}
 
 ## Section to Write
@@ -103,44 +156,53 @@ Write the "${section.section_name}" section now.`;
 }
 
 /**
- * Generates a single section via Claude Opus with Zod validation and retry.
+ * Generates a single section via Claude Opus through aiCall.
+ *
+ * Routes through aiCall (Unit 4) which provides:
+ *   - Anthropic prompt caching: DRAFT_SECTION_SYSTEM_PROMPT (1h TTL) +
+ *     cacheableContext (5m TTL) — sections 2..N hit the cache
+ *   - Pre-flight injection detection on cacheableContext + userInput
+ *   - Pre-flight usage gate (row + token)
+ *   - Per-call audit recording with prompt_id + cache token splits
+ *   - Session-based dedup so all sections of one draft = 1 ai_usage row
+ *   - Sentry tripwire on recording failures
+ *
+ * Local Zod-shape retry stays here — it's not an Anthropic-side error,
+ * so it's not in aiCall's whitelist. Re-issues the call with a static
+ * repair instruction (no error-text echo per R27 hygiene).
  */
 async function generateSection(
   section: RfpParseOutput["required_sections"][0],
   context: WritingContext,
-  relevantCriteria: RfpParseOutput["scoring_criteria"]
+  draftId: string
 ): Promise<DraftSectionOutput> {
-  const sectionType = classifySectionType(section.section_name);
-  const systemPrompt = buildDraftSectionPrompt({
-    section_name: section.section_name,
-    section_type: sectionType,
-    section_description: section.description,
-    page_limit: section.page_limit,
-    word_limit: section.word_limit,
-    special_instructions: section.special_instructions,
-    scoring_criteria: relevantCriteria,
-  });
-
+  const cacheableContext = buildCacheableContext(context);
   const userMessage = buildSectionUserMessage(section, context);
   let lastError: string | null = null;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const prompt = attempt === 0
       ? userMessage
-      : `VALIDATION ERROR: ${lastError}\n\nPlease fix your JSON output.\n\n${userMessage}`;
+      : `${userMessage}\n\nNOTE: Your previous response was not valid JSON. Return only a valid JSON object matching the schema.`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-opus-4-20250514",
-      max_tokens: 16384,
-      system: systemPrompt,
-      messages: [{ role: "user", content: prompt }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.STRATEGY, // Opus for the writing pipeline
+      systemPrompt: DRAFT_SECTION_SYSTEM_PROMPT,
+      cacheableContext,
+      userInput: prompt,
+      promptId: "writing.draft.v1",
+      sessionId: draftId,
+      orgId: context.org_id,
+      userId: context.user_id,
+      tier: context.subscription_tier,
+      actionType: "draft",
+      maxTokens: 16384,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") throw new Error("Unexpected response type");
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       return DraftSectionOutputSchema.parse(parsed);
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
@@ -154,43 +216,55 @@ async function generateSection(
 }
 
 /**
- * Generates the budget table via Claude Opus.
+ * Generates the budget table via Claude Opus through aiCall.
+ *
+ * Same caching strategy as generateSection — DRAFT_SECTION_SYSTEM_PROMPT
+ * is reused for cache reuse (it's invariant; budget can use the same
+ * writing-standards rubric). cacheableContext is also reused, which
+ * means the budget call benefits from the cache warm-up the section
+ * calls already paid for.
  */
 async function generateBudget(
   context: WritingContext,
-  generatedSections: DraftSectionOutput[]
+  generatedSections: DraftSectionOutput[],
+  draftId: string
 ): Promise<BudgetTableOutput> {
-  const userMessage = `## RFP Analysis
-${JSON.stringify(context.rfp_analysis, null, 2)}
+  const cacheableContext = buildCacheableContext(context);
+  const sectionsBlock = generatedSections
+    .map(s => `### ${s.section_name}\n${s.content}`)
+    .join("\n\n");
 
-## Funder Intelligence
-${JSON.stringify(context.funder_analysis, null, 2)}
+  const userMessage = `## Generated Narrative Sections (budget must align with these)
+${sectionsBlock}
 
-## Organization Profile
-${JSON.stringify(context.org_profile, null, 2)}
-
-## Generated Narrative Sections (budget must align with these)
-${generatedSections.map(s => `### ${s.section_name}\n${s.content}`).join("\n\n")}`;
+## Section to Write
+Generate the budget table now, ensuring it aligns with the narrative sections above.`;
 
   let lastError: string | null = null;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const prompt = attempt === 0
       ? userMessage
-      : `VALIDATION ERROR: ${lastError}\n\nFix your JSON.\n\n${userMessage}`;
+      : `${userMessage}\n\nNOTE: Your previous response was not valid JSON. Return only a valid JSON object matching the schema.`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-opus-4-20250514",
-      max_tokens: 8192,
-      system: BUDGET_GENERATOR_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: prompt }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.STRATEGY, // Opus
+      systemPrompt: BUDGET_GENERATOR_SYSTEM_PROMPT,
+      cacheableContext,
+      userInput: prompt,
+      promptId: "writing.budget.v1",
+      sessionId: draftId,
+      orgId: context.org_id,
+      userId: context.user_id,
+      tier: context.subscription_tier,
+      actionType: "budget",
+      maxTokens: 8192,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") throw new Error("Unexpected response type");
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       return BudgetTableOutputSchema.parse(parsed);
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
@@ -201,44 +275,9 @@ ${generatedSections.map(s => `### ${s.section_name}\n${s.content}`).join("\n\n")
   throw new Error("Budget generation failed unexpectedly");
 }
 
-/**
- * Tracks AI usage for billing and cost accounting.
- */
-async function _trackUsage(
-  orgId: string,
-  userId: string,
-  draftId: string,
-  model: string,
-  tokensIn: number,
-  tokensOut: number,
-  generationType: string
-) {
-  const supabase = createAdminClient();
-  const costCents = model.includes("opus")
-    ? Math.round((tokensIn * 15 + tokensOut * 75) / 1_000_000 * 100)  // Opus pricing
-    : Math.round((tokensIn * 3 + tokensOut * 15) / 1_000_000 * 100);  // Sonnet pricing
-
-  await Promise.all([
-    supabase.from("ai_generations").insert({
-      org_id: orgId,
-      user_id: userId,
-      grant_application_id: draftId,
-      generation_type: generationType,
-      model_used: model,
-      tokens_input: tokensIn,
-      tokens_output: tokensOut,
-      estimated_cost_cents: costCents,
-    }),
-    supabase.from("ai_usage").insert({
-      org_id: orgId,
-      action_type: generationType === "budget" ? "draft" : generationType,
-      tokens_input: tokensIn,
-      tokens_output: tokensOut,
-      estimated_cost_cents: costCents,
-      billing_period: new Date().toISOString().slice(0, 10),
-    }),
-  ]);
-}
+// The dead `_trackUsage` function that previously lived here has been removed.
+// It was unused legacy code with the same column-name bug as BD-1. All usage
+// tracking now flows through aiCall's recordUsage path (Unit 1 + Unit 5).
 
 export interface DraftGeneratorResult {
   sections: DraftSectionOutput[];
@@ -273,7 +312,7 @@ export async function generateDraft(
       progress_pct: Math.round((completedSteps / totalSteps) * 80), // 0-80% for drafting
     }).eq("id", draftId);
 
-    const result = await generateSection(section, context, rfp.scoring_criteria);
+    const result = await generateSection(section, context, draftId);
     sections.push(result);
     completedSteps++;
   }
@@ -284,7 +323,7 @@ export async function generateDraft(
     progress_pct: Math.round((completedSteps / totalSteps) * 80),
   }).eq("id", draftId);
 
-  const budget = await generateBudget(context, sections);
+  const budget = await generateBudget(context, sections, draftId);
 
   // Store sections on draft record
   const sectionsMap: Record<string, DraftSectionOutput> = {};

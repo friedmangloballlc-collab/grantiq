@@ -24,6 +24,13 @@ export interface WritingPurchase {
 export interface WritingContext {
   org_id: string;
   user_id: string;
+  /**
+   * Subscription tier (free | starter | pro | growth | enterprise).
+   * Required by aiCall's checkUsageLimit + checkTokenCeiling pre-flight gates
+   * after the Unit 7 draft-generator migration. Looked up by pipeline.ts from
+   * the subscriptions table and threaded through.
+   */
+  subscription_tier: string;
   rfp_analysis: RfpParseOutput;
   funder_analysis: FunderAnalysisOutput;
   org_profile: {
