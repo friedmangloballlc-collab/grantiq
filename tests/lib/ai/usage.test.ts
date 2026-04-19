@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkUsageLimit, recordUsage, UsageLimitError } from "@/lib/ai/usage";
+import {
+  checkUsageLimit,
+  recordUsage,
+  UsageLimitError,
+  AI_ACTION_TYPES,
+  type AiActionType,
+} from "@/lib/ai/usage";
 
 // --------------------------------------------------------------------------
 // Mock createAdminClient so we never hit a real database
@@ -168,6 +174,21 @@ describe("checkUsageLimit", () => {
     consoleSpy.mockRestore();
   });
 
+  it("maps 'eligibility_status' action to 'eligibility_scores' feature", async () => {
+    const tierLimitsChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi
+        .fn()
+        .mockResolvedValue({ data: { monthly_limit: null }, error: null }),
+    };
+    mockFrom.mockReturnValueOnce(tierLimitsChain);
+
+    await checkUsageLimit("org-1", "eligibility_status", "free");
+
+    expect(tierLimitsChain.eq).toHaveBeenCalledWith("feature", "eligibility_scores");
+  });
+
   it("maps 'draft' action to 'ai_drafts' feature", async () => {
     const tierLimitsChain = {
       select: vi.fn().mockReturnThis(),
@@ -261,5 +282,52 @@ describe("recordUsage", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+});
+
+// --------------------------------------------------------------------------
+// AI_ACTION_TYPES enum + ACTION_TO_FEATURE invariants (added in Unit 1)
+// --------------------------------------------------------------------------
+describe("AI_ACTION_TYPES enum", () => {
+  it("contains the 10 canonical action types", () => {
+    expect(AI_ACTION_TYPES).toEqual([
+      "match",
+      "readiness_score",
+      "roadmap",
+      "eligibility_status",
+      "draft",
+      "audit",
+      "rewrite",
+      "loi",
+      "budget",
+      "chat",
+    ]);
+  });
+
+  it("every AI_ACTION_TYPES value resolves to a feature in checkUsageLimit", async () => {
+    // Smoke-test the type-system guarantee that ACTION_TO_FEATURE covers every enum value.
+    // If a future enum addition skips its mapping, this test fails (TS catches it at compile;
+    // runtime here is the safety net for refactors that bypass typing).
+    for (const action of AI_ACTION_TYPES) {
+      const tierLimitsChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi
+          .fn()
+          .mockResolvedValue({ data: { monthly_limit: null }, error: null }),
+      };
+      mockFrom.mockReset();
+      mockFrom.mockReturnValueOnce(tierLimitsChain);
+
+      const result = await checkUsageLimit("org-1", action as AiActionType, "free");
+      expect(result.allowed).toBe(true);
+      // The feature lookup must have been called with a non-undefined value
+      const featureCalls = tierLimitsChain.eq.mock.calls.filter(
+        ([col]) => col === "feature"
+      );
+      expect(featureCalls).toHaveLength(1);
+      expect(featureCalls[0][1]).toBeTruthy();
+      expect(typeof featureCalls[0][1]).toBe("string");
+    }
   });
 });

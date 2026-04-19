@@ -1,12 +1,42 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
-const ACTION_TO_FEATURE: Record<string, string> = {
+/**
+ * Canonical set of AI action types accepted by aiCall.
+ *
+ * Source of truth — DB CHECK constraints on ai_generations.generation_type and
+ * ai_usage.action_type are kept in sync with this list (see migration 00049).
+ *
+ * Adding a new action type requires:
+ *   1. Adding the value here
+ *   2. Adding an ACTION_TO_FEATURE mapping below
+ *   3. Adding a new migration that widens both CHECK constraints
+ */
+export const AI_ACTION_TYPES = [
+  "match",
+  "readiness_score",
+  "roadmap",
+  "eligibility_status",
+  "draft",
+  "audit",
+  "rewrite",
+  "loi",
+  "budget",
+  "chat",
+] as const;
+
+export type AiActionType = (typeof AI_ACTION_TYPES)[number];
+
+const ACTION_TO_FEATURE: Record<AiActionType, string> = {
   match: "matching_runs",
   readiness_score: "readiness_scores",
   roadmap: "matching_runs",
+  eligibility_status: "eligibility_scores",
   draft: "ai_drafts",
   audit: "ai_drafts",
+  rewrite: "ai_drafts",
+  loi: "ai_drafts",
+  budget: "ai_drafts",
   chat: "grantie_messages",
 };
 
@@ -33,11 +63,11 @@ interface UsageCheckResult {
 
 export async function checkUsageLimit(
   orgId: string,
-  actionType: string,
+  actionType: AiActionType,
   tier: string
 ): Promise<UsageCheckResult> {
   const db = createAdminClient();
-  const feature = ACTION_TO_FEATURE[actionType] || actionType;
+  const feature = ACTION_TO_FEATURE[actionType];
 
   const { data: limitRow, error: limitError } = await db
     .from("tier_limits")
@@ -89,7 +119,7 @@ export async function checkUsageLimit(
 
 interface RecordUsageParams {
   orgId: string;
-  actionType: string;
+  actionType: AiActionType;
   tokensInput: number;
   tokensOutput: number;
   estimatedCostCents: number;
