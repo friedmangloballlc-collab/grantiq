@@ -51,6 +51,14 @@ vi.mock("@/lib/ai/sanitize", () => ({
   sanitizeInput: (s: string) => s,
 }));
 
+// Circuit breaker mock — defaults to NOT tripped so existing tests keep
+// using the cached path. Individual tests override per-call.
+const breakerMock = vi.fn().mockResolvedValue(false);
+vi.mock("@/lib/ai/circuit-breaker", () => ({
+  isCacheBreakerTripped: (...args: unknown[]) => breakerMock(...args),
+  clearCircuitBreakerCache: vi.fn(),
+}));
+
 vi.mock("@/lib/ai/usage", async (importOriginal) => {
   // Preserve real types/exports (AiActionType, AI_ACTION_TYPES, UsageLimitError, TokenCeilingError)
   const actual = await importOriginal<typeof import("@/lib/ai/usage")>();

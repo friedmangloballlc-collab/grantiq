@@ -17,6 +17,7 @@ import {
   UsageLimitError,
   type AiActionType,
 } from "@/lib/ai/usage";
+import { isCacheBreakerTripped } from "@/lib/ai/circuit-breaker";
 
 export type AiProvider = "openai" | "anthropic";
 
@@ -163,6 +164,15 @@ interface AnthropicCallParams {
   systemPrompt: string;
   cacheableContext?: string;
   userInput: string;
+  /**
+   * When true, omits all cache_control headers — the call still goes to
+   * Anthropic but without prompt-cache directives. Set by the per-org
+   * circuit breaker (Unit 8) when recent calls have shown cache_read_tokens
+   * stays at 0/null, which means the cache is silently broken for this
+   * (org, prompt) combination and continuing to send cache_control would
+   * keep paying the write multiplier without benefit.
+   */
+  bypassCache?: boolean;
 }
 
 /**
@@ -189,7 +199,11 @@ async function callAnthropicOnce(params: AnthropicCallParams): Promise<ProviderC
         {
           type: "text",
           text: params.cacheableContext,
-          cache_control: { type: "ephemeral", ttl: "5m" },
+          // Omit cache_control when the breaker is tripped; the text still
+          // goes through, just without a cache directive.
+          ...(params.bypassCache
+            ? {}
+            : { cache_control: { type: "ephemeral", ttl: "5m" } }),
         } as Anthropic.TextBlockParam,
       ],
     });
@@ -204,7 +218,9 @@ async function callAnthropicOnce(params: AnthropicCallParams): Promise<ProviderC
       {
         type: "text",
         text: params.systemPrompt,
-        cache_control: { type: "ephemeral", ttl: "1h" },
+        ...(params.bypassCache
+          ? {}
+          : { cache_control: { type: "ephemeral", ttl: "1h" } }),
       } as Anthropic.TextBlockParam,
     ],
     messages: userMessages,
@@ -355,6 +371,12 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
   // 4. Provider dispatch
   let providerResult: ProviderCallResult;
   if (provider === "anthropic") {
+    // Per-org cache circuit breaker (Unit 8): if recent calls show the
+    // cache silently isn't working, omit cache_control so we stop paying
+    // the write multiplier with no benefit. promptId presence already
+    // enforced by the PromptIdRequiredError check above.
+    const bypassCache = await isCacheBreakerTripped(orgId, promptId!);
+
     providerResult = await callAnthropicWithRetry({
       model,
       maxTokens,
@@ -362,6 +384,7 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
       systemPrompt,
       cacheableContext: sanitizedCacheableContext,
       userInput: sanitizedUserInput,
+      bypassCache,
     });
   } else {
     providerResult = await callOpenAI({
