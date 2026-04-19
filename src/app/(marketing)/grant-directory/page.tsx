@@ -56,6 +56,12 @@ export default async function GrantDirectoryPage() {
 
   const admin = createAdminClient();
 
+  // Deadline window helpers — same date format the DB uses (YYYY-MM-DD)
+  const today = new Date().toISOString().split("T")[0];
+  const in7  = new Date(Date.now() +  7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const in30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const in90 = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
   // Aggregate stats — all counted, none returned as individual rows
   const [
     { count: totalCount },
@@ -63,7 +69,9 @@ export default async function GrantDirectoryPage() {
     { data: categoryRows },
     { count: bigGrantsCount },
     { count: midGrantsCount },
-    { count: closingSoonCount },
+    { count: closing7Count },
+    { count: closing30Count },
+    { count: closing90Count },
     { data: stateRows },
   ] = await Promise.all([
     admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true),
@@ -71,13 +79,9 @@ export default async function GrantDirectoryPage() {
     admin.from("grant_sources").select("category").eq("is_active", true).not("category", "is", null),
     admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true).gte("amount_max", 100000),
     admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true).gte("amount_max", 25000).lt("amount_max", 100000),
-    admin
-      .from("grant_sources")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true)
-      .not("deadline", "is", null)
-      .gte("deadline", new Date().toISOString().split("T")[0])
-      .lte("deadline", new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]),
+    admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true).not("deadline", "is", null).gte("deadline", today).lte("deadline", in7),
+    admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true).not("deadline", "is", null).gte("deadline", today).lte("deadline", in30),
+    admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true).not("deadline", "is", null).gte("deadline", today).lte("deadline", in90),
     admin.from("grant_sources").select("states").eq("is_active", true).not("states", "is", null),
   ]);
 
@@ -167,12 +171,72 @@ export default async function GrantDirectoryPage() {
         </section>
       )}
 
-      {/* Money + urgency tiles */}
+      {/* Deadline urgency — 3-tier breakdown */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-warm-900 dark:text-warm-50 mb-2 text-center">
+          Deadlines you might be missing
+        </h2>
+        <p className="text-center text-sm text-warm-500 mb-6">
+          We track every deadline. Sign up to see the ones you actually qualify for.
+        </p>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Link
+            href="/signup?utm_source=directory&utm_medium=urgency&utm_term=closing_7d"
+            className="block p-6 rounded-xl bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/30 hover:shadow-md transition-all relative overflow-hidden"
+          >
+            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-500 text-white">
+              Critical
+            </div>
+            <div className="text-4xl font-bold text-red-600 dark:text-red-500 mb-2">
+              {roundDown(closing7Count ?? 0, 5)}
+            </div>
+            <div className="text-base font-semibold text-warm-900 dark:text-warm-50">
+              Close in 7 days
+            </div>
+            <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
+              Last-call grants. If any match your org, you need to know
+              tonight — not next week.
+            </p>
+          </Link>
+          <Link
+            href="/signup?utm_source=directory&utm_medium=urgency&utm_term=closing_30d"
+            className="block p-6 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 hover:shadow-md transition-all"
+          >
+            <div className="text-4xl font-bold text-amber-600 dark:text-amber-500 mb-2">
+              {roundDown(closing30Count ?? 0, 10)}
+            </div>
+            <div className="text-base font-semibold text-warm-900 dark:text-warm-50">
+              Close in 30 days
+            </div>
+            <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
+              Enough time to write a strong proposal — but only if you start
+              this week.
+            </p>
+          </Link>
+          <Link
+            href="/signup?utm_source=directory&utm_medium=urgency&utm_term=closing_90d"
+            className="block p-6 rounded-xl border border-warm-200 dark:border-warm-800 hover:border-brand-teal hover:shadow-md transition-all bg-white dark:bg-warm-900"
+          >
+            <div className="text-4xl font-bold text-warm-900 dark:text-warm-50 mb-2">
+              {roundDown(closing90Count ?? 0, 25)}
+            </div>
+            <div className="text-base font-semibold text-warm-900 dark:text-warm-50">
+              Close in 90 days
+            </div>
+            <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
+              Your planning horizon. Sign up to build a quarterly grant
+              calendar around the matches that fit.
+            </p>
+          </Link>
+        </div>
+      </section>
+
+      {/* Money tiles */}
       <section className="mb-12">
         <h2 className="text-2xl font-semibold text-warm-900 dark:text-warm-50 mb-6 text-center">
-          What you might be missing
+          Funding by award size
         </h2>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 gap-4">
           <Link
             href="/signup?utm_source=directory&utm_medium=amount&utm_term=large"
             className="block p-6 rounded-xl bg-gradient-to-br from-brand-teal/10 to-brand-teal/5 border border-brand-teal/30 hover:shadow-md transition-all"
@@ -201,21 +265,6 @@ export default async function GrantDirectoryPage() {
             <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
               The sweet-spot range for most nonprofits — manageable
               applications, real impact.
-            </p>
-          </Link>
-          <Link
-            href="/signup?utm_source=directory&utm_medium=urgency&utm_term=closing_soon"
-            className="block p-6 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 hover:shadow-md transition-all"
-          >
-            <div className="text-4xl font-bold text-amber-600 dark:text-amber-500 mb-2">
-              {roundDown(closingSoonCount ?? 0, 10)}
-            </div>
-            <div className="text-base font-semibold text-warm-900 dark:text-warm-50">
-              Closing this month
-            </div>
-            <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
-              Deadlines move fast. We track them so you don&apos;t miss the
-              ones you qualify for.
             </p>
           </Link>
         </div>
