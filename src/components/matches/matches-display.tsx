@@ -30,6 +30,7 @@ interface OrgContext {
   funding_amount_max?: number | null;
   industry?: string | null;
   annual_budget?: number | null;
+  target_beneficiaries?: string[] | null;
 }
 
 interface MatchesDisplayProps {
@@ -60,6 +61,20 @@ export function MatchesDisplay({
   const totalValue = visibleMatches.reduce((sum, m) => {
     return sum + (m.grant_sources?.amount_max ?? 0);
   }, 0);
+
+  // Compute per-card "Why this matched" criteria once per render. Memoized
+  // by match id so only newly-added matches recompute on filter changes.
+  const criteriaByMatchId = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof computeMatchCriteria>>();
+    for (const m of matches) {
+      if (!m.grant_sources) {
+        map.set(m.id, []);
+        continue;
+      }
+      map.set(m.id, computeMatchCriteria(m.grant_sources, orgContext));
+    }
+    return map;
+  }, [matches, orgContext]);
 
   return (
     <div className="max-w-6xl px-4 md:px-6 py-6">
@@ -103,7 +118,7 @@ export function MatchesDisplay({
                 matchScore={Math.round(Number(match.match_score) || 0)}
                 scoreBreakdown={{}}
                 missingRequirements={[]}
-                matchCriteria={[]}
+                matchCriteria={criteriaByMatchId.get(match.id) ?? []}
                 uploadedDocs={uploadedDocs}
               />
             ))}
@@ -126,7 +141,7 @@ export function MatchesDisplay({
                 matchScore={Math.round(Number(match.match_score) || 0)}
                 scoreBreakdown={match.score_breakdown ?? {}}
                 missingRequirements={match.missing_requirements ?? []}
-                matchCriteria={[]}
+                matchCriteria={criteriaByMatchId.get(match.id) ?? []}
                 uploadedDocs={uploadedDocs}
               />
             ))}

@@ -10,6 +10,21 @@ export interface MatchGrantSource {
   source_type: string | null;
   amount_max: number | null;
   deadline: string | null;
+  // Fields below are read by computeMatchCriteria to render the
+  // per-card "Why this matched" criteria list. They are nullable
+  // because not every grant_source row has every field populated.
+  amount_min: number | null;
+  states: string[] | null;
+  eligibility_types: string[] | null;
+  eligible_naics: string[] | null;
+  requires_sam: boolean | null;
+  required_certification: string | null;
+  match_required_pct: number | null;
+  cost_sharing_required: boolean | null;
+  category: string | null;
+  target_beneficiaries: string[] | null;
+  estimated_awards_count: number | null;
+  estimated_funding: number | null;
 }
 
 export interface MatchItem {
