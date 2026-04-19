@@ -70,3 +70,43 @@ export function estimateCostCents(
     ((inputTokens / 1000) * rates.input + (outputTokens / 1000) * rates.output) * 100
   );
 }
+
+/**
+ * Anthropic-aware cost estimator (Unit 4 / R16).
+ *
+ * Anthropic prompt caching has tiered pricing:
+ *   - Non-cached input:        1.0x base input rate
+ *   - Cache write (5-min TTL): 1.25x base input rate
+ *   - Cache write (1-hour TTL): 2.0x base input rate
+ *   - Cache read:              0.1x base input rate
+ *
+ * `inputTokens` here is the NON-CACHED input portion only. Cache write/read
+ * tokens are passed separately. The `systemTtl` arg determines which write
+ * multiplier applies — auto-marked systemPrompts use '1h', cacheableContext
+ * uses '5m'. When both breakpoints coexist (Unit 4 default), pass the more
+ * expensive '1h' as a conservative estimate; the fine-grained per-breakpoint
+ * apportionment is a future optimization.
+ *
+ * Returns cents. Output tokens always priced at the model's base output rate.
+ */
+export function estimateAnthropicCostCents(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  cacheCreationTokens: number = 0,
+  cacheReadTokens: number = 0,
+  systemTtl: "5m" | "1h" = "1h"
+): number {
+  const rates = COST_PER_1K_TOKENS[model as keyof typeof COST_PER_1K_TOKENS];
+  if (!rates) return 0;
+
+  const writeMultiplier = systemTtl === "1h" ? 2.0 : 1.25;
+  const readMultiplier = 0.1;
+
+  const inputCost = (inputTokens / 1000) * rates.input;
+  const cacheWriteCost = (cacheCreationTokens / 1000) * rates.input * writeMultiplier;
+  const cacheReadCost = (cacheReadTokens / 1000) * rates.input * readMultiplier;
+  const outputCost = (outputTokens / 1000) * rates.output;
+
+  return Math.ceil((inputCost + cacheWriteCost + cacheReadCost + outputCost) * 100);
+}
