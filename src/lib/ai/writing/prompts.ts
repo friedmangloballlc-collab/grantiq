@@ -168,46 +168,28 @@ Return ONLY a JSON object matching the schema. No markdown, no commentary, no co
 // PROMPT: Draft Generator — Section Writer (Claude Opus)
 // ============================================================
 
-export function buildDraftSectionPrompt(sectionContext: {
-  section_name: string;
-  section_type: string;
-  section_description: string;
-  page_limit: number | null;
-  word_limit: number | null;
-  special_instructions: string | null;
-  scoring_criteria: Array<{ criterion: string; max_points: number; description: string }>;
-}) {
-  const limitInstructions = [];
-  if (sectionContext.word_limit) {
-    limitInstructions.push(`HARD WORD LIMIT: ${sectionContext.word_limit} words. Do NOT exceed this. Aim for ${Math.round(sectionContext.word_limit * 0.92)}-${sectionContext.word_limit} words.`);
-  }
-  if (sectionContext.page_limit) {
-    limitInstructions.push(`HARD PAGE LIMIT: ${sectionContext.page_limit} pages (assuming 12pt font, 1-inch margins, single-spaced, ~500 words/page). Do NOT exceed ${sectionContext.page_limit * 500} words.`);
-  }
-  if (!sectionContext.word_limit && !sectionContext.page_limit) {
-    limitInstructions.push("No explicit limit specified. Write comprehensively but concisely. Aim for appropriate depth without filler.");
-  }
-
-  const criteriaBlock = sectionContext.scoring_criteria.length > 0
-    ? `\n## Scoring Criteria This Section Must Address\n${sectionContext.scoring_criteria.map(c => `- **${c.criterion}** (${c.max_points} points): ${c.description}`).join("\n")}`
-    : "";
-
-  return `You are an elite grant writer with a 78% win rate across federal, state, and foundation grants. You write with precision, evidence-based arguments, and strategic framing that maximizes reviewer scores.
+/**
+ * Section-stable system prompt for draft generation.
+ *
+ * Unit 3 refactor (R18): this string is INVARIANT across every section call
+ * within a drafting session. All 7 section-specific fields (section_name,
+ * section_type, section_description, word_limit, page_limit,
+ * special_instructions, scoring_criteria) have been extracted into the
+ * companion `buildSectionUserSegment` function — those fields flow into
+ * `userInput` instead.
+ *
+ * Why: Anthropic prompt caching keys on the literal byte content of the
+ * cached prefix. If the system prompt varies per section, the cache
+ * never hits. Pre-refactor, this prompt interpolated section_name,
+ * section_type, etc. directly into the system text — guaranteeing 0%
+ * cache hit rate. Now it's stable; section content lives in the user
+ * message tail (which is uncached by design).
+ */
+export const DRAFT_SECTION_SYSTEM_PROMPT = `You are an elite grant writer with a 78% win rate across federal, state, and foundation grants. You write with precision, evidence-based arguments, and strategic framing that maximizes reviewer scores.
 
 ## Your Task
 
-Write the "${sectionContext.section_name}" section of a grant application.
-
-## Section Requirements
-
-**Section Type:** ${sectionContext.section_type}
-**Description from RFP:** ${sectionContext.section_description}
-${sectionContext.special_instructions ? `**Special Instructions:** ${sectionContext.special_instructions}` : ""}
-
-## Limits
-
-${limitInstructions.join("\n")}
-${criteriaBlock}
+Write a single section of a grant application. The exact section, its requirements, limits, and scoring criteria are provided in the user message.
 
 ## Writing Standards
 
@@ -245,10 +227,11 @@ ${criteriaBlock}
 ## Context Provided in User Message
 
 You will receive:
-1. The RFP analysis (parsed sections, themes, criteria)
-2. Funder analysis (alignment notes, language preferences, writing recommendations)
-3. Organization profile (mission, capabilities, track record)
-4. Narrative examples from prior successful applications (if available — use as style/quality reference, NOT copy)
+1. The section requirements (name, type, description, limits, scoring criteria, special instructions)
+2. The RFP analysis (parsed sections, themes, criteria)
+3. Funder analysis (alignment notes, language preferences, writing recommendations)
+4. Organization profile (mission, capabilities, track record)
+5. Narrative examples from prior successful applications (if available — use as style/quality reference, NOT copy)
 
 ## Output Format
 
@@ -265,6 +248,69 @@ Return ONLY a JSON object matching the schema. Include:
 - notes: caveats or areas needing human input (e.g., "[ORG] needs to add specific local data here")
 
 No markdown code fences. Just valid JSON.`;
+
+/**
+ * Build the section-specific user-message preamble.
+ *
+ * Contains all 7 fields that previously interpolated into the system prompt.
+ * Caller (e.g., draft-generator's generateSection) concatenates this with
+ * the rest of the user input (RFP analysis, funder intel, org profile, etc.)
+ * before passing to aiCall as the userInput.
+ */
+export function buildSectionUserSegment(sectionContext: {
+  section_name: string;
+  section_type: string;
+  section_description: string;
+  page_limit: number | null;
+  word_limit: number | null;
+  special_instructions: string | null;
+  scoring_criteria: Array<{ criterion: string; max_points: number; description: string }>;
+}): string {
+  const limitInstructions = [];
+  if (sectionContext.word_limit) {
+    limitInstructions.push(`HARD WORD LIMIT: ${sectionContext.word_limit} words. Do NOT exceed this. Aim for ${Math.round(sectionContext.word_limit * 0.92)}-${sectionContext.word_limit} words.`);
+  }
+  if (sectionContext.page_limit) {
+    limitInstructions.push(`HARD PAGE LIMIT: ${sectionContext.page_limit} pages (assuming 12pt font, 1-inch margins, single-spaced, ~500 words/page). Do NOT exceed ${sectionContext.page_limit * 500} words.`);
+  }
+  if (!sectionContext.word_limit && !sectionContext.page_limit) {
+    limitInstructions.push("No explicit limit specified. Write comprehensively but concisely. Aim for appropriate depth without filler.");
+  }
+
+  const criteriaBlock = sectionContext.scoring_criteria.length > 0
+    ? `\n## Scoring Criteria This Section Must Address\n${sectionContext.scoring_criteria.map(c => `- **${c.criterion}** (${c.max_points} points): ${c.description}`).join("\n")}`
+    : "";
+
+  return `## Section Requirements
+
+**Section Name:** ${sectionContext.section_name}
+**Section Type:** ${sectionContext.section_type}
+**Description from RFP:** ${sectionContext.section_description}
+${sectionContext.special_instructions ? `**Special Instructions:** ${sectionContext.special_instructions}` : ""}
+
+## Limits
+
+${limitInstructions.join("\n")}
+${criteriaBlock}`;
+}
+
+/**
+ * @deprecated Use DRAFT_SECTION_SYSTEM_PROMPT + buildSectionUserSegment.
+ *
+ * Backwards-compatible wrapper that returns the combined string the way the
+ * pre-Unit-3 code expected. New code should call the two pieces separately
+ * so the system prompt can be cached. Kept temporarily so non-Unit-7
+ * callers don't break; remove after Unit 7 migrates draft-generator.
+ */
+export function buildDraftSectionPrompt(sectionContext: Parameters<typeof buildSectionUserSegment>[0]): string {
+  // Reconstruct the original combined shape: system content + section requirements
+  // interpolated inline. The exact pre-refactor text lived in a single template;
+  // the combined string here is functionally equivalent for callers that haven't
+  // adopted the split yet.
+  return `${DRAFT_SECTION_SYSTEM_PROMPT.replace(
+    "## Your Task\n\nWrite a single section of a grant application. The exact section, its requirements, limits, and scoring criteria are provided in the user message.",
+    `## Your Task\n\nWrite the "${sectionContext.section_name}" section of a grant application.\n\n${buildSectionUserSegment(sectionContext)}`
+  )}`;
 }
 
 
