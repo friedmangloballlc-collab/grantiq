@@ -292,6 +292,7 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
     userInput,
     cacheableContext,
     promptId,
+    sessionId,
     orgId,
     userId,
     tier,
@@ -383,12 +384,15 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
       : estimateCostCents(model, inputTokens, outputTokens);
 
   // 6. Record usage — fire-and-forget (don't block on errors)
+  // sessionId routes through the RPC upsert (Unit 5 / migration 00053) so a
+  // multi-call drafting session counts as ONE ai_usage row instead of N.
   const usagePromise = recordUsage({
     orgId,
     actionType,
     tokensInput: inputTokens,
     tokensOutput: outputTokens,
     estimatedCostCents: costCents,
+    sessionId,
   });
 
   // Also insert into ai_generations for detailed audit trail.

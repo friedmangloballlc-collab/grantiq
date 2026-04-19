@@ -11,8 +11,9 @@ import {
 // Mock createAdminClient so we never hit a real database
 // --------------------------------------------------------------------------
 const mockFrom = vi.fn();
+const mockRpc = vi.fn();
 vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({ from: mockFrom }),
+  createAdminClient: () => ({ from: mockFrom, rpc: mockRpc }),
 }));
 
 // Helper: build a chainable Supabase query mock
@@ -218,6 +219,7 @@ describe("checkUsageLimit", () => {
 describe("recordUsage", () => {
   beforeEach(() => {
     mockFrom.mockReset();
+    mockRpc.mockReset();
   });
 
   it("inserts a row into ai_usage with correct fields", async () => {
@@ -279,6 +281,99 @@ describe("recordUsage", () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining("Failed to record AI usage")
+    );
+
+    consoleSpy.mockRestore();
+  });
+});
+
+// --------------------------------------------------------------------------
+// recordUsage — session_id RPC path (Unit 5 / R13)
+// --------------------------------------------------------------------------
+describe("recordUsage with sessionId (Unit 5)", () => {
+  beforeEach(() => {
+    mockFrom.mockReset();
+    mockRpc.mockReset();
+  });
+
+  it("calls record_ai_usage_session RPC when sessionId is supplied", async () => {
+    mockRpc.mockResolvedValueOnce({ error: null });
+
+    await recordUsage({
+      orgId: "org-abc",
+      actionType: "draft",
+      tokensInput: 500,
+      tokensOutput: 200,
+      estimatedCostCents: 7,
+      sessionId: "grant-app-123",
+    });
+
+    expect(mockRpc).toHaveBeenCalledTimes(1);
+    expect(mockRpc).toHaveBeenCalledWith(
+      "record_ai_usage_session",
+      expect.objectContaining({
+        p_org_id: "org-abc",
+        p_action_type: "draft",
+        p_session_id: "grant-app-123",
+        p_tokens_input: 500,
+        p_tokens_output: 200,
+        p_cost_cents: 7,
+      })
+    );
+    // Plain INSERT path should NOT have been called
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it("falls back to plain INSERT when sessionId is omitted", async () => {
+    const insertMock = vi.fn().mockResolvedValue({ error: null });
+    mockFrom.mockReturnValueOnce({ insert: insertMock });
+
+    await recordUsage({
+      orgId: "org-abc",
+      actionType: "match",
+      tokensInput: 100,
+      tokensOutput: 50,
+      estimatedCostCents: 1,
+    });
+
+    // RPC should NOT have been called when sessionId is absent
+    expect(mockRpc).not.toHaveBeenCalled();
+    expect(insertMock).toHaveBeenCalled();
+  });
+
+  it("includes p_billing_period in YYYY-MM-DD format on RPC path", async () => {
+    mockRpc.mockResolvedValueOnce({ error: null });
+
+    await recordUsage({
+      orgId: "org-abc",
+      actionType: "draft",
+      tokensInput: 1,
+      tokensOutput: 1,
+      estimatedCostCents: 0,
+      sessionId: "grant-app-123",
+    });
+
+    const [, args] = mockRpc.mock.calls[0];
+    expect(args.p_billing_period).toMatch(/^\d{4}-\d{2}-01$/);
+  });
+
+  it("logs error but does not throw when RPC fails", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockRpc.mockResolvedValueOnce({ error: { message: "rpc failed" } });
+
+    await expect(
+      recordUsage({
+        orgId: "org-abc",
+        actionType: "draft",
+        tokensInput: 1,
+        tokensOutput: 1,
+        estimatedCostCents: 0,
+        sessionId: "grant-app-123",
+      })
+    ).resolves.toBeUndefined();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to record AI usage (session)")
     );
 
     consoleSpy.mockRestore();

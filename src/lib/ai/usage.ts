@@ -123,6 +123,21 @@ interface RecordUsageParams {
   tokensInput: number;
   tokensOutput: number;
   estimatedCostCents: number;
+  /**
+   * Optional session id for usage-row dedup (Unit 5 / R13).
+   *
+   * When supplied, the call routes through the record_ai_usage_session RPC
+   * (defined in migration 00053) which upserts on (org_id, action_type,
+   * session_id) and INCREMENTS tokens/cost on conflict. This makes a
+   * multi-call session — e.g., a 6-section drafting run sharing one
+   * grant_application_id — count as a single ai_usage row.
+   *
+   * INVARIANT: callers MUST pass per-call deltas, never cumulative totals.
+   * The RPC's DO UPDATE adds EXCLUDED to existing values.
+   *
+   * When omitted, falls back to the legacy plain INSERT (one row per call).
+   */
+  sessionId?: string;
 }
 
 export async function recordUsage(params: RecordUsageParams): Promise<void> {
@@ -132,6 +147,24 @@ export async function recordUsage(params: RecordUsageParams): Promise<void> {
     .toISOString()
     .split("T")[0];
 
+  // Session-scoped path: RPC upsert that increments on conflict.
+  if (params.sessionId) {
+    const { error } = await db.rpc("record_ai_usage_session", {
+      p_org_id: params.orgId,
+      p_action_type: params.actionType,
+      p_session_id: params.sessionId,
+      p_tokens_input: params.tokensInput,
+      p_tokens_output: params.tokensOutput,
+      p_cost_cents: params.estimatedCostCents,
+      p_billing_period: billingPeriod,
+    });
+    if (error) {
+      logger.error("Failed to record AI usage (session)", { err: String(error) });
+    }
+    return;
+  }
+
+  // Legacy path: plain INSERT, one row per call.
   const { error } = await db.from("ai_usage").insert({
     org_id: params.orgId,
     action_type: params.actionType,
