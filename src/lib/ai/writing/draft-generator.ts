@@ -15,13 +15,22 @@
 //   - Sentry tripwire on recording failures
 //
 // What stayed the same:
-//   - Sequential section execution (the for-loop in generateDraft).
-//     Parallelization was deliberately deferred to a separate unit
-//     because it requires careful orchestration of progress updates
-//     and would obscure the BD-1/cache wins by mixing concerns.
 //   - The Zod-validated retry loop for section output. Anthropic-side
 //     retry (5xx/529) lives in aiCall now; the Zod-shape retry stays
 //     local to this module.
+//
+// Parallelization (added after Unit 7 ship):
+//   Section 0 runs alone first to prime the Anthropic prompt cache
+//   (cacheableContext + system prompt land in the cache on this call).
+//   Sections 1..N then run in parallel via Promise.all — they all hit
+//   the warmed cache (cache_read at 10% of input cost) and execute
+//   concurrently against Anthropic's API. End-to-end draft latency
+//   for a typical 6-section RFP drops from ~6× per-call time to ~2×.
+//
+//   Concurrency safety: Unit 5's record_ai_usage_session RPC uses
+//   Postgres ON CONFLICT DO UPDATE with a partial unique index, which
+//   is atomic — concurrent upserts for the same (org_id, session_id)
+//   are race-safe. The token-ceiling check is also atomic per call.
 
 import {
   DraftSectionOutputSchema,
@@ -285,9 +294,18 @@ export interface DraftGeneratorResult {
 }
 
 /**
- * Main entry: generates all sections + budget sequentially, updating
- * draft progress as it goes. Sections are generated one at a time to
- * allow later sections to reference earlier ones if needed.
+ * Main entry: generates all sections + budget, updating draft progress
+ * as work completes.
+ *
+ * Execution shape:
+ *   1. Section 0 runs alone (primes Anthropic prompt cache)
+ *   2. Sections 1..N run in parallel via Promise.all (all hit warm cache)
+ *   3. Budget runs after all sections complete (it needs the narrative
+ *      content to align numbers to)
+ *
+ * Section ordering in the returned array matches the RFP-defined order
+ * (narrativeSections), not completion order. The parallel branch maps
+ * results back into the original index slots.
  */
 export async function generateDraft(
   draftId: string,
@@ -295,26 +313,67 @@ export async function generateDraft(
 ): Promise<DraftGeneratorResult> {
   const supabase = createAdminClient();
   const rfp = context.rfp_analysis;
-  const sections: DraftSectionOutput[] = [];
 
   // Filter out budget-type sections (generated separately)
   const narrativeSections = rfp.required_sections.filter(
     s => !classifySectionType(s.section_name).startsWith("budget")
   );
   const totalSteps = narrativeSections.length + 1; // +1 for budget
+  const sections: DraftSectionOutput[] = new Array(narrativeSections.length);
   let completedSteps = 0;
 
-  // Generate each section sequentially
-  for (const section of narrativeSections) {
+  // updateProgress is called from concurrent branches; the underlying
+  // PATCH is idempotent (last-write-wins on a single column set), so a
+  // brief race where two updates land out of order only causes a tiny
+  // visual jitter in progress_pct, never a correctness issue.
+  const updateProgress = async (currentSectionName: string) => {
     await supabase.from("grant_drafts").update({
       status: "drafting",
-      current_step: `Writing: ${section.section_name}`,
+      current_step: `Writing: ${currentSectionName}`,
       progress_pct: Math.round((completedSteps / totalSteps) * 80), // 0-80% for drafting
     }).eq("id", draftId);
+  };
 
-    const result = await generateSection(section, context, draftId);
-    sections.push(result);
+  if (narrativeSections.length === 0) {
+    // Edge case: RFP had no narrative sections (only a budget). Skip
+    // straight to budget generation.
+  } else {
+    // Step 1: Run section 0 alone to prime the Anthropic prompt cache.
+    // This call pays the cache_creation cost on systemPrompt (1h TTL)
+    // and cacheableContext (5m TTL). Sections 1..N hit those entries
+    // at the cache_read rate.
+    const firstSection = narrativeSections[0];
+    await updateProgress(firstSection.section_name);
+    sections[0] = await generateSection(firstSection, context, draftId);
     completedSteps++;
+
+    // Step 2: Sections 1..N run in parallel against the warm cache.
+    // Promise.all is safe here — Unit 5's session-dedup RPC uses an
+    // atomic ON CONFLICT DO UPDATE, and the per-call token ceiling
+    // check is also atomic per call.
+    if (narrativeSections.length > 1) {
+      const remaining = narrativeSections.slice(1);
+      await supabase.from("grant_drafts").update({
+        status: "drafting",
+        current_step: `Writing ${remaining.length} sections in parallel`,
+        progress_pct: Math.round((completedSteps / totalSteps) * 80),
+      }).eq("id", draftId);
+
+      const results = await Promise.all(
+        remaining.map(async (section, i) => {
+          const result = await generateSection(section, context, draftId);
+          completedSteps++;
+          // Fire-and-forget progress update so a slow PATCH doesn't
+          // hold up the next section's response from being captured.
+          void updateProgress(section.section_name);
+          return { index: i + 1, result };
+        })
+      );
+
+      for (const { index, result } of results) {
+        sections[index] = result;
+      }
+    }
   }
 
   // Generate budget (informed by all narrative sections)
