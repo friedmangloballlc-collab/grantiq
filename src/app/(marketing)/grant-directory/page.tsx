@@ -1,13 +1,20 @@
-// Grant directory — REPLACED 2026-04-19 with an auth-gate.
+// Grant directory — TEASER PAGE 2026-04-19.
 //
-// Background: this route previously listed all 6,356 grants paginated for
-// any anonymous visitor. That made our entire inventory scrapeable by
-// competitors. Per business decision, the route now:
-//   - Anonymous visitors → see a teaser page (counts only, no grant
-//     details) with a sign-up CTA. Old SEO traffic still lands on a
-//     page; they just can't browse the inventory.
-//   - Authenticated visitors → redirected to /library (the in-app
-//     search experience, which has its own per-tier rate limiting).
+// Anonymous visitors see CATEGORY COUNTS but no individual grant details.
+// Each count is a conversion hook: "look how many grants you're missing,
+// sign up to see them." Authenticated visitors → /library.
+//
+// What we deliberately show:
+//   - Total active count (rounded down to nearest 100, never exact)
+//   - Breakdown by funder type (federal/state/foundation/corporate)
+//   - Top 10 industry categories with counts
+//   - Amount-tier breakdown ("X grants over $100K")
+//   - Deadline urgency ("X grants closing this month")
+//   - Geographic spread ("X states covered")
+//
+// What we deliberately hide:
+//   - Individual grant names, funders, descriptions, deadlines
+//   - The full list — every count is bounded, never paginated
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -17,96 +24,260 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Grant Directory — Sign Up to Browse | GrantAQ",
+  title: "Grant Directory — Sign Up to See Matches | GrantAQ",
   description:
-    "Browse thousands of federal, state, foundation, and corporate grants matched to your organization. Create a free account to see grants you actually qualify for.",
+    "Thousands of federal, state, foundation, and corporate grants. Create a free account and our AI surfaces the grants that fit your organization — not a 6,000-row spreadsheet.",
   alternates: {
     canonical: "https://grantaq.com/grant-directory",
   },
-  // Tell Google not to index this teaser page (we want signup CTAs to
-  // surface, but the old "browse 5000 grants" content is gone).
   robots: { index: false, follow: true },
 };
 
 export const revalidate = 3600;
 
+const SOURCE_TYPE_LABELS: Record<string, string> = {
+  federal: "Federal",
+  state: "State",
+  foundation: "Foundation",
+  corporate: "Corporate",
+};
+
+function roundDown(n: number, step: number): string {
+  if (!n) return "—";
+  return `${(Math.floor(n / step) * step).toLocaleString()}+`;
+}
+
 export default async function GrantDirectoryPage() {
-  // Authenticated users → straight to the in-app library
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     redirect("/library");
   }
 
-  // Anonymous: show a teaser with aggregate stats only
   const admin = createAdminClient();
-  const { count: grantCount } = await admin
-    .from("grant_sources")
-    .select("*", { count: "exact", head: true })
-    .eq("is_active", true);
 
-  const displayCount = grantCount ? `${Math.floor(grantCount / 100) * 100}+` : "5,000+";
+  // Aggregate stats — all counted, none returned as individual rows
+  const [
+    { count: totalCount },
+    { data: sourceTypeRows },
+    { data: categoryRows },
+    { count: bigGrantsCount },
+    { count: midGrantsCount },
+    { count: closingSoonCount },
+    { data: stateRows },
+  ] = await Promise.all([
+    admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true),
+    admin.from("grant_sources").select("source_type").eq("is_active", true),
+    admin.from("grant_sources").select("category").eq("is_active", true).not("category", "is", null),
+    admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true).gte("amount_max", 100000),
+    admin.from("grant_sources").select("*", { count: "exact", head: true }).eq("is_active", true).gte("amount_max", 25000).lt("amount_max", 100000),
+    admin
+      .from("grant_sources")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true)
+      .not("deadline", "is", null)
+      .gte("deadline", new Date().toISOString().split("T")[0])
+      .lte("deadline", new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]),
+    admin.from("grant_sources").select("states").eq("is_active", true).not("states", "is", null),
+  ]);
+
+  // Build source-type breakdown
+  const sourceTypeCounts = new Map<string, number>();
+  for (const row of sourceTypeRows ?? []) {
+    if (row.source_type) {
+      sourceTypeCounts.set(row.source_type, (sourceTypeCounts.get(row.source_type) ?? 0) + 1);
+    }
+  }
+  const sourceTypeBreakdown = Object.entries(SOURCE_TYPE_LABELS)
+    .map(([key, label]) => ({ key, label, count: sourceTypeCounts.get(key) ?? 0 }))
+    .filter((s) => s.count > 0);
+
+  // Build top-10 category breakdown
+  const categoryCounts = new Map<string, number>();
+  for (const row of categoryRows ?? []) {
+    if (row.category) {
+      categoryCounts.set(row.category, (categoryCounts.get(row.category) ?? 0) + 1);
+    }
+  }
+  const topCategories = Array.from(categoryCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([category, count]) => ({ category, count }));
+
+  // Geographic coverage
+  const stateSet = new Set<string>();
+  for (const row of stateRows ?? []) {
+    if (Array.isArray(row.states)) {
+      for (const s of row.states as string[]) stateSet.add(s);
+    }
+  }
 
   return (
-    <div className="max-w-3xl mx-auto py-20 px-4 text-center">
-      <h1 className="text-4xl md:text-5xl font-bold text-warm-900 dark:text-warm-50 mb-6">
-        {displayCount} active grants. Matched to your org.
-      </h1>
-      <p className="text-lg text-warm-600 dark:text-warm-400 mb-10 max-w-2xl mx-auto">
-        Our directory covers federal, state, foundation, and corporate grants —
-        but generic browsing wastes hours. Create a free account and our AI
-        will surface only the grants you actually qualify for, with match
-        scores, eligibility analysis, and deadline tracking.
-      </p>
-
-      <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-        <Button
-          className="bg-brand-teal hover:bg-brand-teal-dark text-white text-lg px-8 py-6"
-          render={<Link href="/signup">Start Free</Link>}
-        />
-        <Button
-          variant="outline"
-          className="text-lg px-8 py-6"
-          render={<Link href="/check">Free Eligibility Check</Link>}
-        />
+    <div className="max-w-5xl mx-auto py-16 px-4">
+      {/* Hero */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-5xl font-bold text-warm-900 dark:text-warm-50 mb-4">
+          {roundDown(totalCount ?? 0, 100)} active grants. <br className="hidden md:inline" />
+          <span className="text-brand-teal">Matched to your org.</span>
+        </h1>
+        <p className="text-lg text-warm-600 dark:text-warm-400 mb-8 max-w-2xl mx-auto">
+          Our directory covers federal, state, foundation, and corporate grants.
+          Generic browsing wastes hours — sign up free and our AI surfaces the
+          grants that actually fit your mission, with match scores and
+          deadline tracking.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button
+            className="bg-brand-teal hover:bg-brand-teal-dark text-white text-lg px-8 py-6"
+            render={<Link href="/signup?utm_source=directory&utm_medium=hero">Start Free — See Your Matches</Link>}
+          />
+          <Button
+            variant="outline"
+            className="text-lg px-8 py-6"
+            render={<Link href="/check?utm_source=directory&utm_medium=hero">Free Eligibility Check</Link>}
+          />
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 text-left max-w-3xl mx-auto">
-        <div>
-          <h3 className="font-semibold text-warm-900 dark:text-warm-50 mb-2">
-            Why we don&apos;t list grants here
-          </h3>
-          <p className="text-sm text-warm-600 dark:text-warm-400">
-            A 6,000-grant directory you scroll through is a worse experience
-            than 25 matched grants picked for your mission. We do the
-            matching first.
-          </p>
+      {/* Source type tiles */}
+      {sourceTypeBreakdown.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold text-warm-900 dark:text-warm-50 mb-6 text-center">
+            Where the funding comes from
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {sourceTypeBreakdown.map((t) => (
+              <Link
+                key={t.key}
+                href={`/signup?utm_source=directory&utm_medium=source_type&utm_term=${t.key}`}
+                className="block p-6 rounded-xl border border-warm-200 dark:border-warm-800 hover:border-brand-teal hover:shadow-md transition-all bg-white dark:bg-warm-900"
+              >
+                <div className="text-3xl font-bold text-brand-teal mb-1">
+                  {roundDown(t.count, 50)}
+                </div>
+                <div className="text-sm font-medium text-warm-900 dark:text-warm-50">
+                  {t.label} grants
+                </div>
+                <div className="text-xs text-warm-500 mt-2">
+                  Sign up to see matches →
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Money + urgency tiles */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-warm-900 dark:text-warm-50 mb-6 text-center">
+          What you might be missing
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Link
+            href="/signup?utm_source=directory&utm_medium=amount&utm_term=large"
+            className="block p-6 rounded-xl bg-gradient-to-br from-brand-teal/10 to-brand-teal/5 border border-brand-teal/30 hover:shadow-md transition-all"
+          >
+            <div className="text-4xl font-bold text-brand-teal mb-2">
+              {roundDown(bigGrantsCount ?? 0, 25)}
+            </div>
+            <div className="text-base font-semibold text-warm-900 dark:text-warm-50">
+              Grants over $100K
+            </div>
+            <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
+              Fund your largest programs. Average award size in our $100K+
+              tier could change your annual budget.
+            </p>
+          </Link>
+          <Link
+            href="/signup?utm_source=directory&utm_medium=amount&utm_term=mid"
+            className="block p-6 rounded-xl border border-warm-200 dark:border-warm-800 hover:border-brand-teal hover:shadow-md transition-all bg-white dark:bg-warm-900"
+          >
+            <div className="text-4xl font-bold text-warm-900 dark:text-warm-50 mb-2">
+              {roundDown(midGrantsCount ?? 0, 25)}
+            </div>
+            <div className="text-base font-semibold text-warm-900 dark:text-warm-50">
+              Grants $25K–$100K
+            </div>
+            <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
+              The sweet-spot range for most nonprofits — manageable
+              applications, real impact.
+            </p>
+          </Link>
+          <Link
+            href="/signup?utm_source=directory&utm_medium=urgency&utm_term=closing_soon"
+            className="block p-6 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 hover:shadow-md transition-all"
+          >
+            <div className="text-4xl font-bold text-amber-600 dark:text-amber-500 mb-2">
+              {roundDown(closingSoonCount ?? 0, 10)}
+            </div>
+            <div className="text-base font-semibold text-warm-900 dark:text-warm-50">
+              Closing this month
+            </div>
+            <p className="text-sm text-warm-600 dark:text-warm-400 mt-2">
+              Deadlines move fast. We track them so you don&apos;t miss the
+              ones you qualify for.
+            </p>
+          </Link>
         </div>
-        <div>
-          <h3 className="font-semibold text-warm-900 dark:text-warm-50 mb-2">
-            What you get with an account
-          </h3>
-          <p className="text-sm text-warm-600 dark:text-warm-400">
-            AI match scores per grant, eligibility breakdown, deadline
-            tracking, and (on paid tiers) full proposal drafting.
+      </section>
+
+      {/* Top categories */}
+      {topCategories.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold text-warm-900 dark:text-warm-50 mb-6 text-center">
+            Funding by category
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {topCategories.map((c) => (
+              <Link
+                key={c.category}
+                href={`/signup?utm_source=directory&utm_medium=category&utm_term=${encodeURIComponent(c.category)}`}
+                className="block p-4 rounded-lg border border-warm-200 dark:border-warm-800 hover:border-brand-teal hover:bg-warm-50 dark:hover:bg-warm-800/50 transition-all"
+              >
+                <div className="text-xl font-bold text-brand-teal">
+                  {roundDown(c.count, 10)}
+                </div>
+                <div className="text-xs font-medium text-warm-700 dark:text-warm-300 capitalize line-clamp-2">
+                  {c.category}
+                </div>
+              </Link>
+            ))}
+          </div>
+          <p className="text-center text-sm text-warm-500 mt-4">
+            And more — sign up to see every category matched to your mission.
           </p>
+        </section>
+      )}
+
+      {/* Geographic + final CTA */}
+      <section className="text-center py-12 px-6 rounded-2xl bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 border border-brand-teal/20">
+        <div className="text-5xl font-bold text-brand-teal mb-2">{stateSet.size}</div>
+        <div className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-2">
+          U.S. states + territories covered
         </div>
-        <div>
-          <h3 className="font-semibold text-warm-900 dark:text-warm-50 mb-2">
-            Want a feel for our coverage?
-          </h3>
-          <p className="text-sm text-warm-600 dark:text-warm-400">
-            Browse our{" "}
-            <Link href="/grants/states" className="text-brand-teal hover:underline">
-              state-by-state
-            </Link>{" "}
-            and{" "}
-            <Link href="/grants/industry/healthcare" className="text-brand-teal hover:underline">
-              industry
-            </Link>{" "}
-            overviews — they show category breakdowns without the inventory.
-          </p>
-        </div>
+        <p className="text-warm-600 dark:text-warm-400 mb-6 max-w-xl mx-auto">
+          From Alaska Native Health programs to Puerto Rico recovery funding —
+          we cover the full geographic range. Sign up to see the grants that
+          match your service area.
+        </p>
+        <Button
+          className="bg-brand-teal hover:bg-brand-teal-dark text-white text-lg px-8 py-6"
+          render={<Link href="/signup?utm_source=directory&utm_medium=footer_cta">See My Matches — Free</Link>}
+        />
+      </section>
+
+      {/* Quiet escape hatches for the curious */}
+      <div className="mt-12 text-center text-sm text-warm-500">
+        Looking for a specific area? Browse our{" "}
+        <Link href="/grants/states" className="text-brand-teal hover:underline">
+          state overview
+        </Link>{" "}
+        or{" "}
+        <Link href="/grants/industry/healthcare" className="text-brand-teal hover:underline">
+          industry breakdowns
+        </Link>
+        {" — "}
+        category-level views without the full inventory.
       </div>
     </div>
   );
