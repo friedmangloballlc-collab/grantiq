@@ -9,6 +9,7 @@ import { handleGenerateRoadmap } from "./generate-roadmap";
 import { handleWritingJob } from "./writing";
 import { handleWeeklyDigest } from "./weekly-digest";
 import { handleSendSequenceEmails } from "./send-sequence-emails";
+import { handleVerifyGrants } from "./grant-verifier";
 
 let _openai: OpenAI | null = null;
 function getOpenAI() { return _openai ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); }
@@ -42,6 +43,9 @@ export async function handleJob(job: Job, supabase: SupabaseClient): Promise<voi
       break;
     case "send_sequence_emails":
       await handleSendSequenceEmails(supabase);
+      break;
+    case "verify_grants":
+      await handleVerifyGrants(supabase);
       break;
     default:
       console.warn(`Unknown job type: ${job.jobType}`);

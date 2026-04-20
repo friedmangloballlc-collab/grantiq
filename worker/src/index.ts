@@ -12,7 +12,7 @@ import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
 import { parseJob } from "./queue";
 import { handleJob } from "./handlers/index";
-import { scheduleDueCrawls, seedCrawlSources, scheduleSequenceEmails } from "./scheduler";
+import { scheduleDueCrawls, seedCrawlSources, scheduleSequenceEmails, scheduleGrantVerification } from "./scheduler";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -123,6 +123,7 @@ async function main() {
   while (true) {
     await scheduleDueCrawls(supabase);
     await scheduleSequenceEmails(supabase);
+    await scheduleGrantVerification(supabase);
 
     // Greedily claim up to MAX_CONCURRENT jobs before sleeping
     // eslint-disable-next-line no-await-in-loop

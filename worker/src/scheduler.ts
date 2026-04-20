@@ -92,6 +92,40 @@ export async function scheduleSequenceEmails(supabase: SupabaseClient): Promise<
   }
 }
 
+/**
+ * Schedules a daily `verify_grants` job if one hasn't already run in
+ * the last 23 hours. Nightly data-hygiene sweep — see
+ * docs/plans/2026-04-20-005-feat-grantiq-grant-data-verifier-plan.md.
+ */
+export async function scheduleGrantVerification(supabase: SupabaseClient): Promise<void> {
+  const twentyThreeHoursAgo = new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString();
+
+  const { data: existing } = await supabase
+    .from("job_queue")
+    .select("id")
+    .eq("job_type", "verify_grants")
+    .in("status", ["pending", "processing", "completed"])
+    .gte("created_at", twentyThreeHoursAgo)
+    .limit(1);
+
+  if (existing && existing.length > 0) return;
+
+  const { error } = await supabase.from("job_queue").insert({
+    job_type: "verify_grants",
+    payload: {},
+    status: "pending",
+    priority: 4,
+    max_attempts: 2,
+    scheduled_for: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Scheduler: failed to enqueue verify_grants:", error.message);
+  } else {
+    console.log("Scheduler: enqueued verify_grants");
+  }
+}
+
 export async function seedCrawlSources(supabase: SupabaseClient): Promise<void> {
   const sources = [
     {
