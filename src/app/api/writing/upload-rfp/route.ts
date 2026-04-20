@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseRfp } from "@/lib/ai/writing/rfp-parser";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 // Per-org tier lookup for aiCall pre-flight gates. Falls back to 'free'
@@ -26,6 +27,22 @@ const TextUploadSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  try {
+    return await handleUploadRfp(req);
+  } catch (err) {
+    // Without this catch, parseRfp throws bubble out as a Vercel 500 with
+    // empty body — no way to debug from the client. Surface the actual
+    // message so the UI + logs both have something to work with.
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error("upload-rfp failed", { err: message });
+    return NextResponse.json(
+      { error: message || "Internal error parsing RFP" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleUploadRfp(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
