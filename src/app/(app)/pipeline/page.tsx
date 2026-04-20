@@ -77,6 +77,7 @@ export default async function PipelinePage() {
 
   const pipelineItems: PipelineItem[] = (items as unknown as {
     id: string;
+    grant_source_id: string;
     stage?: string;
     deadline?: string | null;
     loi_status?: string | null;
@@ -91,6 +92,7 @@ export default async function PipelinePage() {
     const stage = STAGE_MIGRATION[rawStage] ?? rawStage;
     return {
       id: item.id,
+      grantSourceId: item.grant_source_id,
       stage,
       grantName: item.grant_sources?.name ?? "Unknown Grant",
       funderName: item.grant_sources?.funder_name ?? "Unknown Funder",

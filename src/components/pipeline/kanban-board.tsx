@@ -29,6 +29,7 @@ export type LOIStatus = "not_required" | "sent" | "accepted" | "declined" | null
 
 export interface PipelineItem {
   id: string;
+  grantSourceId: string;
   stage: string;
   grantName: string;
   funderName: string;
@@ -116,7 +117,11 @@ export function KanbanBoard({
     } else if (item.stage === "declined") {
       setSelectedItem(item);
       setPanelType("declined");
-    } else if (item.stage === "qualified" || item.stage === "in_development") {
+    } else if (
+      item.stage === "identified" ||
+      item.stage === "qualified" ||
+      item.stage === "in_development"
+    ) {
       setSelectedItem(item);
       setPanelType("checklist");
     }
@@ -181,6 +186,7 @@ export function KanbanBoard({
                                 clickable={
                                   item.stage === "awarded" ||
                                   item.stage === "declined" ||
+                                  item.stage === "identified" ||
                                   item.stage === "qualified" ||
                                   item.stage === "in_development"
                                 }

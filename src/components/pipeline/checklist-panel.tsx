@@ -11,11 +11,18 @@ interface ChecklistPanelProps {
   onClose: () => void;
 }
 
+const STAGE_LABEL: Record<string, string> = {
+  identified: "Identified — Ready to Start",
+  qualified: "Qualified",
+  in_development: "In Development",
+};
+
 export function ChecklistPanel({ item, onClose }: ChecklistPanelProps) {
-  // Build a minimal GrantSource from the pipeline item
-  // source_type defaults to foundation since pipeline items don't carry it
+  // Build a minimal GrantSource from the pipeline item.
+  // Use grantSourceId so downstream actions (e.g., write/evaluate)
+  // resolve to the real grant, not the pipeline row.
   const grant: GrantSource = {
-    id: item.id,
+    id: item.grantSourceId,
     name: item.grantName,
     funder_name: item.funderName,
     source_type: "foundation",
@@ -35,7 +42,7 @@ export function ChecklistPanel({ item, onClose }: ChecklistPanelProps) {
             <div className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4 text-blue-500" />
               <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                {item.stage === "qualified" ? "Qualified" : "In Development"}
+                {STAGE_LABEL[item.stage] ?? item.stage}
               </span>
             </div>
             <h2 className="text-base font-bold text-warm-900 dark:text-warm-50 mt-1 leading-tight">
@@ -57,10 +64,17 @@ export function ChecklistPanel({ item, onClose }: ChecklistPanelProps) {
           <ApplicationChecklist grant={grant} />
         </div>
 
-        {/* Footer: link to full grant detail */}
-        <div className="p-4 border-t border-warm-200 dark:border-warm-700 flex-shrink-0">
+        {/* Footer: primary action + link to full grant detail */}
+        <div className="p-4 border-t border-warm-200 dark:border-warm-700 flex-shrink-0 space-y-2">
           <Link
-            href={`/grants/${item.id}`}
+            href={`/grants/${item.grantSourceId}/write`}
+            className="block w-full text-center px-4 py-2 rounded-lg bg-brand-teal text-white font-medium text-sm hover:bg-brand-teal/90 transition-colors"
+            onClick={onClose}
+          >
+            Start Writing Application
+          </Link>
+          <Link
+            href={`/grants/${item.grantSourceId}`}
             className="inline-flex items-center gap-1.5 text-sm text-brand-teal hover:underline"
             onClick={onClose}
           >
