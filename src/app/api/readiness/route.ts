@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 // GET /api/readiness — fetch the latest readiness_scores for the org.
@@ -15,7 +16,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    // Admin-client bypass for RLS chicken-and-egg (commit 28425fd pattern)
+    const admin = createAdminClient();
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -27,7 +30,7 @@ export async function GET() {
     }
 
     // Return the most recent score plus history (last 10)
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("readiness_scores")
       .select("*")
       .eq("org_id", membership.org_id)

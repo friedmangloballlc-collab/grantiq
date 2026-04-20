@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 // GET /api/roadmap — fetch existing funding_roadmaps for the org.
@@ -15,7 +16,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    // Admin-client bypass for RLS chicken-and-egg (commit 28425fd pattern)
+    const admin = createAdminClient();
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -26,7 +29,7 @@ export async function GET() {
       return NextResponse.json({ error: "No active org membership" }, { status: 403 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("funding_roadmaps")
       .select("*")
       .eq("org_id", membership.org_id)

@@ -1,0 +1,42 @@
+name: RLS Sweep
+
+# Runs the RLS Sweep Agent on every PR that touches /api/ routes.
+# Blocks merging if a new route follows the broken user-scoped
+# supabase.from("org_members") pattern — see commits 28425fd
+# (pipeline route fix) + de78104 (writing routes fix).
+#
+# Tonight's session caught 30+ routes with this bug. This agent
+# exists to prevent the 31st.
+
+on:
+  pull_request:
+    paths:
+      - "src/app/api/**"
+  # Also run on master to catch anything that sneaks through
+  push:
+    branches: [master]
+    paths:
+      - "src/app/api/**"
+
+jobs:
+  rls-sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need full history for --changed diff
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci --ignore-scripts
+
+      - name: Run RLS sweep on changed files
+        if: github.event_name == 'pull_request'
+        run: npx tsx scripts/rls-sweep.ts --changed
+
+      - name: Run RLS sweep on full /api/ tree
+        if: github.event_name == 'push'
+        run: npx tsx scripts/rls-sweep.ts

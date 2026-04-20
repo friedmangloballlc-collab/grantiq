@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 const VALID_ACTIONS = ["saved", "dismissed", "evaluated", "applied", "won", "lost"] as const;
@@ -16,7 +17,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    // Admin-client bypass for RLS chicken-and-egg on org_members
+    // (user.id is JWT-verified above). Same pattern as commit 28425fd.
+    const admin = createAdminClient();
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -45,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "relevance_rating must be between 1 and 5" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("match_feedback")
       .insert({
         org_id: membership.org_id,

@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(
   req: NextRequest,
@@ -12,7 +13,10 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: draft, error } = await supabase
+  // Admin-client bypass for RLS chicken-and-egg (commit 28425fd pattern)
+  const admin = createAdminClient();
+
+  const { data: draft, error } = await admin
     .from("grant_drafts")
     .select("id, org_id, tier, status, review_simulation")
     .eq("id", id)
@@ -23,7 +27,7 @@ export async function GET(
   }
 
   // Get user's active org
-  const { data: membership } = await supabase
+  const { data: membership } = await admin
     .from("org_members")
     .select("org_id")
     .eq("user_id", user.id)
