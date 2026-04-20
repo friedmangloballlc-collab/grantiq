@@ -30,9 +30,13 @@ export async function aggregateSpend(
   const windowStart = new Date(windowEnd.getTime() - opts.windowHours * 3600 * 1000);
 
   // Single query: pull all ai_generations in window.
+  // Column names match the actual schema: tokens_input / tokens_output /
+  // estimated_cost_cents / cache_read_tokens (NOT input_tokens / output_tokens /
+  // cost_cents / cache_read_input_tokens — those are a naming convention from
+  // the aiCall plan doc that didn't match the actual migration).
   const { data: rows, error } = await supabase
     .from('ai_generations')
-    .select('org_id, generation_type, model_used, input_tokens, output_tokens, cache_read_input_tokens, cost_cents')
+    .select('org_id, generation_type, model_used, tokens_input, tokens_output, cache_read_tokens, estimated_cost_cents')
     .gte('created_at', windowStart.toISOString())
     .lt('created_at', windowEnd.toISOString());
 
@@ -60,9 +64,9 @@ export async function aggregateSpend(
     const orgId = (r.org_id as string) ?? 'null-org';
     const action = (r.generation_type as string) ?? TOP_ACTION_PLACEHOLDER;
     const model = (r.model_used as string) ?? 'unknown';
-    const cents = (r.cost_cents as number | null) ?? 0;
-    const inputTokens = (r.input_tokens as number | null) ?? 0;
-    const cachedTokens = (r.cache_read_input_tokens as number | null) ?? 0;
+    const cents = (r.estimated_cost_cents as number | null) ?? 0;
+    const inputTokens = (r.tokens_input as number | null) ?? 0;
+    const cachedTokens = (r.cache_read_tokens as number | null) ?? 0;
 
     totalCents += cents;
     totalCalls += 1;

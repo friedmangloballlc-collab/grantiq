@@ -67,12 +67,12 @@ export default async function AgentsAdminPage() {
   ] = await Promise.all([
     admin
       .from("ai_generations")
-      .select("cost_cents, generation_type")
+      .select("estimated_cost_cents, generation_type")
       .gte("created_at", twentyFourHoursAgo),
 
     admin
       .from("ai_generations")
-      .select("cost_cents")
+      .select("estimated_cost_cents")
       .gte("created_at", sevenDaysAgo),
 
     admin
@@ -97,11 +97,11 @@ export default async function AgentsAdminPage() {
 
   // ── Aggregate derived stats ────────────────────────────────────────────
   const spend24hTotal = (spend24h.data ?? []).reduce(
-    (acc, r) => acc + (r.cost_cents ?? 0),
+    (acc, r) => acc + (r.estimated_cost_cents ?? 0),
     0
   );
   const spend7dTotal = (spend7d.data ?? []).reduce(
-    (acc, r) => acc + (r.cost_cents ?? 0),
+    (acc, r) => acc + (r.estimated_cost_cents ?? 0),
     0
   );
 
@@ -110,7 +110,7 @@ export default async function AgentsAdminPage() {
   for (const r of spend24h.data ?? []) {
     const a = (r.generation_type as string) ?? "unknown";
     if (!actionBreakdown[a]) actionBreakdown[a] = { cents: 0, calls: 0 };
-    actionBreakdown[a].cents += r.cost_cents ?? 0;
+    actionBreakdown[a].cents += r.estimated_cost_cents ?? 0;
     actionBreakdown[a].calls += 1;
   }
   const topActions = Object.entries(actionBreakdown)

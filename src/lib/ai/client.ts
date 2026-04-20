@@ -42,11 +42,15 @@ export const MODELS = {
   CLASSIFY: "gpt-4o-mini" as const,
 } as const;
 
-// Anthropic models kept for reference / writing modules
+// Anthropic models — these IDs must match Anthropic's live catalog.
+// Only update CLASSIFY — the old haiku-4-20250414 ID appears stale and
+// causes silent 404s in the match critic (no insert, no error surfaced).
+// SCORING + STRATEGY left alone because the writing pipeline has been
+// using them successfully.
 export const ANTHROPIC_MODELS = {
   SCORING: "claude-sonnet-4-20250514" as const,
   STRATEGY: "claude-opus-4-20250514" as const,
-  CLASSIFY: "claude-haiku-4-20250414" as const,
+  CLASSIFY: "claude-haiku-4-5-20251001" as const,
 } as const;
 
 export const COST_PER_1K_TOKENS = {
