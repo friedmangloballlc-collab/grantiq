@@ -1,14 +1,14 @@
 // grantaq/src/lib/ai/writing/loi-generator.ts
 //
-// Generates a Letter of Intent using Claude Sonnet (cheaper / faster than Opus).
+// Generates a Letter of Intent using Claude Sonnet through aiCall.
+//
+// Pre-existing bug fixed here: the old direct-SDK version used
+// MODELS.SCORING (an OpenAI model name) but called anthropic.messages.create.
+// That path would have errored at runtime if ever exercised. Migrating to
+// aiCall with ANTHROPIC_MODELS.SCORING fixes the model reference.
 
-import Anthropic from "@anthropic-ai/sdk";
-import { MODELS } from "@/lib/ai/client";
-
-let _anthropic: Anthropic | null = null;
-function getAnthropic() {
-  return (_anthropic ??= new Anthropic());
-}
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 
 export interface OrgProfile {
   name: string;
@@ -44,9 +44,16 @@ Write a professional, compelling 1-page LOI that includes:
 
 Keep it under 500 words. Professional but warm tone. Do not use placeholder brackets — write complete sentences using the provided data.`;
 
+export interface LoiContext {
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
+}
+
 export async function generateLOI(
   org: OrgProfile,
   grant: GrantDetails,
+  ctx: LoiContext,
   projectSummary?: string
 ): Promise<string> {
   const userMessage = `Generate a Letter of Intent for:
@@ -73,14 +80,19 @@ ${projectSummary ? `PROJECT SUMMARY:\n${projectSummary}` : ""}
 
 Write the LOI now.`;
 
-  const response = await getAnthropic().messages.create({
-    model: MODELS.SCORING,
-    max_tokens: 2048,
+  const response = await aiCall({
+    provider: "anthropic",
+    model: ANTHROPIC_MODELS.SCORING,
+    systemPrompt: LOI_SYSTEM_PROMPT,
+    userInput: userMessage,
+    promptId: "writing.loi.v1",
+    orgId: ctx.org_id,
+    userId: ctx.user_id,
+    tier: ctx.subscription_tier,
+    actionType: "loi",
+    maxTokens: 2048,
     temperature: 0.4,
-    system: LOI_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userMessage }],
   });
 
-  const textBlock = response.content.find((b) => b.type === "text");
-  return textBlock && "text" in textBlock ? textBlock.text : "Unable to generate LOI. Please try again.";
+  return response.content || "Unable to generate LOI. Please try again.";
 }

@@ -1,15 +1,17 @@
 // grantaq/src/lib/ai/writing/coherence-checker.ts
 
-import Anthropic from "@anthropic-ai/sdk";
 import { CoherenceCheckOutputSchema, type CoherenceCheckOutput } from "./schemas";
 import { COHERENCE_CHECKER_SYSTEM_PROMPT } from "./prompts";
 import type { DraftSectionOutput, BudgetTableOutput, RfpParseOutput } from "./schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const anthropic = new Anthropic();
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 
 interface CoherenceCheckInput {
   draft_id: string;
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
   sections: DraftSectionOutput[];
   budget: BudgetTableOutput;
   rfp_analysis: RfpParseOutput;
@@ -41,18 +43,23 @@ Page/Word Limits: ${input.rfp_analysis.required_sections.map(s => `${s.section_n
       ? userMessage
       : `VALIDATION ERROR: ${lastError}\n\nFix your JSON.\n\n${userMessage}`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
-      system: COHERENCE_CHECKER_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: prompt }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.SCORING,
+      systemPrompt: COHERENCE_CHECKER_SYSTEM_PROMPT,
+      userInput: prompt,
+      promptId: "writing.coherence.v1",
+      sessionId: input.draft_id,
+      orgId: input.org_id,
+      userId: input.user_id,
+      tier: input.subscription_tier,
+      actionType: "audit",
+      maxTokens: 8192,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") throw new Error("Unexpected response type");
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       const validated = CoherenceCheckOutputSchema.parse(parsed);
 
       // Store on draft record

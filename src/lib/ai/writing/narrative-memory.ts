@@ -1,6 +1,5 @@
 // grantaq/src/lib/ai/writing/narrative-memory.ts
 
-import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import {
   NarrativeExtractionOutputSchema,
@@ -9,40 +8,50 @@ import {
 } from "./schemas";
 import { NARRATIVE_EXTRACTOR_SYSTEM_PROMPT } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 
-let _anthropic: Anthropic | null = null;
 let _openai: OpenAI | null = null;
-function getAnthropic() { return _anthropic ??= new Anthropic(); }
 function getOpenAI() { return _openai ??= new OpenAI(); }
 
 /**
  * After a grant is submitted, extract reusable narrative segments,
  * embed them, and store in narrative_segments for future retrieval.
+ *
+ * Extraction uses aiCall (post-migration); embeddings continue to use
+ * the OpenAI SDK directly — aiCall doesn't wrap embeddings endpoints.
  */
 export async function extractAndStoreSegments(
   orgId: string,
+  userId: string,
+  subscriptionTier: string,
   sections: DraftSectionOutput[],
   grantSourceId: string | null,
   outcome: "pending" | "won" | "lost" | null
 ): Promise<void> {
   const supabase = createAdminClient();
 
-  // 1. Extract segments via Claude
+  // 1. Extract segments via Claude (routed through aiCall)
   const applicationText = sections.map(s => `## ${s.section_name}\n${s.content}`).join("\n\n");
 
-  const response = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
-    system: NARRATIVE_EXTRACTOR_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: `Extract reusable narrative segments from this grant application:\n\n${applicationText}` }],
+  const response = await aiCall({
+    provider: "anthropic",
+    model: ANTHROPIC_MODELS.SCORING,
+    systemPrompt: NARRATIVE_EXTRACTOR_SYSTEM_PROMPT,
+    userInput: `Extract reusable narrative segments from this grant application:\n\n${applicationText}`,
+    promptId: "writing.narrative_extract.v1",
+    sessionId: grantSourceId ?? undefined,
+    orgId,
+    userId,
+    tier: subscriptionTier,
+    actionType: "audit",
+    maxTokens: 4096,
+    temperature: 0,
   });
-
-  const content = response.content[0];
-  if (content.type !== "text") return;
 
   let extraction: NarrativeExtractionOutput;
   try {
-    const parsed = JSON.parse(content.text);
+    const parsed = JSON.parse(response.content);
     extraction = NarrativeExtractionOutputSchema.parse(parsed);
   } catch {
     // Silently fail — narrative memory is an enhancement, not critical path

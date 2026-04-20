@@ -195,6 +195,9 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
     // 7. Coherence check
     const _coherence = await checkCoherence({
       draft_id: input.draft_id,
+      org_id: input.org_id,
+      user_id: input.user_id,
+      subscription_tier: subscriptionTier,
       sections,
       budget,
       rfp_analysis: rfpAnalysis,
@@ -231,6 +234,9 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       // Review simulation
       await simulateReview({
         draft_id: input.draft_id,
+        org_id: input.org_id,
+        user_id: input.user_id,
+        subscription_tier: subscriptionTier,
         sections: finalSections,
         budget_json: JSON.stringify(budget, null, 2),
         rfp_analysis: rfpAnalysis,
@@ -241,6 +247,9 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
     // 9. Compliance check (all tiers)
     await checkCompliance({
       draft_id: input.draft_id,
+      org_id: input.org_id,
+      user_id: input.user_id,
+      subscription_tier: subscriptionTier,
       sections: finalSections,
       budget,
       rfp_analysis: rfpAnalysis,

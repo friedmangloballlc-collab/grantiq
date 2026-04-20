@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateLOI } from "@/lib/ai/writing/loi-generator";
 import type { OrgProfile, GrantDetails } from "@/lib/ai/writing/loi-generator";
 import { logger } from "@/lib/logger";
@@ -102,7 +103,20 @@ export async function POST(req: NextRequest) {
   // Generate LOI
   let loiOutput;
   try {
-    loiOutput = await generateLOI(orgProfile, grantDetails, project_summary.trim());
+    const admin = createAdminClient();
+    const { data: sub } = await admin
+      .from("subscriptions")
+      .select("tier")
+      .eq("org_id", orgId)
+      .maybeSingle();
+    const tier = (sub?.tier as string | undefined) ?? "free";
+
+    loiOutput = await generateLOI(
+      orgProfile,
+      grantDetails,
+      { org_id: orgId, user_id: user.id, subscription_tier: tier },
+      project_summary.trim()
+    );
   } catch (err) {
     logger.error("LOI generation error", { err: String(err) });
     return NextResponse.json(

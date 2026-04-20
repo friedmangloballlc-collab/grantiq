@@ -1,6 +1,5 @@
 // grantaq/src/lib/ai/writing/review-simulator.ts
 
-import Anthropic from "@anthropic-ai/sdk";
 import {
   ReviewerPersonaSchema,
   ReviewSimulationOutputSchema,
@@ -15,18 +14,28 @@ import {
   REVIEW_SIM_COMMUNITY_ADVOCATE_PROMPT,
 } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 import { z } from "zod";
-
-const anthropic = new Anthropic();
 
 type ReviewerPersona = z.infer<typeof ReviewerPersonaSchema>;
 
 interface ReviewSimulationInput {
   draft_id: string;
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
   sections: DraftSectionOutput[];
   budget_json: string;
   rfp_analysis: RfpParseOutput;
   funder_analysis: FunderAnalysisOutput;
+}
+
+interface PersonaCtx {
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
+  draft_id: string;
 }
 
 const PERSONA_PROMPTS = [
@@ -40,8 +49,10 @@ const PERSONA_PROMPTS = [
  */
 async function runReviewerPersona(
   systemPrompt: string,
+  personaId: string,
   applicationText: string,
-  scoringCriteria: string
+  scoringCriteria: string,
+  ctx: PersonaCtx
 ): Promise<ReviewerPersona> {
   const userMessage = `## Application to Review
 ${applicationText}
@@ -58,18 +69,23 @@ Score this application using the criteria above. Be thorough and honest.`;
       ? userMessage
       : `VALIDATION ERROR: ${lastError}\n\nFix your JSON.\n\n${userMessage}`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: [{ role: "user", content: prompt }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.SCORING,
+      systemPrompt,
+      userInput: prompt,
+      promptId: `writing.review_${personaId}.v1`,
+      sessionId: ctx.draft_id,
+      orgId: ctx.org_id,
+      userId: ctx.user_id,
+      tier: ctx.subscription_tier,
+      actionType: "audit",
+      maxTokens: 4096,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") throw new Error("Unexpected response type");
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       return ReviewerPersonaSchema.parse(parsed);
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
@@ -99,10 +115,17 @@ export async function simulateReview(input: ReviewSimulationInput): Promise<Revi
     .map(c => `- **${c.criterion}** (${c.max_points} points): ${c.description}`)
     .join("\n");
 
+  const personaCtx: PersonaCtx = {
+    org_id: input.org_id,
+    user_id: input.user_id,
+    subscription_tier: input.subscription_tier,
+    draft_id: input.draft_id,
+  };
+
   // Run all 3 reviewers in parallel
   const reviewerResults = await Promise.all(
-    PERSONA_PROMPTS.map(({ prompt }) =>
-      runReviewerPersona(prompt, applicationText, scoringCriteria)
+    PERSONA_PROMPTS.map(({ persona, prompt }) =>
+      runReviewerPersona(prompt, persona, applicationText, scoringCriteria, personaCtx)
     )
   );
 

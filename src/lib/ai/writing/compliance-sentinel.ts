@@ -1,6 +1,5 @@
 // grantaq/src/lib/ai/writing/compliance-sentinel.ts
 
-import Anthropic from "@anthropic-ai/sdk";
 import {
   ComplianceOutputSchema,
   ComplianceFindingSchema,
@@ -11,17 +10,27 @@ import {
 } from "./schemas";
 import { COMPLIANCE_SEMANTIC_PROMPT } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 import { z } from "zod";
-
-const anthropic = new Anthropic();
 
 type ComplianceFinding = z.infer<typeof ComplianceFindingSchema>;
 
 interface ComplianceInput {
   draft_id: string;
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
   sections: DraftSectionOutput[];
   budget: BudgetTableOutput;
   rfp_analysis: RfpParseOutput;
+}
+
+interface SemanticCtx {
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
+  draft_id: string;
 }
 
 // ============================================================
@@ -193,7 +202,8 @@ function runDeterministicChecks(
 async function runSemanticChecks(
   sections: DraftSectionOutput[],
   budget: BudgetTableOutput,
-  rfp: RfpParseOutput
+  rfp: RfpParseOutput,
+  ctx: SemanticCtx
 ): Promise<ComplianceFinding[]> {
   const applicationText = sections.map(s => `## ${s.section_name}\n${s.content}`).join("\n\n");
 
@@ -209,18 +219,23 @@ Funder: ${rfp.funder_name}
 Key Themes: ${rfp.key_themes.join(", ")}
 Grant Type: ${rfp.grant_type}`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
-    system: COMPLIANCE_SEMANTIC_PROMPT,
-    messages: [{ role: "user", content: userMessage }],
+  const response = await aiCall({
+    provider: "anthropic",
+    model: ANTHROPIC_MODELS.SCORING,
+    systemPrompt: COMPLIANCE_SEMANTIC_PROMPT,
+    userInput: userMessage,
+    promptId: "writing.compliance.v1",
+    sessionId: ctx.draft_id,
+    orgId: ctx.org_id,
+    userId: ctx.user_id,
+    tier: ctx.subscription_tier,
+    actionType: "audit",
+    maxTokens: 4096,
+    temperature: 0,
   });
 
-  const content = response.content[0];
-  if (content.type !== "text") throw new Error("Unexpected response type");
-
   try {
-    const parsed = JSON.parse(content.text);
+    const parsed = JSON.parse(response.content);
     return z.array(ComplianceFindingSchema).parse(parsed);
   } catch {
     // If semantic parse fails, return a warning
@@ -253,7 +268,12 @@ export async function checkCompliance(input: ComplianceInput): Promise<Complianc
   // Run both passes (deterministic is instant, semantic runs in parallel)
   const [deterministicFindings, semanticFindings] = await Promise.all([
     Promise.resolve(runDeterministicChecks(input.sections, input.budget, input.rfp_analysis)),
-    runSemanticChecks(input.sections, input.budget, input.rfp_analysis),
+    runSemanticChecks(input.sections, input.budget, input.rfp_analysis, {
+      org_id: input.org_id,
+      user_id: input.user_id,
+      subscription_tier: input.subscription_tier,
+      draft_id: input.draft_id,
+    }),
   ]);
 
   const allFindings = [...deterministicFindings, ...semanticFindings];
