@@ -22,7 +22,9 @@ export default async function OrgSettingsPage() {
 
   let org = null;
   if (user) {
-    const { data: membership } = await supabase
+    // Admin-client bypass for RLS chicken-and-egg (commit 28425fd pattern)
+    const db = createAdminClient();
+    const { data: membership } = await db
       .from("org_members")
       .select("org_id, role")
       .eq("user_id", user.id)
@@ -30,7 +32,6 @@ export default async function OrgSettingsPage() {
       .single();
 
     if (membership) {
-      const db = createAdminClient();
       const [{ data: orgData }, { data: profileData }] = await Promise.all([
         db.from("organizations").select("*").eq("id", membership.org_id).single(),
         db.from("org_profiles").select("*").eq("org_id", membership.org_id).single(),

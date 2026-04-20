@@ -38,7 +38,9 @@ export default async function BillingPage() {
   const usageStats = { matches: 0, chat_messages: 0, readiness: 0, strategy_reports: 0 };
 
   if (user) {
-    const { data: membership } = await supabase
+    // Admin-client bypass for RLS chicken-and-egg (commit 28425fd pattern)
+    const adminClient = createAdminClient();
+    const { data: membership } = await adminClient
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -46,19 +48,18 @@ export default async function BillingPage() {
       .single();
 
     if (membership) {
-      const { data: sub } = await supabase
+      const { data: sub } = await adminClient
         .from("subscriptions")
         .select("tier, status, current_period_end, stripe_customer_id")
         .eq("org_id", membership.org_id)
         .single();
       subscription = sub;
 
-      // Fetch usage for current period (month) using admin client for reliable access
+      // Fetch usage for current period (month)
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const adminClient = createAdminClient();
       const { data: usage } = await adminClient
         .from("ai_usage")
         .select("action_type")

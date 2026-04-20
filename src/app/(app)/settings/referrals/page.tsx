@@ -21,8 +21,11 @@ export default async function ReferralsPage() {
   let creditsEarned = 0;
 
   if (user) {
+    // Admin-client bypass for RLS chicken-and-egg (commit 28425fd pattern)
+    const admin = createAdminClient();
+
     // Get user's org membership
-    const { data: membership } = await supabase
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -33,7 +36,7 @@ export default async function ReferralsPage() {
     const orgId = membership?.org_id;
 
     // Check for existing referral code
-    const { data: existing } = await supabase
+    const { data: existing } = await admin
       .from("referrals")
       .select("code, status, credit_amount_cents")
       .eq("referrer_user_id", user.id)
@@ -51,8 +54,7 @@ export default async function ReferralsPage() {
           .filter((r) => r.status === "credit_applied")
           .reduce((sum, r) => sum + (r.credit_amount_cents ?? 0), 0) / 100;
     } else if (orgId) {
-      // Auto-generate on first visit using admin client (RLS may block insert)
-      const admin = createAdminClient();
+      // Auto-generate on first visit (admin client already in scope)
       const newCode = generateReferralCode();
       await admin.from("referrals").insert({
         referrer_user_id: user.id,

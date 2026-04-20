@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { TeamManagement } from "@/components/settings/team-management";
 
 export default async function TeamPage() {
@@ -20,7 +21,9 @@ export default async function TeamPage() {
   }> = [];
 
   if (user) {
-    const { data: membership } = await supabase
+    // Admin-client bypass for RLS chicken-and-egg (commit 28425fd pattern)
+    const admin = createAdminClient();
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id, role")
       .eq("user_id", user.id)
@@ -31,7 +34,7 @@ export default async function TeamPage() {
       orgId = membership.org_id;
       userRole = membership.role;
 
-      const { data } = await supabase
+      const { data } = await admin
         .from("org_members")
         .select("id, user_id, role, status, created_at, profiles(email, full_name)")
         .eq("org_id", membership.org_id)
