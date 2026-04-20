@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateSuccessFee, buildSuccessFeeMessage } from "@/lib/billing/success-fees";
+import { buildComplianceCalendar } from "@/lib/ai/agents/compliance-calendar-builder";
 import { logger } from "@/lib/logger";
 
 export async function GET() {
@@ -280,6 +281,53 @@ export async function PATCH(req: NextRequest) {
       }).then(({ error: fbErr }) => {
         if (fbErr) logger.warn("Feedback insert failed", { err: fbErr.message });
       });
+    }
+
+    // ── Compliance Calendar Builder: fire when stage flips to 'awarded' ──────────
+    // Fire-and-forget — Opus call takes 5-10s, pipeline response shouldn't wait.
+    // Errors surface in logs as verdict='unavailable'; never blocks the user.
+    if (stage === "awarded" && item.stage !== "awarded") {
+      (async () => {
+        try {
+          const { data: grant } = await admin
+            .from("grant_sources")
+            .select("name, funder_name, raw_text")
+            .eq("id", item.grant_source_id)
+            .single();
+
+          const { data: org } = await admin
+            .from("organizations")
+            .select("subscription_tier")
+            .eq("id", item.org_id)
+            .single();
+
+          if (!grant) return;
+
+          const result = await buildComplianceCalendar({
+            pipelineId: id,
+            orgId: item.org_id,
+            userId: user.id,
+            subscriptionTier: (org?.subscription_tier as string) ?? "free",
+            grantName: grant.name ?? "Awarded grant",
+            funderName: grant.funder_name ?? "Funder",
+            awardDate: new Date().toISOString().slice(0, 10),
+            awardEndDate: null,
+            rfpText: (grant.raw_text as string | null) ?? null,
+          });
+
+          logger.info("compliance.calendar_builder completed", {
+            pipelineId: id,
+            verdict: result.verdict,
+            inserted: result.inserted,
+            skipped: result.skipped,
+          });
+        } catch (err) {
+          logger.error("compliance.calendar_builder unexpected_error", {
+            pipelineId: id,
+            err: String(err),
+          });
+        }
+      })();
     }
 
     return NextResponse.json({ success: true, autoAction, successFeeNotification });
