@@ -99,7 +99,6 @@ export default function GrantWritePage({ params }: PageProps) {
   const [prefillSource, setPrefillSource] = useState<
     "raw_text" | "description" | null
   >(null);
-  const [grantUrl, setGrantUrl] = useState<string | null>(null);
 
   // Prefill the RFP textarea from grant_sources data we already have.
   // raw_text wins (full crawl); description is the fallback stub.
@@ -113,18 +112,17 @@ export default function GrantWritePage({ params }: PageProps) {
         const { grant } = await res.json();
         if (cancelled || !grant) return;
 
-        if (grant.url) setGrantUrl(grant.url);
-
         if (grant.raw_text && grant.raw_text.trim().length > 200) {
           setRfpText(grant.raw_text);
           setPrefillSource("raw_text");
         } else if (grant.description && grant.description.trim().length > 0) {
-          // Stub prefill — clearly mark as insufficient
+          // Stub prefill — clearly mark as insufficient. Funder URL is
+          // intentionally omitted from user-visible text (internal-only field).
           const stub = [
             `=== AUTO-PREFILLED FROM GRANT METADATA ===`,
             `This is a thin summary, NOT the full RFP. For accurate output,`,
-            `replace this text with the full RFP / NOFA / guidelines from the`,
-            `funder. Source URL: ${grant.url ?? "(none on file)"}`,
+            `replace this text with the full RFP / NOFA / guidelines from`,
+            `the funder.`,
             ``,
             `Grant: ${grant.name}`,
             `Funder: ${grant.funder_name}`,
@@ -428,23 +426,7 @@ export default function GrantWritePage({ params }: PageProps) {
                 <div className="mb-2 px-3 py-2 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200">
                   ⚠ Only a short description is on file for this grant — not the full RFP.
                   For an accurate draft, replace the prefilled text with the full
-                  guidelines from the funder
-                  {grantUrl && (
-                    <>
-                      {" "}
-                      (
-                      <a
-                        href={grantUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline hover:no-underline"
-                      >
-                        open funder page
-                      </a>
-                      )
-                    </>
-                  )}
-                  .
+                  guidelines from the funder.
                 </div>
               )}
               <Textarea
