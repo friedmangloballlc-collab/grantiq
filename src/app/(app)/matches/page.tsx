@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { EmptyState } from "@/components/shared/empty-state";
 import { MatchesDisplay } from "@/components/matches/matches-display";
 import type { MatchItem } from "@/components/matches/match-filters";
+import { isAdminEmail } from "@/lib/auth/admin";
 
 export default async function MatchesPage() {
   const supabase = await createServerSupabaseClient();
@@ -55,7 +56,11 @@ export default async function MatchesPage() {
     .select("tier")
     .eq("org_id", orgId)
     .single();
-  const tier = (sub?.tier ?? "free") as string;
+  const rawTier = (sub?.tier ?? "free") as string;
+  // Admin bypass: render as enterprise so the free-tier match cap doesn't
+  // apply. Per-feature limits also fall away (admin orgs get returned
+  // allowed=true from checkUsageLimit unconditionally).
+  const tier = isAdminEmail(user.email) ? "enterprise" : rawTier;
 
   const results = await Promise.all([
     db

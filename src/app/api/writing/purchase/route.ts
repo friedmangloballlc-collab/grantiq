@@ -2,9 +2,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import Stripe from "stripe";
 import { getWritingPrice, canPurchaseWriting } from "@/lib/ai/writing/pricing";
+import { isAdminEmail } from "@/lib/auth/admin";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -47,6 +49,43 @@ export async function POST(req: NextRequest) {
   const { allowed, reason } = await canPurchaseWriting(org_id, tier, grant_type);
   if (!allowed) {
     return NextResponse.json({ error: reason }, { status: 403 });
+  }
+
+  // Admin bypass: skip Stripe entirely. Create the draft record with
+  // a sentinel payment_intent_id and immediately mark it ready for the
+  // worker. The frontend treats this exactly like a paid draft.
+  if (isAdminEmail(user.email)) {
+    const admin = createAdminClient();
+    const { data: draft, error: draftError } = await admin
+      .from("grant_drafts")
+      .insert({
+        org_id,
+        user_id: user.id,
+        rfp_analysis_id,
+        grant_source_id: parsed.data.grant_source_id || null,
+        pipeline_id: parsed.data.pipeline_id || null,
+        tier,
+        grant_type,
+        status: "rfp_parsed",
+        price_cents: 0,
+        stripe_payment_intent_id: "admin_bypass",
+        is_full_confidence: false,
+      })
+      .select("id")
+      .single();
+
+    if (draftError || !draft) {
+      return NextResponse.json({ error: "Failed to create admin draft" }, { status: 500 });
+    }
+
+    // Skip the client_secret round-trip; tell the caller to immediately
+    // POST /api/writing/start-draft.
+    return NextResponse.json({
+      draft_id: draft.id,
+      client_secret: null,
+      price_cents: 0,
+      admin_bypass: true,
+    });
   }
 
   const priceCents = getWritingPrice(tier, grant_type);

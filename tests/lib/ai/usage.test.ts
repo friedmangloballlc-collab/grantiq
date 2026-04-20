@@ -19,6 +19,14 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from: mockFrom, rpc: mockRpc }),
 }));
 
+// isAdminOrg adds an extra DB lookup we don't want in unit tests for the
+// non-admin paths. Return false unconditionally so the bypass never fires
+// and the existing assertions about gating behavior still hold.
+vi.mock("@/lib/auth/admin", () => ({
+  isAdminOrg: vi.fn().mockResolvedValue(false),
+  isAdminEmail: vi.fn().mockReturnValue(false),
+}));
+
 // Helper: build a chainable Supabase query mock
 function buildQuery(resolveWith: { data: unknown; error: unknown }) {
   const chain = {

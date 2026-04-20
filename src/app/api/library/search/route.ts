@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
+import { isAdminEmail } from "@/lib/auth/admin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -36,7 +37,10 @@ export async function GET(req: NextRequest) {
     const tier = sub?.tier ?? "free";
     const trialActive = sub?.trial_ends_at ? new Date(sub.trial_ends_at) > new Date() : false;
 
-    if (tier === "free" && !trialActive) {
+    // Admin bypass: skip free-tier gate AND per-day cap below.
+    const adminBypass = isAdminEmail(user.email);
+
+    if (tier === "free" && !trialActive && !adminBypass) {
       return NextResponse.json({ error: "Library requires Starter plan or above" }, { status: 403 });
     }
 
@@ -58,7 +62,7 @@ export async function GET(req: NextRequest) {
       growth: 1000,
     };
     const dailyCap = DAILY_SEARCH_CAP[tier];
-    if (dailyCap !== undefined) {
+    if (dailyCap !== undefined && !adminBypass) {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { count: searchesToday, error: auditError } = await db
         .from("library_search_audit")

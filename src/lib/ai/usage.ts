@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
+import { isAdminOrg } from "@/lib/auth/admin";
 
 /**
  * Canonical set of AI action types accepted by aiCall.
@@ -111,6 +112,11 @@ export async function checkTokenCeiling(
   tier: string,
   estimatedTokens: number
 ): Promise<void> {
+  // Admin bypass: skip both per-call cap and monthly ceiling for orgs
+  // whose owner email is in ADMIN_EMAILS. The cache inside isAdminOrg
+  // makes this effectively free on hot paths.
+  if (await isAdminOrg(orgId)) return;
+
   // 1. Per-call hard cap — no DB query needed
   if (estimatedTokens > PER_CALL_TOKEN_CAP) {
     throw new TokenCeilingError(
@@ -177,6 +183,11 @@ export async function checkUsageLimit(
   actionType: AiActionType,
   tier: string
 ): Promise<UsageCheckResult> {
+  // Admin bypass: skip the row-based monthly limit for admin orgs.
+  if (await isAdminOrg(orgId)) {
+    return { allowed: true, used: 0, limit: null, remaining: null };
+  }
+
   const db = createAdminClient();
   const feature = ACTION_TO_FEATURE[actionType];
 
