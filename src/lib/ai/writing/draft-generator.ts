@@ -115,12 +115,21 @@ export function classifySectionType(sectionName: string): string {
  * hit rate silently drops to 0%.
  */
 function buildCacheableContext(context: WritingContext): string {
-  return canonicalStringify({
+  // Only include funder_context_block when it's a non-empty string.
+  // Including a null/undefined field would still serialize stably, but
+  // omitting it entirely means the cache key for grants WITHOUT 990 data
+  // matches the pre-Unit-9a baseline — useful for measuring cache-hit
+  // continuity across the rollout.
+  const payload: Record<string, unknown> = {
     org_profile: context.org_profile,
     org_capabilities: context.org_capabilities,
     funder_analysis: context.funder_analysis,
     rfp_analysis: context.rfp_analysis,
-  }) ?? "";
+  };
+  if (context.funder_context_block && context.funder_context_block.length > 0) {
+    payload.funder_context_block = context.funder_context_block;
+  }
+  return canonicalStringify(payload) ?? "";
 }
 
 /**

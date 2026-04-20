@@ -47,6 +47,16 @@ export interface WritingContext {
     text: string;
     quality_score: number;
   }>;
+  /**
+   * Optional funder context block sourced from existing 990 data
+   * (Unit 9a of docs/plans/2026-04-19-002). Built by
+   * src/lib/grants/funder_context.ts and threaded in by pipeline.ts.
+   * When present, it's appended to the cacheable context so the AI
+   * has verified ground-truth funder details on every section call.
+   * When null/undefined, the cacheable context omits it entirely —
+   * never emit a placeholder that the AI could mistake for real data.
+   */
+  funder_context_block?: string | null;
   grant_match?: {
     match_score: number;
     score_breakdown: Record<string, number>;

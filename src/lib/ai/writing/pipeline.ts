@@ -8,6 +8,7 @@ import { auditDraft, rewriteWithAuditFeedback } from "./ai-auditor";
 import { simulateReview } from "./review-simulator";
 import { checkCompliance } from "./compliance-sentinel";
 import { retrieveNarrativeExamples } from "./narrative-memory";
+import { buildFunderContextBlock } from "@/lib/grants/funder_context";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface PipelineInput {
@@ -153,6 +154,14 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       ? await retrieveNarrativeExamples(input.org_id, org.mission_embedding, sectionTypes)
       : [];
 
+    // 4a. Build funder context block from existing 990 data (Unit 9a).
+    // Returns null when no funder_profiles row resolves OR when the row
+    // has no usable fields. Caller (draft-generator) will skip including
+    // the block in cacheable context if null — never emit empty stubs.
+    const funderContextBlock = input.grant_source_id
+      ? await buildFunderContextBlock(input.grant_source_id)
+      : null;
+
     // 5. Build writing context
     const context: WritingContext = {
       org_id: input.org_id,
@@ -182,6 +191,7 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       },
       org_capabilities: orgCaps || {},
       narrative_examples: narrativeExamples,
+      funder_context_block: funderContextBlock,
     };
 
     // 6. Generate draft (all sections + budget)
