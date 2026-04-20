@@ -163,6 +163,64 @@ One-time invocation against the existing 6,356 grants. Run from the worker on fi
 
 Files: none new — uses Unit 4/5.
 
+### Unit 9: 990-enrichment context block
+
+The crawler closes the gap for the ~80% of grants with public RFPs. For the other 20% — and as a hard-grounded supplement for the 80% — assemble a per-grant **funder context block** sourced from the 990 data we already have (or will have), and pass it into the writing pipeline alongside the RFP text. This is the move that gives the AI real ground truth even when the RFP itself is thin.
+
+This unit splits into 9a (ship now, uses what's already in `funder_profiles`) and 9b (stretch, requires Schedule I parsing).
+
+#### Unit 9a: Funder financial + giving context (existing 990 data)
+
+Build a deterministic context-block assembler that pulls from `funder_profiles` and existing aggregate fields. No new ingestion required — `funder_profiles` is already populated by the ProPublica 990 ingestion (`src/lib/ingestion/propublica-990.ts`).
+
+- New file `src/lib/grants/funder_context.ts`. Exports `buildFunderContextBlock(grantSourceId): Promise<string | null>`.
+- For a grant, resolve `funder_profiles` via `grant_sources.funder_id` (or fallback to `funder_name` ilike match if funder_id is null).
+- Assembled block includes ONLY verified-from-990 fields (no fabrication):
+  - Funder type + NTEE-derived focus areas
+  - Total annual giving (most recent 990 filing)
+  - Average award size + typical award range
+  - Geographic preference (from JSONB)
+  - Org size preference + new-applicant friendliness
+  - Foundation financial health summary: total assets, income, "well-funded vs. drawing down" inferred from asset trends if available
+- Wire this into `src/lib/ai/writing/pipeline.ts` so the funder context block is appended to the prompt context after the RFP text. Tag the block with a clear "FUNDER CONTEXT (FROM IRS 990 FILINGS)" header so the AI knows the provenance and won't invent details beyond it.
+
+Files:
+- `src/lib/grants/funder_context.ts` (new)
+- `src/lib/ai/writing/pipeline.ts` (modify — accept and pass the funder context)
+- `src/lib/ai/writing/draft-generator.ts` and other writing services that take WritingContext (modify if WritingContext type needs a `funder_context_block` field)
+- `src/types/writing.ts` (modify if needed)
+
+Tests:
+- `src/lib/grants/__tests__/funder_context.test.ts` — fixture funder_profiles row → assert block formatting, missing-field handling (don't fabricate), funder_id-vs-funder_name fallback resolution.
+- Pipeline integration: snapshot test of full prompt context with + without funder context block.
+
+#### Unit 9b: Schedule I line-item history (stretch — requires net new ingestion)
+
+Per-grant detail of who the funder gave money to, when, how much, and for what purpose. This is the killer "show the operator what this funder ACTUALLY funds" data — but the existing ProPublica integration only pulls aggregate `contributions_paid`, not the line-item Schedule I detail.
+
+Two paths to consider, decide before starting:
+
+- **Path A — IRS bulk XML 990s.** The IRS publishes annual XML 990 dumps. Schedule I appears as `<RecipientTable>` entries inside Form 990 (not 990-PF — different form). For private foundations, the equivalent is Form 990-PF Part XV (Grants and Contributions Paid During the Year or Approved for Future Payment). Build an ingestion pipeline that downloads the annual zips, filters to funders we have in `funder_profiles`, parses Schedule I / Part XV, stores in a new table.
+- **Path B — Candid/GuideStar API.** Paid (~$5K-15K/yr depending on tier), but turnkey. Returns clean per-grant detail without parsing.
+
+If Path A: estimate is 2-3 days for the parser + a new table `funder_grants_made` (funder_id, recipient_name, recipient_ein, amount, purpose, year). If Path B: 1 day to integrate, plus the contract.
+
+Files (Path A):
+- `src/lib/ingestion/irs_990_schedule_i.ts` (new — XML parser + state machine)
+- `supabase/migrations/00059_funder_grants_made.sql` (new table + indexes)
+- `worker/src/handlers/irs_990_ingestion.ts` (new — annual cron)
+
+Then once the data is in:
+- Extend `funder_context.ts` to include "Past 3 years of grants made by this funder" — top 10 by amount, with recipient + purpose
+- Extend pipeline tests to assert Schedule I detail flows into the prompt when present, gracefully omits when not
+
+This unit is **deferred**, not committed. Cost-benefit decision needed before starting:
+- Path A: ~2-3 days dev + ongoing storage/maintenance cost
+- Path B: $5-15K/yr ongoing
+- Either path: enables "the AI cites real recent grants this funder made" in every draft — material credibility lift
+
+**Recommendation**: ship Unit 9a now, evaluate Path A vs Path B for 9b based on early operator feedback (does the funder context block from 9a alone close the credibility gap, or do operators specifically need line-item history?).
+
 ## Open Questions
 
 - **grants.gov API key**: do we already have one provisioned? If yes, env var name? If no, sign up for one before Unit 2 starts (free, 24-hr provision time).
@@ -177,12 +235,18 @@ Files: none new — uses Unit 4/5.
 
 ## Sequencing
 
-Sequential dependency: Unit 1 (schema) → Unit 2/3 in parallel (adapters) → Unit 4 (orchestrator depends on adapters) → Unit 5 (cron depends on orchestrator) + Unit 7 (paste preservation depends on Unit 1's `manual` status). Unit 6 (admin UI) and Unit 8 (backfill) come last.
+Sequential dependency: Unit 1 (schema) → Unit 2/3 in parallel (adapters) → Unit 4 (orchestrator depends on adapters) → Unit 5 (cron depends on orchestrator) + Unit 7 (paste preservation depends on Unit 1's `manual` status). Unit 6 (admin UI) and Unit 8 (backfill) come last in the crawler track.
 
-Estimated effort: 3-5 working days. The crawler adapters (Units 2 + 3) are the bulk of the work and the highest test surface; the rest is straightforward orchestration and persistence.
+**Unit 9a runs in parallel with the entire crawler track** — no dependency on the crawler at all, can ship on day 1. The funder context block makes the writing pipeline materially better for all 6,356 grants immediately, regardless of crawler progress. **Unit 9b is gated** on the cost-benefit decision (Path A vs Path B), do not start until that decision is made.
+
+Estimated effort:
+- Crawler track (Units 1-8): 3-5 working days
+- Unit 9a: 1 day (additive, parallelizable)
+- Unit 9b: 2-3 days (Path A) or 1 day + contract (Path B), deferred
 
 ## Validation
 
 - Post-Unit 8: query `SELECT raw_text_status, COUNT(*) FROM grant_sources WHERE is_active GROUP BY 1`. Acceptance bar: ≥80% extracted, <10% failed, remainder not_attempted (newly imported, will pick up next nightly run).
 - Manual smoke: pick 5 grants across all 4 source_types, open `/grants/[id]/write` for each. Confirm the green "✓ full RFP on file" banner shows and the textarea has substantive content for the extracted ones; confirm the amber stub banner shows for the failed ones.
 - Operator-paste preservation: paste a custom RFP for a grant, run the orchestrator with that grantId, confirm raw_text is unchanged.
+- Post-Unit 9a: pick a grant whose funder has a populated `funder_profiles` row, generate a draft, inspect the AI prompt context (via `ai_generations` table or a debug endpoint). Confirm the funder context block appears in the prompt with the "FUNDER CONTEXT (FROM IRS 990 FILINGS)" header and contains only fields actually present in `funder_profiles`. Generate a draft for a grant whose funder has NO `funder_profiles` row; confirm the block is gracefully omitted (no "unknown" placeholders that the AI could mistake for real data).
