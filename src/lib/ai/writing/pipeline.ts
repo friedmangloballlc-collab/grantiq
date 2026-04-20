@@ -9,6 +9,9 @@ import { simulateReview } from "./review-simulator";
 import { checkCompliance } from "./compliance-sentinel";
 import { retrieveNarrativeExamples } from "./narrative-memory";
 import { buildFunderContextBlock } from "@/lib/grants/funder_context";
+import { auditSection } from "@/lib/ai/agents/hallucination-auditor";
+import { scoreDraft } from "@/lib/ai/agents/quality-scorer";
+import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface PipelineInput {
@@ -213,6 +216,71 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       rfp_analysis: rfpAnalysis,
     });
 
+    // 7a. Hallucination Auditor: run on every section in parallel.
+    // Persist each audit row; tier-aware blocking in UI (Tier 2/3
+    // gate advancement on blocked verdicts). Fail-open if audit fails.
+    // Source RFP text is on rfp_analysis (from rfp-parser).
+    const rfpSourceText = ((rfpAnalysis as unknown as { source_rfp_text?: string }).source_rfp_text) ?? "";
+    const auditResults = await Promise.all(
+      sections.map((section) =>
+        auditSection({
+          sectionText: section.content,
+          sectionName: section.section_name,
+          rfpText: rfpSourceText,
+          funderContextBlock: context.funder_context_block ?? null,
+          orgProfile: {
+            name: context.org_profile.name,
+            mission_statement: context.org_profile.mission_statement,
+            population_served: context.org_profile.population_served,
+            program_areas: context.org_profile.program_areas,
+          },
+          context: {
+            org_id: input.org_id,
+            user_id: input.user_id,
+            subscription_tier: subscriptionTier,
+            draft_id: input.draft_id,
+          },
+        }).then((result) => ({ section, result }))
+      )
+    );
+
+    // Persist audit rows (best-effort; never block pipeline)
+    for (const { section, result } of auditResults) {
+      await supabase.from("section_audits").insert({
+        draft_id: input.draft_id,
+        section_name: section.section_name,
+        section_type: (section as unknown as { section_type?: string }).section_type ?? null,
+        claims_total: result.claimsTotal,
+        claims_grounded: result.claimsGrounded,
+        claims_ungrounded: result.claimsUngrounded,
+        verdict: result.verdict,
+        claims_detail: result.claimsDetail,
+        audited_by: "writing.hallucination_audit.v1",
+        input_tokens: result.tokensUsed.input,
+        output_tokens: result.tokensUsed.output,
+        cached_input_tokens: result.tokensUsed.cached,
+      });
+    }
+
+    // Tier 2 / Full Confidence: block pipeline advancement if any
+    // section has verdict='blocked'. Tier 1 advisory-only; ship anyway.
+    const hasBlocked = auditResults.some((r) => r.result.verdict === "blocked");
+    if (
+      hasBlocked &&
+      (input.tier === "tier2_ai_audit" ||
+        input.tier === "full_confidence" ||
+        input.tier === "tier3_expert")
+    ) {
+      await supabase
+        .from("grant_drafts")
+        .update({
+          status: "audit_blocked",
+          current_step: "Hallucination audit flagged claims — operator review required",
+        })
+        .eq("id", input.draft_id);
+      return; // Halt pipeline; operator resolves via UI then retriggers
+    }
+
     // Tier 1 stops here (after compliance check below)
     let finalSections = sections;
 
@@ -264,6 +332,47 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       budget,
       rfp_analysis: rfpAnalysis,
     });
+
+    // 9a. Application Quality Scorer: pre-submission rubric score.
+    // Runs for ALL tiers (including Tier 1) — score is a conversion
+    // lever even on free/starter. Fail-open: score errors don't
+    // prevent completion.
+    try {
+      const contentHash = createHash("sha256")
+        .update(finalSections.map((s) => s.content).join("\n"))
+        .digest("hex");
+
+      const scoreResult = await scoreDraft({
+        draftId: input.draft_id,
+        sections: finalSections.map((s) => ({
+          section_name: s.section_name,
+          content: s.content,
+        })),
+        budget,
+        rfpAnalysis: rfpAnalysis as unknown as Parameters<typeof scoreDraft>[0]["rfpAnalysis"],
+        funderContextBlock: context.funder_context_block ?? null,
+        context: {
+          org_id: input.org_id,
+          user_id: input.user_id,
+          subscription_tier: subscriptionTier,
+        },
+      });
+
+      await supabase.from("draft_quality_scores").insert({
+        draft_id: input.draft_id,
+        total_score: scoreResult.totalScore,
+        max_possible: scoreResult.maxPossible,
+        criteria_detail: scoreResult.criteriaDetail,
+        rubric_source: scoreResult.rubricSource,
+        draft_content_hash: contentHash,
+        improvements_ranked: scoreResult.improvementsRanked,
+        verdict: scoreResult.verdict,
+        scored_by: "writing.quality_scorer.v1",
+      });
+    } catch (scoreErr) {
+      // Score failure never blocks completion; operators just don't see a score
+      console.error("quality_scorer failed", { draft_id: input.draft_id, err: String(scoreErr) });
+    }
 
     // 10. Mark complete
     await supabase.from("grant_drafts").update({
