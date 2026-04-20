@@ -220,9 +220,29 @@ export default function GrantWritePage({ params }: PageProps) {
         throw new Error(purchaseData.error ?? "Purchase failed.");
       }
 
-      // If Stripe is not configured, go to the draft directly
+      // Admin bypass OR Stripe-not-configured path. The purchase API set
+      // client_secret=null because either:
+      //   (a) admin_bypass=true — the user is in ADMIN_EMAILS and we
+      //       skipped Stripe entirely. We must still kick off the
+      //       writing pipeline by calling start-draft (no webhook will).
+      //   (b) Stripe isn't configured — same handling, just skip
+      //       start-draft and let the user land on a "payment pending"
+      //       state.
       if (!purchaseData.client_secret) {
-        router.push(`/writing/${purchaseData.draft_id}`);
+        if (purchaseData.admin_bypass) {
+          const startRes = await fetch("/api/writing/start-draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ draft_id: purchaseData.draft_id }),
+          });
+          if (!startRes.ok) {
+            const startBody = await startRes.json().catch(() => ({}));
+            throw new Error(startBody.error ?? "Failed to start admin draft");
+          }
+          router.push(`/writing/${purchaseData.draft_id}`);
+        } else {
+          router.push(`/writing/${purchaseData.draft_id}?payment=pending`);
+        }
         return;
       }
 
