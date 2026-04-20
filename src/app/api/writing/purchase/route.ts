@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
 
   const { org_id, rfp_analysis_id, tier, grant_type } = parsed.data;
 
-  const { data: membership } = await supabase
+  // Admin-client membership lookup bypasses the RLS chicken-and-egg
+  // on org_members. user.id is JWT-verified via auth.getUser() above.
+  const adminAuth = createAdminClient();
+  const { data: membership } = await adminAuth
     .from("org_members")
     .select("org_id")
     .eq("org_id", org_id)

@@ -44,7 +44,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "file and org_id are required" }, { status: 400 });
     }
 
-    const { data: membership } = await supabase
+    // Admin-client membership lookup bypasses the RLS chicken-and-egg
+    // on org_members (same pattern applied in /api/pipeline + /api/grants/[id]).
+    // user.id is JWT-verified above, so scoping by it is safe.
+    const adminAuth = createAdminClient();
+    const { data: membership } = await adminAuth
       .from("org_members")
       .select("org_id")
       .eq("org_id", orgId)
@@ -94,7 +98,9 @@ export async function POST(req: NextRequest) {
   const orgId = body.org_id;
   if (!orgId) return NextResponse.json({ error: "org_id is required" }, { status: 400 });
 
-  const { data: membership } = await supabase
+  // Same admin-client bypass as the multipart branch above
+  const adminAuth = createAdminClient();
+  const { data: membership } = await adminAuth
     .from("org_members")
     .select("org_id")
     .eq("org_id", orgId)

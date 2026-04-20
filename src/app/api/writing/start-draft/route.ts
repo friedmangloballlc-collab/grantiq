@@ -31,8 +31,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Draft not found" }, { status: 404 });
   }
 
-  // Verify the authenticated user belongs to the draft's org
-  const { data: membership } = await supabase
+  // Verify the authenticated user belongs to the draft's org.
+  // Admin client to bypass org_members RLS chicken-and-egg.
+  const adminAuth = createAdminClient();
+  const { data: membership } = await adminAuth
     .from("org_members")
     .select("org_id")
     .eq("org_id", draft.org_id)
