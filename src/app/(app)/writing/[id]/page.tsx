@@ -10,11 +10,11 @@ import {
 import {
   CheckCircle2,
   AlertCircle,
-  Clock,
   ChevronRight,
   CreditCard,
 } from "lucide-react";
 import { CopyButton } from "@/components/writing/copy-button";
+import { LiveDraftProgress } from "@/components/writing/live-draft-progress";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -72,6 +72,8 @@ interface GrantDraft {
   tier: string;
   grant_type: string;
   status: DraftStatus;
+  current_step: string | null;
+  progress_pct: number | null;
   price_cents: number;
   is_full_confidence: boolean;
   created_at: string;
@@ -146,7 +148,7 @@ export default async function DraftViewerPage({
   const { data: draft, error } = await admin
     .from("grant_drafts")
     .select(
-      "id, tier, grant_type, status, price_cents, is_full_confidence, created_at, updated_at, sections, audit_report, review_simulation, compliance_report, stripe_payment_intent_id, grant_sources(name, funder_name)"
+      "id, tier, grant_type, status, current_step, progress_pct, price_cents, is_full_confidence, created_at, updated_at, sections, audit_report, review_simulation, compliance_report, stripe_payment_intent_id, grant_sources(name, funder_name)"
     )
     .eq("id", id)
     .single();
@@ -254,15 +256,16 @@ export default async function DraftViewerPage({
         </CardContent>
       </Card>
 
-      {/* In-progress message */}
+      {/* Live in-progress widget — subscribes to grant_drafts updates
+          via Supabase Realtime (publication enabled in 00056). Renders
+          nothing once status is terminal. */}
       {d.status !== "completed" && d.status !== "failed" && (
-        <div className="flex items-center gap-3 bg-[var(--color-brand-teal)]/5 border border-[var(--color-brand-teal)]/20 rounded-lg px-4 py-3">
-          <Clock className="h-4 w-4 text-[var(--color-brand-teal)] shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            Your application is being generated. This page will show content as
-            each section completes. Refresh to check for updates.
-          </p>
-        </div>
+        <LiveDraftProgress
+          draftId={d.id}
+          initialStatus={d.status}
+          initialStep={d.current_step}
+          initialProgress={d.progress_pct}
+        />
       )}
 
       {/* Draft sections */}
