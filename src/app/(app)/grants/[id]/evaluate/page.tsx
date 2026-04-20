@@ -119,8 +119,12 @@ export default async function EvaluateGrantPage({ params }: Props) {
     }
   }
 
+  // All RLS-gated reads below use adminDb to bypass the chicken-and-egg
+  // on public.user_org_ids(). user.id + orgId are both JWT-verified
+  // above, so scoping by them is safe.
+
   // Fetch grant
-  const { data: grant } = await supabase
+  const { data: grant } = await adminDb
     .from("grant_sources")
     .select(
       "id, name, source_type, eligibility_types, states, amount_min, amount_max, deadline, funder_id"
@@ -131,7 +135,7 @@ export default async function EvaluateGrantPage({ params }: Props) {
   if (!grant) notFound();
 
   // Fetch org
-  const { data: org } = await supabase
+  const { data: org } = await adminDb
     .from("organizations")
     .select("id, entity_type, state, annual_budget")
     .eq("id", orgId)
@@ -140,14 +144,14 @@ export default async function EvaluateGrantPage({ params }: Props) {
   if (!org) notFound();
 
   // Fetch capabilities
-  const { data: capabilities } = await supabase
+  const { data: capabilities } = await adminDb
     .from("org_capabilities")
     .select("prior_federal_grants, prior_foundation_grants, staff_count")
     .eq("org_id", orgId)
     .single();
 
   // Fetch existing match score for mission alignment
-  const { data: matchScore } = await supabase
+  const { data: matchScore } = await adminDb
     .from("grant_matches")
     .select("match_score, score_breakdown")
     .eq("org_id", orgId)
@@ -155,7 +159,7 @@ export default async function EvaluateGrantPage({ params }: Props) {
     .single();
 
   // Fetch active pipeline count for capacity estimation
-  const { count: activePipelineCount } = await supabase
+  const { count: activePipelineCount } = await adminDb
     .from("grant_pipeline")
     .select("id", { count: "exact", head: true })
     .eq("org_id", orgId)
@@ -190,7 +194,7 @@ export default async function EvaluateGrantPage({ params }: Props) {
   };
 
   // Check for existing saved scorecard
-  const { data: existingScorecard } = await supabase
+  const { data: existingScorecard } = await adminDb
     .from("grant_scorecards")
     .select("criteria, total_score, priority, auto_disqualified, disqualify_reason")
     .eq("org_id", orgId)
