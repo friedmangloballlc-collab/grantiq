@@ -15,7 +15,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    // Membership lookup via admin client — bypasses RLS chicken-and-egg
+    // on org_members (the SELECT policy on org_members itself depends on
+    // public.user_org_ids() which queries org_members). Safe because we
+    // scope by the JWT-verified user.id, not client-supplied input.
+    const admin = createAdminClient();
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -26,7 +31,7 @@ export async function GET() {
       return NextResponse.json({ error: "No active org membership" }, { status: 403 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("grant_pipeline")
       .select("*, grant_sources(name, funder_name, amount_max, deadline)")
       .eq("org_id", membership.org_id)
@@ -54,7 +59,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    const admin = createAdminClient();
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -72,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "grant_source_id is required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("grant_pipeline")
       .insert({
         org_id: membership.org_id,
@@ -189,8 +195,10 @@ export async function PATCH(req: NextRequest) {
     if (loi_status !== undefined) updates.loi_status = loi_status;
     if (award_amount !== undefined) updates.award_amount = award_amount;
 
+    const admin = createAdminClient();
+
     // Fetch current item to verify ownership and capture previous stage
-    const { data: item } = await supabase
+    const { data: item } = await admin
       .from("grant_pipeline")
       .select("org_id, stage, grant_source_id, writing_tier")
       .eq("id", id)
@@ -200,7 +208,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Pipeline item not found" }, { status: 404 });
     }
 
-    const { data: membership } = await supabase
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -212,7 +220,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    const { error } = await supabase
+    const { error } = await admin
       .from("grant_pipeline")
       .update(updates)
       .eq("id", id);
@@ -239,7 +247,7 @@ export async function PATCH(req: NextRequest) {
         const feeResult = calculateSuccessFee(resolvedAwardAmount, writingTier);
         if (feeResult) {
           // Insert into success_fee_invoices (best-effort — table may not exist in all envs)
-          await supabase
+          await admin
             .from("success_fee_invoices")
             .insert({
               org_id: item.org_id,
@@ -265,8 +273,7 @@ export async function PATCH(req: NextRequest) {
     if (stage === "awarded" || stage === "declined") {
       const feedbackAction = stage === "awarded" ? "won" : "lost";
       // Direct insert instead of relative HTTP call (which fails server-side)
-      const adminDb = createAdminClient();
-      adminDb.from("match_feedback").insert({
+      admin.from("match_feedback").insert({
         org_id: item.org_id,
         grant_source_id: item.grant_source_id,
         user_action: feedbackAction,
