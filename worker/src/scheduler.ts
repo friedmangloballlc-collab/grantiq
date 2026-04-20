@@ -126,6 +126,40 @@ export async function scheduleGrantVerification(supabase: SupabaseClient): Promi
   }
 }
 
+/**
+ * Schedules an hourly `cost_watchdog` job. Dedup window is 55 minutes
+ * (not a full hour) so the schedule aligns to :05 past each hour even
+ * if the worker briefly stalls.
+ */
+export async function scheduleCostWatchdog(supabase: SupabaseClient): Promise<void> {
+  const fiftyFiveMinsAgo = new Date(Date.now() - 55 * 60 * 1000).toISOString();
+
+  const { data: existing } = await supabase
+    .from("job_queue")
+    .select("id")
+    .eq("job_type", "cost_watchdog")
+    .in("status", ["pending", "processing", "completed"])
+    .gte("created_at", fiftyFiveMinsAgo)
+    .limit(1);
+
+  if (existing && existing.length > 0) return;
+
+  const { error } = await supabase.from("job_queue").insert({
+    job_type: "cost_watchdog",
+    payload: {},
+    status: "pending",
+    priority: 2,  // higher priority than grants/emails — cost alerts matter
+    max_attempts: 2,
+    scheduled_for: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Scheduler: failed to enqueue cost_watchdog:", error.message);
+  } else {
+    console.log("Scheduler: enqueued cost_watchdog");
+  }
+}
+
 export async function seedCrawlSources(supabase: SupabaseClient): Promise<void> {
   const sources = [
     {
