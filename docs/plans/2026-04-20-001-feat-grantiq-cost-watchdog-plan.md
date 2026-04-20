@@ -262,12 +262,22 @@ Tests:
 - Admin GET → 200 with expected data shape
 - Resolve POST → updates row in cost_watchdog_alerts
 
-## Open Questions
+## Decisions (locked, 2026-04-20)
 
-1. **Slack webhook URL env var**: confirm `SLACK_WEBHOOK_URL` isn't already taken for another purpose. If so, use `COST_WATCHDOG_SLACK_URL`.
-2. **Default thresholds**: `dailyHardCap` default = $50/org/day. Is that right for GrantIQ's pricing? If Growth tier customers pay $199/mo, a $50/day cap means we'd alert on ~8% of their monthly value — probably fine. Validate against actual billing patterns post-Anthropic-fix.
-3. **Alert resolution workflow**: do we auto-resolve after 24h, or require manual resolve? Recommend manual — forces eyes on each one.
-4. **Does the Railway worker have internet access to hit Slack's webhook URL?** Verify before building Unit 4.
+1. **Slack webhook env var: `COST_WATCHDOG_SLACK_WEBHOOK_URL`.** Verified no existing Slack integration in the codebase — this is a fresh env var, no conflict. User provisions a new Slack incoming webhook pointing at #grantiq-ops (or equivalent) before Unit 4 lands.
+
+2. **Default `dailyHardCap`: $25/org/day** (not $50). Rationale: conservative starting point. At Growth tier ($199/mo) this alerts on ~12.5% of monthly value in one day — loud enough to matter. Easier to loosen than tighten later — a too-low threshold produces noise we can tune away; a too-high threshold produces silence around real incidents. Config is per-tier-overridable via `WatchdogConfig.dailyHardCapByTier`:
+   ```
+   free:       $5
+   starter:    $15
+   pro:        $25   (default)
+   growth:     $50
+   enterprise: $150
+   ```
+
+3. **Alert auto-resolution: 24h after `created_at`.** Worker cron additionally runs an auto-resolve sweep at the start of each hourly run: `UPDATE cost_watchdog_alerts SET resolved_at = now() WHERE resolved_at IS NULL AND created_at < now() - interval '24 hours'`. Dashboard still has a manual "Resolve now" button for faster closure. Dedup key continues to suppress re-alerts even after auto-resolve — a re-alert for the same anomaly only fires on the NEXT hour after auto-resolve, not immediately.
+
+4. **Railway worker internet access**: assumed working (the worker already makes external calls — e.g., ProPublica API in propublica-990.ts). If the Slack POST fails with a network error, persist the alert row with `slack_sent_at = null` per Unit 4's spec so nothing is lost.
 
 ## Risk
 
