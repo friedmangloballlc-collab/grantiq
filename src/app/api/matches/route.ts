@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
-import { runHardChecks } from "@/lib/ai/agents/match-critic/hard-checks";
+import { critiqueMatch } from "@/lib/ai/agents/match-critic";
 import type {
   CriticOrgProfile,
   CriticGrantMatch,
@@ -115,9 +115,18 @@ export async function GET() {
       mission_statement: org.mission_statement ?? null,
     };
 
-    // Run Stage 1 hard checks on each candidate. Stage 1 is pure JS,
-    // synchronous, zero API cost — fires for every candidate every load.
-    // Stage 2 (LLM semantic check) ships when Anthropic is unblocked.
+    // Look up subscription tier for aiCall gates in Stage 2
+    const { data: sub } = await admin
+      .from("subscriptions")
+      .select("tier")
+      .eq("org_id", orgId)
+      .maybeSingle();
+    const tier = (sub?.tier as string | undefined) ?? "free";
+
+    // Full critique: Stage 1 hard checks (zero cost, <1ms per match) →
+    // Stage 2 LLM mission-mismatch check (Haiku, ~800ms, only runs for
+    // Stage-1 survivors). Run all critiques in parallel via Promise.all
+    // so the total wall time is ~max(individual latency), not the sum.
     const newKills: Array<{
       org_id: string;
       grant_source_id: string;
@@ -129,13 +138,16 @@ export async function GET() {
     }> = [];
     const survivors: MatchRow[] = [];
 
-    for (const match of candidates) {
-      if (!match.grant_sources) {
-        // No joined grant data — can't critique. Keep it.
-        survivors.push(match);
-        continue;
-      }
+    const criticContext = {
+      org_id: orgId,
+      user_id: user.id,
+      subscription_tier: tier,
+    };
 
+    const critiquePromises = candidates.map(async (match) => {
+      if (!match.grant_sources) {
+        return { match, verdict: null };
+      }
       const grant: CriticGrantMatch = {
         id: match.grant_sources.id,
         name: match.grant_sources.name,
@@ -148,9 +160,23 @@ export async function GET() {
         states: match.grant_sources.states ?? [],
         description: match.grant_sources.description,
       };
+      const verdict = await critiqueMatch({
+        org: orgProfile,
+        grant,
+        context: criticContext,
+      });
+      return { match, verdict };
+    });
 
-      const verdict = runHardChecks(orgProfile, grant);
-      if (verdict && verdict.verdict === "KILL") {
+    const critiqued = await Promise.all(critiquePromises);
+
+    for (const { match, verdict } of critiqued) {
+      if (!verdict) {
+        // No grant_sources data — keep it (fail-safe)
+        survivors.push(match);
+        continue;
+      }
+      if (verdict.verdict === "KILL") {
         newKills.push({
           org_id: orgId,
           grant_source_id: match.grant_source_id,
@@ -158,11 +184,12 @@ export async function GET() {
           kill_reason: verdict.killReason ?? "other",
           kill_confidence: verdict.confidence,
           critic_notes: verdict.notes,
-          critic_model: "match.critic.hard_checks.v1",
+          critic_model:
+            verdict.stage === "hard_check"
+              ? "match.critic.hard_checks.v1"
+              : "match.critic.v1",
         });
       } else {
-        // Stage 1 pass → candidate survives. Stage 2 (LLM) will run here
-        // when Anthropic is unblocked, for mission-mismatch detection.
         survivors.push(match);
       }
     }
