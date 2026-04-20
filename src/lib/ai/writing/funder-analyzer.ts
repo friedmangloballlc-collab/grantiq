@@ -1,14 +1,32 @@
 // grantaq/src/lib/ai/writing/funder-analyzer.ts
+//
+// Migrated from direct `new Anthropic()` SDK calls to aiCall (service-audit
+// pass, 2026-04-19). Same migration pattern as draft-generator.ts.
+//
+// What this migration buys (same as draft-generator):
+//   - Anthropic prompt caching on system prompt (1h TTL) — sections of
+//     subsequent funder analyses for the same prompt version hit the
+//     warm cache
+//   - Pre-flight injection detection on user input
+//   - Pre-flight usage gate (row-based + token-based)
+//   - Per-call audit trail to ai_generations with prompt_id
+//   - Sentry tripwire on recording failures
+//
+// What stayed the same:
+//   - Local Zod-shape retry stays here (NOT in aiCall's whitelist) —
+//     same pattern as draft-generator's section retry
+//   - rfp_analyses.funder_analysis update flow is unchanged
 
-import Anthropic from "@anthropic-ai/sdk";
 import { FunderAnalysisOutputSchema, type FunderAnalysisOutput } from "./schemas";
 import { FUNDER_ANALYZER_SYSTEM_PROMPT } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const anthropic = new Anthropic();
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 
 interface FunderAnalyzerInput {
   org_id: string;
+  user_id: string;
+  subscription_tier: string;
   rfp_analysis_id: string;
   funder_profile: {
     funder_name: string;
@@ -41,6 +59,10 @@ interface FunderAnalyzerInput {
 /**
  * Calls Claude Sonnet to analyze a funder and produce alignment intelligence.
  * Validates output with Zod. Retries once on validation failure.
+ *
+ * Routes through aiCall (Unit 4) so the call is observable + cost-controlled.
+ * Uses sessionId = rfp_analysis_id so funder analysis counts as part of the
+ * same drafting session for usage-row dedup.
  */
 export async function analyzeFunder(input: FunderAnalyzerInput): Promise<FunderAnalysisOutput> {
   const userMessage = `## Funder Profile
@@ -60,18 +82,23 @@ ${input.federal_award_history ? `## Federal Award History\n${input.federal_award
       ? userMessage
       : `Your previous response failed validation: ${lastError}\n\nPlease fix and try again.\n\n${userMessage}`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      system: FUNDER_ANALYZER_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: prompt }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.SCORING,
+      systemPrompt: FUNDER_ANALYZER_SYSTEM_PROMPT,
+      userInput: prompt,
+      promptId: "writing.funder_analysis.v1",
+      sessionId: input.rfp_analysis_id,
+      orgId: input.org_id,
+      userId: input.user_id,
+      tier: input.subscription_tier,
+      actionType: "roadmap",
+      maxTokens: 4096,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") throw new Error("Unexpected response type");
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       const validated = FunderAnalysisOutputSchema.parse(parsed);
 
       // Store analysis on the rfp_analyses record

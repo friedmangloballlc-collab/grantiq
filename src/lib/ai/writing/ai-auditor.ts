@@ -1,6 +1,18 @@
 // grantaq/src/lib/ai/writing/ai-auditor.ts
+//
+// Migrated from direct Anthropic SDK calls to aiCall (service-audit pass,
+// 2026-04-19). Same migration pattern as funder-analyzer + draft-generator.
+//
+// Two entry points:
+//   auditDraft — single Opus call, Zod-validated, stores audit_report
+//   rewriteWithAuditFeedback — per-section loop (like draft-generator but
+//   with different prompt shape), stores rewritten_sections
+//
+// actionType='audit' for auditDraft and 'rewrite' for rewriteWithAuditFeedback.
+// Both map to the 'ai_drafts' feature for tier-limit enforcement. sessionId
+// is the draft_id so all audit + rewrite calls on one draft dedup to a single
+// ai_usage row.
 
-import Anthropic from "@anthropic-ai/sdk";
 import {
   AuditOutputSchema,
   DraftSectionOutputSchema,
@@ -11,11 +23,14 @@ import {
 } from "./schemas";
 import { AI_AUDITOR_SYSTEM_PROMPT } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const anthropic = new Anthropic();
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 
 interface AuditInput {
   draft_id: string;
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
   sections: DraftSectionOutput[];
   budget_json: string;
   rfp_analysis: RfpParseOutput;
@@ -62,18 +77,23 @@ Red Flags: ${input.funder_analysis.red_flags.join(", ")}`;
       ? userMessage
       : `VALIDATION ERROR: ${lastError}\n\nFix your JSON.\n\n${userMessage}`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-opus-4-20250514",
-      max_tokens: 16384,
-      system: AI_AUDITOR_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: prompt }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.STRATEGY,
+      systemPrompt: AI_AUDITOR_SYSTEM_PROMPT,
+      userInput: prompt,
+      promptId: "writing.audit.v1",
+      sessionId: input.draft_id,
+      orgId: input.org_id,
+      userId: input.user_id,
+      tier: input.subscription_tier,
+      actionType: "audit",
+      maxTokens: 16384,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") throw new Error("Unexpected response type");
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       const validated = AuditOutputSchema.parse(parsed);
 
       const supabase = createAdminClient();
@@ -96,15 +116,21 @@ Red Flags: ${input.funder_analysis.red_flags.join(", ")}`;
 
 /**
  * AI Rewriter: Takes audit feedback and rewrites sections that scored low
- * or have high-impact improvements. Uses Claude Opus.
+ * or have high-impact improvements. Uses Claude Opus through aiCall.
  */
 export async function rewriteWithAuditFeedback(
   draftId: string,
+  orgId: string,
+  userId: string,
+  subscriptionTier: string,
   originalSections: DraftSectionOutput[],
   audit: AuditOutput,
   rfpAnalysis: RfpParseOutput,
   funderAnalysis: FunderAnalysisOutput
 ): Promise<DraftSectionOutput[]> {
+  // rfpAnalysis intentionally unused here; kept in the signature because
+  // future rewrite prompt revisions may thread it through. Silence TS.
+  void rfpAnalysis;
   const supabase = createAdminClient();
 
   // Identify sections that need rewriting (those with improvements ranked in top 10)
@@ -158,17 +184,23 @@ Avoid: ${funderAnalysis.red_flags.join(", ")}
 
 Return ONLY a JSON object matching the DraftSectionOutput schema.`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-opus-4-20250514",
-      max_tokens: 16384,
-      messages: [{ role: "user", content: rewritePrompt }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.STRATEGY,
+      systemPrompt: "You rewrite grant sections based on audit feedback. Return valid JSON matching the DraftSectionOutput schema.",
+      userInput: rewritePrompt,
+      promptId: "writing.rewrite.v1",
+      sessionId: draftId,
+      orgId,
+      userId,
+      tier: subscriptionTier,
+      actionType: "rewrite",
+      maxTokens: 16384,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") throw new Error("Unexpected response type");
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       const validated = DraftSectionOutputSchema.parse(parsed);
       rewrittenSections.push(validated);
     } catch {

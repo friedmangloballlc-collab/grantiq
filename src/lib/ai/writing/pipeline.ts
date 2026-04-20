@@ -62,6 +62,17 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
 
     const rfpAnalysis = rfpRecord.parsed_data;
 
+    // Look up subscription tier early so aiCall-routed services (funder
+    // analysis, draft generation, etc.) can pass it through their
+    // pre-flight usage gates. Falls back to 'free' if no subscription row
+    // exists; the gates handle missing tier_limits gracefully.
+    const { data: subRowEarly } = await supabase
+      .from("subscriptions")
+      .select("tier")
+      .eq("org_id", input.org_id)
+      .maybeSingle();
+    const subscriptionTier: string = (subRowEarly?.tier as string | undefined) ?? "free";
+
     // 2. Run funder analysis if not already done
     let funderAnalysis = rfpRecord.funder_analysis;
     if (!funderAnalysis) {
@@ -90,6 +101,8 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       if (funderProfile && org) {
         funderAnalysis = await analyzeFunder({
           org_id: input.org_id,
+          user_id: input.user_id,
+          subscription_tier: subscriptionTier,
           rfp_analysis_id: input.rfp_analysis_id,
           funder_profile: funderProfile,
           org_profile: {
@@ -139,16 +152,6 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
     const narrativeExamples = org?.mission_embedding
       ? await retrieveNarrativeExamples(input.org_id, org.mission_embedding, sectionTypes)
       : [];
-
-    // 5a. Look up subscription tier (required by aiCall pre-flight gates after Unit 7).
-    // Falls back to 'free' if no subscription row exists; the gates handle missing
-    // tier_limits gracefully (allow with null limit).
-    const { data: subRow } = await supabase
-      .from("subscriptions")
-      .select("tier")
-      .eq("org_id", input.org_id)
-      .maybeSingle();
-    const subscriptionTier: string = (subRow?.tier as string | undefined) ?? "free";
 
     // 5. Build writing context
     const context: WritingContext = {
@@ -204,6 +207,9 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
     if (input.tier === "tier2_ai_audit" || input.tier === "full_confidence" || input.tier === "tier3_expert") {
       const audit = await auditDraft({
         draft_id: input.draft_id,
+        org_id: input.org_id,
+        user_id: input.user_id,
+        subscription_tier: subscriptionTier,
         sections,
         budget_json: JSON.stringify(budget, null, 2),
         rfp_analysis: rfpAnalysis,
@@ -213,6 +219,9 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
       // Rewrite sections based on audit feedback
       finalSections = await rewriteWithAuditFeedback(
         input.draft_id,
+        input.org_id,
+        input.user_id,
+        subscriptionTier,
         sections,
         audit,
         rfpAnalysis,

@@ -1,6 +1,13 @@
 // grantaq/src/lib/ai/writing/rfp-parser.ts
+//
+// Migrated from direct Anthropic SDK calls to aiCall (service-audit pass,
+// 2026-04-19). Same pattern as funder-analyzer + draft-generator.
+//
+// actionType='draft' was chosen because RFP parsing is a prerequisite
+// step of the drafting pipeline; it counts toward the org's ai_drafts
+// quota rather than inventing a new 'rfp_parse' feature that would
+// require new tier_limits rows.
 
-import Anthropic from "@anthropic-ai/sdk";
 // Dynamic import to avoid build-time DOM polyfill issues
 async function loadPdfParse(): Promise<(buf: Buffer) => Promise<{ text: string }>> {
   const mod = await import("pdf-parse");
@@ -10,11 +17,13 @@ async function loadPdfParse(): Promise<(buf: Buffer) => Promise<{ text: string }
 import { RfpParseOutputSchema, type RfpParseOutput } from "./schemas";
 import { RFP_PARSER_SYSTEM_PROMPT } from "./prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const anthropic = new Anthropic();
+import { aiCall } from "@/lib/ai/call";
+import { ANTHROPIC_MODELS } from "@/lib/ai/client";
 
 interface ParseRfpInput {
   org_id: string;
+  user_id: string;
+  subscription_tier: string;
   source_type: "pdf_upload" | "text_paste" | "url";
   pdf_buffer?: Buffer;        // For PDF uploads
   raw_text?: string;          // For text paste
@@ -44,11 +53,21 @@ export async function extractPdfText(buffer: Buffer): Promise<string> {
   return result.text;
 }
 
+interface ClaudeParserContext {
+  org_id: string;
+  user_id: string;
+  subscription_tier: string;
+}
+
 /**
  * Calls Claude Sonnet to parse an RFP/NOFO document into structured data.
- * Validates output with Zod. Retries once on validation failure with error feedback.
+ * Validates output with Zod. Retries once on validation failure with error
+ * feedback. Routes through aiCall for prompt caching + usage tracking.
  */
-export async function callClaudeParser(text: string): Promise<RfpParseOutput> {
+export async function callClaudeParser(
+  text: string,
+  ctx: ClaudeParserContext
+): Promise<RfpParseOutput> {
   const truncatedText = text.slice(0, 120_000); // ~30K tokens, Sonnet context safety
 
   let lastError: string | null = null;
@@ -58,20 +77,22 @@ export async function callClaudeParser(text: string): Promise<RfpParseOutput> {
       ? `Analyze this RFP/NOFO document and extract structured data:\n\n${truncatedText}`
       : `Your previous response failed validation with this error: ${lastError}\n\nPlease fix the output and try again. Here is the document:\n\n${truncatedText}`;
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
-      system: RFP_PARSER_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userMessage }],
+    const response = await aiCall({
+      provider: "anthropic",
+      model: ANTHROPIC_MODELS.SCORING,
+      systemPrompt: RFP_PARSER_SYSTEM_PROMPT,
+      userInput: userMessage,
+      promptId: "writing.rfp_parse.v1",
+      orgId: ctx.org_id,
+      userId: ctx.user_id,
+      tier: ctx.subscription_tier,
+      actionType: "draft",
+      maxTokens: 8192,
+      temperature: 0,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") {
-      throw new Error("Unexpected response type from Claude");
-    }
-
     try {
-      const parsed = JSON.parse(content.text);
+      const parsed = JSON.parse(response.content);
       const validated = RfpParseOutputSchema.parse(parsed);
       return validated;
     } catch (err) {
@@ -105,7 +126,11 @@ export async function parseRfp(input: ParseRfpInput): Promise<ParseRfpResult> {
   }
 
   // 2. Parse with Claude
-  const parsed = await callClaudeParser(rawText);
+  const parsed = await callClaudeParser(rawText, {
+    org_id: input.org_id,
+    user_id: input.user_id,
+    subscription_tier: input.subscription_tier,
+  });
 
   // 3. Store in database
   const supabase = createAdminClient();

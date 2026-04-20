@@ -2,8 +2,21 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { parseRfp } from "@/lib/ai/writing/rfp-parser";
 import { z } from "zod";
+
+// Per-org tier lookup for aiCall pre-flight gates. Falls back to 'free'
+// when no subscription row exists.
+async function getOrgTier(orgId: string): Promise<string> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("subscriptions")
+    .select("tier")
+    .eq("org_id", orgId)
+    .maybeSingle();
+  return (data?.tier as string | undefined) ?? "free";
+}
 
 const TextUploadSchema = z.object({
   source_type: z.literal("text_paste"),
@@ -64,6 +77,8 @@ export async function POST(req: NextRequest) {
 
     const result = await parseRfp({
       org_id: orgId,
+      user_id: user.id,
+      subscription_tier: await getOrgTier(orgId),
       source_type: "pdf_upload",
       pdf_buffer: buffer,
       file_url: filePath,
@@ -97,6 +112,8 @@ export async function POST(req: NextRequest) {
 
   const result = await parseRfp({
     org_id: orgId,
+    user_id: user.id,
+    subscription_tier: await getOrgTier(orgId),
     source_type: "text_paste",
     raw_text: parsed.data.text,
     grant_source_id: parsed.data.grant_source_id,
