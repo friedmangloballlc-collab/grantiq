@@ -66,8 +66,39 @@ export function OutcomeLogger({
     if (!canSubmit) return;
     setSaving(true);
 
-    // In production: POST to /api/pipeline/log-outcome
-    await new Promise((r) => setTimeout(r, 600));
+    // PATCH /api/pipeline triggers the whole downstream agent chain:
+    // - awarded: Compliance Calendar Builder + Outcome Learner + success fee
+    // - declined: Outcome Learner + match_feedback
+    // funder_feedback_text is what feeds the Outcome Learner's insights.
+    const body: Record<string, unknown> = {
+      id: item.id,
+      stage: outcome,
+    };
+    if (isAwarded) {
+      body.award_amount = parseFloat(amountAwarded.replace(/,/g, "")) || 0;
+      body.notes = `Start: ${startDate} · Period: ${grantPeriod}`;
+    }
+    if (isDeclined) {
+      // Always send notes so the rejection reason persists on the row.
+      body.notes = `Rejection reason: ${rejectionReason}`;
+      if (funderFeedback.trim().length > 0) {
+        body.funder_feedback_text = funderFeedback.trim();
+      }
+    }
+
+    try {
+      const res = await fetch("/api/pipeline", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        // Best-effort: show the failure but don't block close. User can retry.
+        console.error("log-outcome PATCH failed", await res.text());
+      }
+    } catch (err) {
+      console.error("log-outcome network error", err);
+    }
 
     const data: AwardedData | DeclinedData = isAwarded
       ? {

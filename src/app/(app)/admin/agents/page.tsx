@@ -3,14 +3,19 @@
 // Add a new agent section here instead of creating a new admin page —
 // keeps navigation clean as more agents ship.
 //
-// Currently covers:
-//   - Cost Watchdog (docs/plans/2026-04-20-001)
-//   - Grant Data Verifier (docs/plans/2026-04-20-005)
-//
-// Future sections will be added for:
-//   - RFP Hallucination Auditor (when shipped — reads section_audits)
-//   - Funder Match Critic (when shipped — reads match_kills)
-//   - Application Quality Scorer (when shipped — reads draft_quality_scores)
+// Covers all 12 agents from the roadmap:
+//   #1  Cost Watchdog           (cost_watchdog_alerts, ai_generations)
+//   #2  Grant Data Verifier     (grant_verification_log, grant_sources)
+//   #3  Funder Match Critic     (match_kills)
+//   #4  Compliance Calendar     (compliance_events auto_generated)
+//   #5  Outcome Learning        (org_funder_history, funder_learnings)
+//   #6  Onboarding Coach        (deferred post-PMF)
+//   #7  Hallucination Auditor   (section_audits)
+//   #8  Quality Scorer          (draft_quality_scores)
+//   #9  RLS Sweep               (GitHub Action, no table)
+//   #10 Sentry Triage           (error_triage_events)
+//   #11 Smoke Test              (GitHub Action, no table)
+//   #12 Support Triage          (support_tickets)
 
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -64,6 +69,21 @@ export default async function AgentsAdminPage() {
     // Grant Verifier
     recentRuns,
     flaggedGrants,
+    // Match Critic (#3)
+    matchKills7d,
+    // Compliance Calendar Builder (#4)
+    autoComplianceEvents7d,
+    // Outcome Learner (#5)
+    orgFunderHistory7d,
+    funderLearningsTotal,
+    // Hallucination Auditor (#7)
+    sectionAudits7d,
+    // Quality Scorer (#8)
+    qualityScores7d,
+    // Sentry Triage (#10)
+    triageEvents7d,
+    // Support Triage (#12)
+    supportTickets7d,
   ] = await Promise.all([
     admin
       .from("ai_generations")
@@ -93,6 +113,46 @@ export default async function AgentsAdminPage() {
       .eq("manual_review_flag", true)
       .order("last_verified", { ascending: false })
       .limit(50),
+
+    admin
+      .from("match_kills")
+      .select("kill_reason, overridden_by_user, created_at")
+      .gte("created_at", sevenDaysAgo),
+
+    admin
+      .from("compliance_events")
+      .select("id, created_at")
+      .eq("auto_generated", true)
+      .gte("created_at", sevenDaysAgo),
+
+    admin
+      .from("org_funder_history")
+      .select("outcome, created_at")
+      .gte("created_at", sevenDaysAgo),
+
+    admin
+      .from("funder_learnings")
+      .select("*", { count: "exact", head: true }),
+
+    admin
+      .from("section_audits")
+      .select("verdict, claims_ungrounded, created_at")
+      .gte("created_at", sevenDaysAgo),
+
+    admin
+      .from("draft_quality_scores")
+      .select("verdict, total_score, created_at")
+      .gte("created_at", sevenDaysAgo),
+
+    admin
+      .from("error_triage_events")
+      .select("severity, category, status, created_at")
+      .gte("created_at", sevenDaysAgo),
+
+    admin
+      .from("support_tickets")
+      .select("intent, urgency, status, created_at")
+      .gte("created_at", sevenDaysAgo),
   ]);
 
   // ── Aggregate derived stats ────────────────────────────────────────────
@@ -168,6 +228,57 @@ export default async function AgentsAdminPage() {
     manual_review_reason: string | null;
     last_verified: string | null;
   }>;
+
+  // ── Aggregate 7d activity per new agent ─────────────────────────────────
+  const kills = matchKills7d.data ?? [];
+  const killsByReason: Record<string, number> = {};
+  let killsOverridden = 0;
+  for (const k of kills) {
+    const r = (k.kill_reason as string) ?? "other";
+    killsByReason[r] = (killsByReason[r] ?? 0) + 1;
+    if (k.overridden_by_user) killsOverridden += 1;
+  }
+
+  const complianceEventsCount = (autoComplianceEvents7d.data ?? []).length;
+
+  const outcomes = orgFunderHistory7d.data ?? [];
+  const awardedCount = outcomes.filter((o) => o.outcome === "awarded").length;
+  const declinedCount = outcomes.filter((o) => o.outcome === "declined").length;
+  const withdrawnCount = outcomes.filter((o) => o.outcome === "withdrawn").length;
+  const funderLearningsCount = funderLearningsTotal.count ?? 0;
+
+  const audits = sectionAudits7d.data ?? [];
+  const auditClean = audits.filter((a) => a.verdict === "clean").length;
+  const auditFlagged = audits.filter((a) => a.verdict === "flagged").length;
+  const auditBlocked = audits.filter((a) => a.verdict === "blocked").length;
+  const auditUnaudited = audits.filter((a) => a.verdict === "unaudited").length;
+
+  const scores = qualityScores7d.data ?? [];
+  const scoresTotal = scores.length;
+  const scoresSubmittable = scores.filter((s) => s.verdict === "submittable").length;
+  const avgScore =
+    scoresTotal > 0
+      ? Math.round(
+          scores.reduce((a, s) => a + (s.total_score as number), 0) / scoresTotal
+        )
+      : 0;
+
+  const triage = triageEvents7d.data ?? [];
+  const triageBySeverity: Record<string, number> = {};
+  const triageOpen = triage.filter((t) => t.status === "open").length;
+  for (const t of triage) {
+    const s = (t.severity as string) ?? "unknown";
+    triageBySeverity[s] = (triageBySeverity[s] ?? 0) + 1;
+  }
+
+  const tickets = supportTickets7d.data ?? [];
+  const ticketsOpen = tickets.filter((t) => t.status === "open").length;
+  const ticketsUrgent = tickets.filter((t) => t.urgency === "urgent").length;
+  const ticketsByIntent: Record<string, number> = {};
+  for (const t of tickets) {
+    const i = (t.intent as string) ?? "other";
+    ticketsByIntent[i] = (ticketsByIntent[i] ?? 0) + 1;
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
@@ -391,10 +502,347 @@ export default async function AgentsAdminPage() {
         </Card>
       </section>
 
-      {/* Placeholder for future agent sections */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: FUNDER MATCH CRITIC (#3)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🎯</span>
+          <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50">Funder Match Critic</h2>
+          <span className="text-xs text-muted-foreground ml-auto">
+            Per-match · source: match_kills
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Matches killed (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {kills.length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">false-positive filter</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>User overrides (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {killsOverridden}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                signals critic was wrong
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Top kill reason</CardDescription>
+              <CardTitle className="text-base font-semibold text-warm-900 dark:text-warm-50">
+                {Object.entries(killsByReason).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                {Object.entries(killsByReason).sort((a, b) => b[1] - a[1])[0]?.[1] ?? 0} kills
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: HALLUCINATION AUDITOR (#7)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🛡</span>
+          <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50">Hallucination Auditor</h2>
+          <span className="text-xs text-muted-foreground ml-auto">
+            Per-section · source: section_audits
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Clean (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-green-600">
+                {auditClean}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Flagged</CardDescription>
+              <CardTitle className="text-3xl font-bold text-amber-600">
+                {auditFlagged}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Blocked</CardDescription>
+              <CardTitle className="text-3xl font-bold text-destructive">
+                {auditBlocked}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Fail-open</CardDescription>
+              <CardTitle className="text-3xl font-bold text-muted-foreground">
+                {auditUnaudited}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: QUALITY SCORER (#8)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">📊</span>
+          <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50">Quality Scorer</h2>
+          <span className="text-xs text-muted-foreground ml-auto">
+            Per-draft · source: draft_quality_scores
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Drafts scored (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {scoresTotal}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Avg score</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {avgScore}<span className="text-base font-normal text-muted-foreground">/100</span>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Submittable</CardDescription>
+              <CardTitle className="text-3xl font-bold text-green-600">
+                {scoresSubmittable}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                of {scoresTotal} scored
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: COMPLIANCE CALENDAR BUILDER (#4)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">📅</span>
+          <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50">Compliance Calendar Builder</h2>
+          <span className="text-xs text-muted-foreground ml-auto">
+            Per-award · source: compliance_events
+          </span>
+        </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Obligations auto-generated (7d)</CardDescription>
+            <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+              {complianceEventsCount}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">
+              Fires on pipeline transition to &quot;awarded&quot;. Inserts reports,
+              audits, renewals from RFP text.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: OUTCOME LEARNING AGENT (#5)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🧠</span>
+          <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50">Outcome Learning Agent</h2>
+          <span className="text-xs text-muted-foreground ml-auto">
+            Per-outcome · sources: org_funder_history, funder_learnings
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Awarded (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-green-600">
+                {awardedCount}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Declined (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-destructive">
+                {declinedCount}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Withdrawn (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-muted-foreground">
+                {withdrawnCount}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Total learnings</CardDescription>
+              <CardTitle className="text-3xl font-bold text-[var(--color-brand-teal)]">
+                {funderLearningsCount}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">compounds over time</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: SENTRY TRIAGE (#10)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🚨</span>
+          <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50">Sentry Triage</h2>
+          <span className="text-xs text-muted-foreground ml-auto">
+            Per-error · source: error_triage_events
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Events (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {triage.length}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Open</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {triageOpen}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Critical</CardDescription>
+              <CardTitle className="text-3xl font-bold text-destructive">
+                {triageBySeverity.critical ?? 0}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>High</CardDescription>
+              <CardTitle className="text-3xl font-bold text-amber-600">
+                {triageBySeverity.high ?? 0}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+        {triage.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">
+            No events yet. Triage fires when Sentry webhook is wired to
+            /api/triage/sentry with SENTRY_WEBHOOK_SECRET header.
+          </p>
+        )}
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: SUPPORT TRIAGE (#12)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">💬</span>
+          <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50">Support Triage</h2>
+          <span className="text-xs text-muted-foreground ml-auto">
+            Per-ticket · source: support_tickets
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Tickets (7d)</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {tickets.length}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Open</CardDescription>
+              <CardTitle className="text-3xl font-bold text-warm-900 dark:text-warm-50">
+                {ticketsOpen}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Urgent</CardDescription>
+              <CardTitle className="text-3xl font-bold text-destructive">
+                {ticketsUrgent}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Top intent</CardDescription>
+              <CardTitle className="text-base font-semibold text-warm-900 dark:text-warm-50">
+                {Object.entries(ticketsByIntent).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                {Object.entries(ticketsByIntent).sort((a, b) => b[1] - a[1])[0]?.[1] ?? 0} tickets
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        {tickets.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">
+            No tickets yet. Triage fires when inbound forwarder posts to
+            /api/triage/support with SUPPORT_WEBHOOK_SECRET header.
+          </p>
+        )}
+      </section>
+
+      {/* Background workstream agents (no dashboard card — ambient) */}
       <section className="text-sm text-muted-foreground border-t border-border pt-4">
-        Future agents will add their own sections here as they ship:
-        Hallucination Auditor · Match Critic · Quality Scorer · Compliance Calendar · Support Triage.
+        <p className="font-semibold text-warm-700 dark:text-warm-300 mb-1">
+          Also live (no dashboard — runs ambiently):
+        </p>
+        <ul className="list-disc list-inside space-y-0.5">
+          <li>RLS Sweep (#9) — GitHub Action, fails CI on cross-org data leaks</li>
+          <li>Smoke Test (#11) — GitHub Action, full-path signal on every deploy</li>
+          <li>Onboarding Coach (#6) — deferred post-PMF</li>
+        </ul>
       </section>
     </div>
   );
