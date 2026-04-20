@@ -212,7 +212,13 @@ export function KanbanBoard({
         <DeclinedPanel item={selectedItem} onClose={closePanel} />
       )}
       {selectedItem && panelType === "checklist" && (
-        <ChecklistPanel item={selectedItem} onClose={closePanel} />
+        <ChecklistPanel
+          item={selectedItem}
+          onClose={closePanel}
+          onRemove={(removedId) => {
+            setItems((prev) => prev.filter((it) => it.id !== removedId));
+          }}
+        />
       )}
       {outcomeItem && outcomeType && (
         <OutcomeLogger

@@ -1,6 +1,7 @@
 "use client";
 
-import { X, ClipboardList, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { X, ClipboardList, ExternalLink, Trash2 } from "lucide-react";
 import Link from "next/link";
 import type { PipelineItem } from "./kanban-board";
 import { ApplicationChecklist } from "./application-checklist";
@@ -9,6 +10,7 @@ import type { GrantSource } from "@/lib/grants/application-checklist";
 interface ChecklistPanelProps {
   item: PipelineItem;
   onClose: () => void;
+  onRemove?: (itemId: string) => void;
 }
 
 const STAGE_LABEL: Record<string, string> = {
@@ -17,7 +19,29 @@ const STAGE_LABEL: Record<string, string> = {
   in_development: "In Development",
 };
 
-export function ChecklistPanel({ item, onClose }: ChecklistPanelProps) {
+export function ChecklistPanel({ item, onClose, onRemove }: ChecklistPanelProps) {
+  const [removing, setRemoving] = useState(false);
+
+  async function handleRemove() {
+    if (!onRemove) return;
+    if (!confirm(`Remove "${item.grantName}" from your pipeline?`)) return;
+    setRemoving(true);
+    try {
+      const res = await fetch(`/api/pipeline?id=${item.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(body.error ?? "Failed to remove from pipeline");
+        setRemoving(false);
+        return;
+      }
+      onRemove(item.id);
+      onClose();
+    } catch {
+      alert("Failed to remove from pipeline");
+      setRemoving(false);
+    }
+  }
+
   // Build a minimal GrantSource from the pipeline item.
   // Use grantSourceId so downstream actions (e.g., write/evaluate)
   // resolve to the real grant, not the pipeline row.
@@ -73,14 +97,27 @@ export function ChecklistPanel({ item, onClose }: ChecklistPanelProps) {
           >
             Start Writing Application
           </Link>
-          <Link
-            href={`/grants/${item.grantSourceId}`}
-            className="inline-flex items-center gap-1.5 text-sm text-brand-teal hover:underline"
-            onClick={onClose}
-          >
-            View full grant detail
-            <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link
+              href={`/grants/${item.grantSourceId}`}
+              className="inline-flex items-center gap-1.5 text-sm text-brand-teal hover:underline"
+              onClick={onClose}
+            >
+              View full grant detail
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+            {onRemove && (
+              <button
+                onClick={handleRemove}
+                disabled={removing}
+                className="inline-flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 disabled:opacity-50"
+                aria-label="Remove from pipeline"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {removing ? "Removing…" : "Remove"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

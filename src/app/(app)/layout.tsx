@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { getOrgContext } from "@/lib/auth/get-org-context";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isAdminEmail } from "@/lib/auth/admin";
 import type { OrgContext } from "@/hooks/use-org";
 
 export default async function AppLayout({
@@ -60,6 +61,7 @@ export default async function AppLayout({
     tier: ctx.tier as OrgContext["tier"],
     userId: ctx.userId,
     email: ctx.email,
+    isAdmin: isAdminEmail(ctx.email),
     allOrgs,
   };
 

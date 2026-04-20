@@ -85,7 +85,7 @@ interface PageProps {
 
 export default function GrantWritePage({ params }: PageProps) {
   const { id: grantId } = use(params);
-  const { orgId, tier } = useOrg();
+  const { orgId, tier, isAdmin } = useOrg();
   const router = useRouter();
 
   // ALL hooks must be declared before any conditional returns (Rules of Hooks)
@@ -97,8 +97,9 @@ export default function GrantWritePage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Gate: Free and Starter users cannot access AI Writing (AFTER all hooks)
-  if (TIER_ORDER.indexOf(tier) < TIER_ORDER.indexOf("growth")) {
+  // Gate: Free and Starter users cannot access AI Writing (AFTER all hooks).
+  // Admin users bypass — server-side enforcement still applies in /api/writing/purchase.
+  if (!isAdmin && TIER_ORDER.indexOf(tier) < TIER_ORDER.indexOf("growth")) {
     return (
       <div className="px-6 py-8 max-w-5xl">
         <div className="mb-8">

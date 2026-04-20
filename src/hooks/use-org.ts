@@ -15,6 +15,10 @@ export interface OrgContext {
   userId: string;
   /** Authenticated user's email — used for admin gate */
   email?: string;
+  /** Server-resolved admin flag (matches ADMIN_EMAILS env). Lets the
+   * client UI skip paywalls/tier gates without re-implementing the
+   * env-var check; the server is still the actual enforcement boundary. */
+  isAdmin: boolean;
   /** All orgs the user belongs to — used by the org switcher */
   allOrgs: OrgOption[];
 }
