@@ -212,7 +212,7 @@ SUBMITTED DRAFT:
 ${draftSummary}`;
 
   let learnings: ExtractedLearning[] = [];
-  let sourceGenerationId: string | null = null;
+  const sourceGenerationId: string | null = null;
   try {
     const response = await aiCall({
       provider: "anthropic",

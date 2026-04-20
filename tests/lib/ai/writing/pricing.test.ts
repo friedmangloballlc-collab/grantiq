@@ -11,15 +11,15 @@ import {
 
 describe("Writing Pricing", () => {
   it("returns correct prices for all tier/type combinations", () => {
-    expect(getWritingPrice("tier1_ai_only", "state_foundation")).toBe(14900);
-    expect(getWritingPrice("tier1_ai_only", "federal")).toBe(34900);
-    expect(getWritingPrice("tier1_ai_only", "sbir_sttr")).toBe(49900);
-    expect(getWritingPrice("tier2_ai_audit", "state_foundation")).toBe(24900);
-    expect(getWritingPrice("tier2_ai_audit", "federal")).toBe(54900);
-    expect(getWritingPrice("tier2_ai_audit", "sbir_sttr")).toBe(74900);
-    expect(getWritingPrice("tier3_expert", "state_foundation")).toBe(49900);
-    expect(getWritingPrice("tier3_expert", "federal")).toBe(124900);
-    expect(getWritingPrice("tier3_expert", "sbir_sttr")).toBe(174900);
+    expect(getWritingPrice("tier1_ai_only", "state_foundation")).toBe(24900);
+    expect(getWritingPrice("tier1_ai_only", "federal")).toBe(49900);
+    expect(getWritingPrice("tier1_ai_only", "sbir_sttr")).toBe(74900);
+    expect(getWritingPrice("tier2_ai_audit", "state_foundation")).toBe(49700);
+    expect(getWritingPrice("tier2_ai_audit", "federal")).toBe(99700);
+    expect(getWritingPrice("tier2_ai_audit", "sbir_sttr")).toBe(149700);
+    expect(getWritingPrice("tier3_expert", "state_foundation")).toBe(99700);
+    expect(getWritingPrice("tier3_expert", "federal")).toBe(199700);
+    expect(getWritingPrice("tier3_expert", "sbir_sttr")).toBe(299700);
     expect(getWritingPrice("full_confidence", "state_foundation")).toBe(0);
     expect(getWritingPrice("full_confidence", "federal")).toBe(0);
     expect(getWritingPrice("full_confidence", "sbir_sttr")).toBe(0);
