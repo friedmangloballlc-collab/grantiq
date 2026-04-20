@@ -1,0 +1,63 @@
+name: Smoke Test
+
+# Runs the Deploy Smoke Tester against production after every merge to master.
+# Walks the GrantIQ critical path via HTTP (auth, pipeline, matches, save,
+# grant detail, optional RFP upload, cleanup). Fails if any step breaks.
+#
+# Manual trigger also supported for testing against preview URLs:
+#   gh workflow run smoke-test.yml -f base_url=https://preview.grantiq.com
+
+on:
+  # Post-deploy trigger — run after master push (Vercel deploy is triggered
+  # by the same push; this runs in parallel to the deploy, so we use a
+  # "wait then verify" pattern via the initial sleep)
+  push:
+    branches: [master]
+  # Manual dispatch for preview/staging environments
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Target base URL (default: https://www.grantiq.com)"
+        required: false
+        type: string
+        default: "https://www.grantiq.com"
+      skip_rfp:
+        description: "Skip RFP upload step (useful when Anthropic is down)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    # Don't block CI, just run and report. Smoke test failures become a
+    # visible signal in the Actions tab without gating merges.
+    continue-on-error: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci --ignore-scripts
+
+      # Wait for Vercel deploy to finish before hitting the endpoint.
+      # 60s is usually enough; if Vercel's slow, the smoke test will just
+      # hit the previous version, which is fine — it surfaces regressions
+      # either way.
+      - name: Wait for deploy
+        if: github.event_name == 'push'
+        run: sleep 60
+
+      - name: Run smoke test
+        env:
+          SMOKE_TEST_BASE_URL: ${{ inputs.base_url || 'https://www.grantiq.com' }}
+          SMOKE_TEST_EMAIL: ${{ secrets.SMOKE_TEST_EMAIL }}
+          SMOKE_TEST_PASSWORD: ${{ secrets.SMOKE_TEST_PASSWORD }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_TEST_GRANT_ID: ${{ secrets.SMOKE_TEST_GRANT_ID }}
+          SMOKE_TEST_SKIP_RFP: ${{ inputs.skip_rfp && '1' || '' }}
+        run: npx tsx scripts/smoke-test.ts
