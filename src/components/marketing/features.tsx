@@ -67,7 +67,7 @@ export function Features() {
           {FEATURES.map((feature) => (
             <div
               key={feature.title}
-              className="rounded-xl border border-warm-200 dark:border-warm-700 p-6 hover:border-brand-teal/40 hover:shadow-sm transition-all"
+              className="rounded-xl border border-warm-200 dark:border-warm-700 p-6 hover:border-brand-teal/40 hover:shadow-sm transition-[border-color,box-shadow] duration-200"
             >
               <div className="w-10 h-10 rounded-lg bg-brand-teal/10 flex items-center justify-center mb-4">
                 <feature.icon className="h-5 w-5 text-brand-teal" />
