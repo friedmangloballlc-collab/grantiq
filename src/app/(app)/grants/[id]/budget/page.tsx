@@ -14,7 +14,11 @@ export default async function GrantBudgetPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
 
-  const { data: grant } = await supabase
+  // Admin-client bypass for RLS on grant_sources (same pattern as
+  // commits 28425fd + 30a1850). auth.getUser stays on user-scoped client.
+  const admin = createAdminClient();
+
+  const { data: grant } = await admin
     .from("grant_sources")
     .select("id, name, funder_name, source_type, amount_min, amount_max")
     .eq("id", id)
@@ -28,7 +32,6 @@ export default async function GrantBudgetPage({ params }: Props) {
   } = await supabase.auth.getUser();
   let orgName: string | undefined;
   if (user) {
-    const admin = createAdminClient();
     const { data: membership } = await admin
       .from("org_members")
       .select("org_id, organizations(name)")

@@ -12,11 +12,13 @@ on:
   pull_request:
     paths:
       - "src/app/api/**"
+      - "src/app/(app)/**"
   # Also run on master to catch anything that sneaks through
   push:
     branches: [master]
     paths:
       - "src/app/api/**"
+      - "src/app/(app)/**"
 
 jobs:
   rls-sweep:

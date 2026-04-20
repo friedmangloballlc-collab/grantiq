@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 /**
@@ -17,7 +18,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: prefs, error } = await supabase
+    // Admin client bypasses RLS (user-scoped blocked by chicken-and-egg)
+    const admin = createAdminClient();
+    const { data: prefs, error } = await admin
       .from("notification_preferences")
       .select("*")
       .eq("user_id", user.id)
@@ -71,7 +74,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Invalid digest_frequency" }, { status: 400 });
     }
 
-    const { error } = await supabase
+    // Admin client for RLS bypass
+    const admin = createAdminClient();
+    const { error } = await admin
       .from("notification_preferences")
       .upsert(
         {

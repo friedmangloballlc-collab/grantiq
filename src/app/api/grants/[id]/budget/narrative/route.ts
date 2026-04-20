@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateBudgetNarrative } from "@/lib/ai/writing/budget-narrative";
 import { logger } from "@/lib/logger";
 import type { BudgetLineItem } from "@/components/budget/budget-builder";
@@ -37,8 +38,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Validate grant exists
-    const { data: grant } = await supabase
+    // Validate grant exists — admin client to bypass RLS (grant_sources
+    // is RLS-gated; user only needs to know if the grant is real)
+    const admin = createAdminClient();
+    const { data: grant } = await admin
       .from("grant_sources")
       .select("id")
       .eq("id", grantId)

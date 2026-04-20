@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
 
 export default async function NotificationsSettingsPage() {
@@ -18,7 +19,9 @@ export default async function NotificationsSettingsPage() {
   let prefs = defaultPrefs;
 
   if (user) {
-    const { data } = await supabase
+    // Admin-client bypass for RLS-gated tables (commit 28425fd pattern)
+    const admin = createAdminClient();
+    const { data } = await admin
       .from("notification_preferences")
       .select(
         "digest_frequency, alert_new_matches_above_score, alert_deadline_days_before, alert_pipeline_stale_days"
