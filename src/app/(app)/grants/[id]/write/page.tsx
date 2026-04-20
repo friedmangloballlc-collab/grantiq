@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import { useOrg } from "@/hooks/use-org";
 import { TIER_ORDER } from "@/components/shared/upgrade-gate";
 import { Button } from "@/components/ui/button";
@@ -96,6 +96,51 @@ export default function GrantWritePage({ params }: PageProps) {
   const [step, setStep] = useState<"select" | "rfp" | "processing">("select");
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [prefillSource, setPrefillSource] = useState<
+    "raw_text" | "description" | null
+  >(null);
+  const [grantUrl, setGrantUrl] = useState<string | null>(null);
+
+  // Prefill the RFP textarea from grant_sources data we already have.
+  // raw_text wins (full crawl); description is the fallback stub.
+  // If neither, leave empty and let the user paste — never fabricate.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/grants/${grantId}`);
+        if (!res.ok) return;
+        const { grant } = await res.json();
+        if (cancelled || !grant) return;
+
+        if (grant.url) setGrantUrl(grant.url);
+
+        if (grant.raw_text && grant.raw_text.trim().length > 200) {
+          setRfpText(grant.raw_text);
+          setPrefillSource("raw_text");
+        } else if (grant.description && grant.description.trim().length > 0) {
+          // Stub prefill — clearly mark as insufficient
+          const stub = [
+            `=== AUTO-PREFILLED FROM GRANT METADATA ===`,
+            `This is a thin summary, NOT the full RFP. For accurate output,`,
+            `replace this text with the full RFP / NOFA / guidelines from the`,
+            `funder. Source URL: ${grant.url ?? "(none on file)"}`,
+            ``,
+            `Grant: ${grant.name}`,
+            `Funder: ${grant.funder_name}`,
+            `Description: ${grant.description}`,
+          ].join("\n");
+          setRfpText(stub);
+          setPrefillSource("description");
+        }
+      } catch {
+        // Silent — prefill is a convenience, not required
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [grantId]);
 
   // Gate: Free and Starter users cannot access AI Writing (AFTER all hooks).
   // Admin users bypass — server-side enforcement still applies in /api/writing/purchase.
@@ -372,12 +417,43 @@ export default function GrantWritePage({ params }: PageProps) {
           </div>
 
           {rfpMode === "paste" ? (
-            <Textarea
-              placeholder="Paste the full RFP / grant guidelines here (minimum 200 characters)…"
-              className="min-h-48 font-mono text-xs"
-              value={rfpText}
-              onChange={(e) => setRfpText(e.target.value)}
-            />
+            <>
+              {prefillSource === "raw_text" && (
+                <div className="mb-2 px-3 py-2 rounded-md bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200">
+                  ✓ Prefilled with the full RFP text we have on file for this grant.
+                  Edit if needed, then click Start Writing.
+                </div>
+              )}
+              {prefillSource === "description" && (
+                <div className="mb-2 px-3 py-2 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200">
+                  ⚠ Only a short description is on file for this grant — not the full RFP.
+                  For an accurate draft, replace the prefilled text with the full
+                  guidelines from the funder
+                  {grantUrl && (
+                    <>
+                      {" "}
+                      (
+                      <a
+                        href={grantUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:no-underline"
+                      >
+                        open funder page
+                      </a>
+                      )
+                    </>
+                  )}
+                  .
+                </div>
+              )}
+              <Textarea
+                placeholder="Paste the full RFP / grant guidelines here (minimum 200 characters)…"
+                className="min-h-48 font-mono text-xs"
+                value={rfpText}
+                onChange={(e) => setRfpText(e.target.value)}
+              />
+            </>
           ) : (
             <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-accent/30 transition-colors">
               <Upload className="h-8 w-8 text-muted-foreground mb-2" />

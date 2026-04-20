@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 export async function GET(
@@ -18,7 +19,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    // Admin-client lookups bypass the RLS chicken-and-egg on org_members
+    // (same pattern as /api/pipeline). User identity is still JWT-verified.
+    const admin = createAdminClient();
+
+    const { data: membership } = await admin
       .from("org_members")
       .select("org_id")
       .eq("user_id", user.id)
@@ -29,8 +34,7 @@ export async function GET(
       return NextResponse.json({ error: "No active org membership" }, { status: 403 });
     }
 
-    // Fetch the grant source
-    const { data: grant, error: grantError } = await supabase
+    const { data: grant, error: grantError } = await admin
       .from("grant_sources")
       .select("*")
       .eq("id", id)
@@ -40,8 +44,7 @@ export async function GET(
       return NextResponse.json({ error: "Grant not found" }, { status: 404 });
     }
 
-    // Fetch match data for this org + grant if it exists
-    const { data: match } = await supabase
+    const { data: match } = await admin
       .from("grant_matches")
       .select("*")
       .eq("org_id", membership.org_id)
