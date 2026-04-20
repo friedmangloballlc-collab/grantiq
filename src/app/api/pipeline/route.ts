@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateSuccessFee, buildSuccessFeeMessage } from "@/lib/billing/success-fees";
 import { buildComplianceCalendar } from "@/lib/ai/agents/compliance-calendar-builder";
+import { learnFromOutcome } from "@/lib/ai/agents/outcome-learner";
 import { logger } from "@/lib/logger";
 
 export async function GET() {
@@ -167,7 +168,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, stage, notes, loi_status, award_amount } = body;
+    const { id, stage, notes, loi_status, award_amount, funder_feedback_text } =
+      body;
 
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
@@ -323,6 +325,78 @@ export async function PATCH(req: NextRequest) {
           });
         } catch (err) {
           logger.error("compliance.calendar_builder unexpected_error", {
+            pipelineId: id,
+            err: String(err),
+          });
+        }
+      })();
+    }
+
+    // ── Outcome Learner: fire on terminal outcomes (awarded | declined) ──────────
+    // Fire-and-forget — extracts funder learnings + writes history row.
+    // Withdrawn isn't a terminal stage in this schema; if added later, include it.
+    const TERMINAL_OUTCOMES: PipelineStage[] = ["awarded", "declined"];
+    if (
+      stage !== undefined &&
+      TERMINAL_OUTCOMES.includes(stage as PipelineStage) &&
+      item.stage !== stage
+    ) {
+      (async () => {
+        try {
+          const { data: grant } = await admin
+            .from("grant_sources")
+            .select("name, funder_name, funder_id")
+            .eq("id", item.grant_source_id)
+            .single();
+
+          const { data: org } = await admin
+            .from("organizations")
+            .select("subscription_tier")
+            .eq("id", item.org_id)
+            .single();
+
+          // Try to find the submitted draft for this pipeline item so
+          // the learner has actual section text to analyze.
+          const { data: draft } = await admin
+            .from("grant_drafts")
+            .select("id, sections")
+            .eq("pipeline_id", id)
+            .in("status", ["completed", "compliance_checked", "review_simulated"])
+            .order("completed_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!grant) return;
+
+          const result = await learnFromOutcome({
+            pipelineId: id,
+            orgId: item.org_id,
+            userId: user.id,
+            subscriptionTier: (org?.subscription_tier as string) ?? "free",
+            outcome: stage as "awarded" | "declined",
+            funderId: (grant.funder_id as string | null) ?? null,
+            funderName: grant.funder_name ?? "Funder",
+            grantName: grant.name ?? "Grant",
+            awardAmount:
+              typeof award_amount === "number" ? award_amount : null,
+            decisionDate: new Date().toISOString().slice(0, 10),
+            funderFeedbackText:
+              typeof funder_feedback_text === "string"
+                ? funder_feedback_text
+                : null,
+            draftSections:
+              (draft?.sections as Record<string, string> | null) ?? null,
+            draftId: (draft?.id as string | null) ?? null,
+          });
+
+          logger.info("outcome_learner completed", {
+            pipelineId: id,
+            verdict: result.verdict,
+            historyInserted: result.historyInserted,
+            funderLearningsInserted: result.funderLearningsInserted,
+          });
+        } catch (err) {
+          logger.error("outcome_learner unexpected_error", {
             pipelineId: id,
             err: String(err),
           });
