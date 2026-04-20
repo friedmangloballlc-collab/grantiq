@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { CopyButton } from "@/components/writing/copy-button";
 import { LiveDraftProgress } from "@/components/writing/live-draft-progress";
+import { LiveDraftStream } from "@/components/writing/live-draft-stream";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -266,6 +267,15 @@ export default async function DraftViewerPage({
           initialStep={d.current_step}
           initialProgress={d.progress_pct}
         />
+      )}
+
+      {/* Token-by-token streaming view — subscribes to per-draft Realtime
+          broadcast channel populated by the worker's draft-broadcaster
+          while sections generate. Auto-renders nothing if no broadcasts
+          have arrived yet (cold start) or once persisted sections are
+          available below. */}
+      {d.status === "drafting" && !d.sections?.length && (
+        <LiveDraftStream draftId={d.id} />
       )}
 
       {/* Draft sections */}

@@ -183,7 +183,8 @@ Write the "${section.section_name}" section now.`;
 async function generateSection(
   section: RfpParseOutput["required_sections"][0],
   context: WritingContext,
-  draftId: string
+  draftId: string,
+  onDelta?: (delta: string) => void
 ): Promise<DraftSectionOutput> {
   const cacheableContext = buildCacheableContext(context);
   const userMessage = buildSectionUserMessage(section, context);
@@ -194,6 +195,9 @@ async function generateSection(
       ? userMessage
       : `${userMessage}\n\nNOTE: Your previous response was not valid JSON. Return only a valid JSON object matching the schema.`;
 
+    // Only stream on attempt 0. On the JSON-shape repair retry, the user
+    // is already looking at attempt-0's output; surfacing a second stream
+    // would duplicate text in the UI.
     const response = await aiCall({
       provider: "anthropic",
       model: ANTHROPIC_MODELS.STRATEGY, // Opus for the writing pipeline
@@ -208,6 +212,7 @@ async function generateSection(
       actionType: "draft",
       maxTokens: 16384,
       temperature: 0,
+      onTextDelta: attempt === 0 ? onDelta : undefined,
     });
 
     try {
@@ -294,6 +299,41 @@ export interface DraftGeneratorResult {
 }
 
 /**
+ * Callback fired for each text delta arriving from Anthropic during
+ * section generation. Used by the worker to broadcast streaming text
+ * to the browser via Supabase Realtime so users see sections appear
+ * word-by-word instead of staring at a spinner.
+ *
+ * sectionIndex is the 0-based slot in narrativeSections; sectionName
+ * is the human-readable section title (e.g. "Needs Assessment").
+ * delta is a partial text fragment, NOT the cumulative content.
+ *
+ * The callback is best-effort: throwing here does NOT abort generation
+ * — the call.ts wrapper logs and continues. Don't do heavy work in
+ * the callback (no synchronous DB writes, no heavy parsing); the worker
+ * pattern is to fire-and-forget a Realtime broadcast.
+ */
+export type DraftSectionDeltaCallback = (
+  sectionIndex: number,
+  sectionName: string,
+  delta: string
+) => void;
+
+/**
+ * Callback fired exactly once per section when its generation
+ * promise resolves successfully. Lets the streaming UI lock in the
+ * accumulated text and stop showing a "writing..." indicator.
+ *
+ * Not called on failure — the section's exception propagates and the
+ * worker should treat it as a pipeline-level failure (the existing
+ * grant_drafts.status='failed' write covers that case).
+ */
+export type DraftSectionDoneCallback = (
+  sectionIndex: number,
+  sectionName: string
+) => void;
+
+/**
  * Main entry: generates all sections + budget, updating draft progress
  * as work completes.
  *
@@ -309,7 +349,9 @@ export interface DraftGeneratorResult {
  */
 export async function generateDraft(
   draftId: string,
-  context: WritingContext
+  context: WritingContext,
+  onSectionDelta?: DraftSectionDeltaCallback,
+  onSectionDone?: DraftSectionDoneCallback
 ): Promise<DraftGeneratorResult> {
   const supabase = createAdminClient();
   const rfp = context.rfp_analysis;
@@ -344,7 +386,15 @@ export async function generateDraft(
     // at the cache_read rate.
     const firstSection = narrativeSections[0];
     await updateProgress(firstSection.section_name);
-    sections[0] = await generateSection(firstSection, context, draftId);
+    sections[0] = await generateSection(
+      firstSection,
+      context,
+      draftId,
+      onSectionDelta
+        ? (delta) => onSectionDelta(0, firstSection.section_name, delta)
+        : undefined
+    );
+    onSectionDone?.(0, firstSection.section_name);
     completedSteps++;
 
     // Step 2: Sections 1..N run in parallel against the warm cache.
@@ -361,12 +411,21 @@ export async function generateDraft(
 
       const results = await Promise.all(
         remaining.map(async (section, i) => {
-          const result = await generateSection(section, context, draftId);
+          const sectionIndex = i + 1;
+          const result = await generateSection(
+            section,
+            context,
+            draftId,
+            onSectionDelta
+              ? (delta) => onSectionDelta(sectionIndex, section.section_name, delta)
+              : undefined
+          );
+          onSectionDone?.(sectionIndex, section.section_name);
           completedSteps++;
           // Fire-and-forget progress update so a slow PATCH doesn't
           // hold up the next section's response from being captured.
           void updateProgress(section.section_name);
-          return { index: i + 1, result };
+          return { index: sectionIndex, result };
         })
       );
 

@@ -76,6 +76,24 @@ export interface AiCallOptions {
   temperature?: number;
   /** Response format — use { type: "json_object" } for guaranteed valid JSON */
   responseFormat?: { type: "json_object" | "text" };
+  /**
+   * Optional text-delta callback (Anthropic only).
+   *
+   * When set, the Anthropic branch uses `anthropic.messages.stream()` and
+   * invokes this callback for each `content_block_delta` text fragment as
+   * it arrives. The full assembled `content` is still returned in the
+   * AiCallResult (we await `stream.finalMessage()` at the end), and all
+   * the surrounding aiCall machinery (injection check, sanitization,
+   * usage gate, token ceiling, recording, retry) runs identically.
+   *
+   * Callbacks are best-effort: a throwing onTextDelta does not abort
+   * the stream — it logs and continues, since the partial text is
+   * already on the wire and aborting would lose tokens we've paid for.
+   *
+   * Ignored when provider !== 'anthropic'. The OpenAI branch does not
+   * currently support streaming through this hook (week-1 scope).
+   */
+  onTextDelta?: (delta: string) => void;
 }
 
 export interface AiCallResult {
@@ -173,6 +191,12 @@ interface AnthropicCallParams {
    * keep paying the write multiplier without benefit.
    */
   bypassCache?: boolean;
+  /**
+   * When set, this single attempt uses the streaming API and invokes the
+   * callback per text delta. Final message + usage are still returned via
+   * the same ProviderCallResult shape. See AiCallOptions.onTextDelta.
+   */
+  onTextDelta?: (delta: string) => void;
 }
 
 /**
@@ -210,7 +234,7 @@ async function callAnthropicOnce(params: AnthropicCallParams): Promise<ProviderC
   }
   userMessages.push({ role: "user", content: params.userInput });
 
-  const response = await anthropic.messages.create({
+  const requestBody = {
     model: params.model,
     max_tokens: params.maxTokens,
     temperature: params.temperature,
@@ -224,7 +248,48 @@ async function callAnthropicOnce(params: AnthropicCallParams): Promise<ProviderC
       } as Anthropic.TextBlockParam,
     ],
     messages: userMessages,
-  });
+  };
+
+  // Streaming branch — same request shape, just consumed as deltas.
+  // We iterate text events from the SDK's MessageStream and forward
+  // each delta to the caller's onTextDelta hook. The SDK accumulates
+  // the full message internally; we await finalMessage() at the end
+  // to get token usage + stop_reason in the same shape as the
+  // non-streaming branch.
+  if (params.onTextDelta) {
+    const stream = anthropic.messages.stream(requestBody);
+    stream.on("text", (delta) => {
+      try {
+        params.onTextDelta!(delta);
+      } catch (err) {
+        // Best-effort: a failing UI subscriber must not abort the stream.
+        // The text is already on the wire; aborting loses tokens we paid for.
+        logger.error("ai_stream_delta_callback_failed", { err: String(err) });
+      }
+    });
+    const finalMessage = await stream.finalMessage();
+
+    const textParts: string[] = [];
+    for (const block of finalMessage.content) {
+      if (block.type === "text") {
+        textParts.push(block.text);
+      } else {
+        throw new UnexpectedBlockTypeError(block.type);
+      }
+    }
+
+    return {
+      content: textParts.join(""),
+      inputTokens: finalMessage.usage?.input_tokens ?? 0,
+      outputTokens: finalMessage.usage?.output_tokens ?? 0,
+      cacheCreationTokens: finalMessage.usage?.cache_creation_input_tokens ?? 0,
+      cacheReadTokens: finalMessage.usage?.cache_read_input_tokens ?? 0,
+      stopReason: finalMessage.stop_reason ?? undefined,
+    };
+  }
+
+  // Non-streaming branch (default) — single round-trip, same response shape.
+  const response = await anthropic.messages.create(requestBody);
 
   // Normalize: concat text blocks, throw on unexpected block types.
   const textParts: string[] = [];
@@ -385,6 +450,7 @@ export async function aiCall(options: AiCallOptions): Promise<AiCallResult> {
       cacheableContext: sanitizedCacheableContext,
       userInput: sanitizedUserInput,
       bypassCache,
+      onTextDelta: options.onTextDelta,
     });
   } else {
     providerResult = await callOpenAI({

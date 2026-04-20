@@ -2,7 +2,7 @@
 
 import type { WritingTier, WritingContext } from "@/types/writing";
 import { analyzeFunder } from "./funder-analyzer";
-import { generateDraft } from "./draft-generator";
+import { generateDraft, type DraftSectionDeltaCallback, type DraftSectionDoneCallback } from "./draft-generator";
 import { checkCoherence } from "./coherence-checker";
 import { auditDraft, rewriteWithAuditFeedback } from "./ai-auditor";
 import { simulateReview } from "./review-simulator";
@@ -17,6 +17,20 @@ interface PipelineInput {
   org_id: string;
   user_id: string;
   grant_source_id?: string;
+  /**
+   * Optional per-delta callback for streaming section text to the
+   * browser via Supabase Realtime. The worker (worker/src/handlers/
+   * writing.ts) initializes a broadcaster per draft and passes its
+   * `delta` method here. Other callers (tests, scripts) leave
+   * it undefined to skip streaming entirely.
+   */
+  onSectionDelta?: DraftSectionDeltaCallback;
+  /**
+   * Optional per-section completion callback paired with onSectionDelta.
+   * Worker hooks broadcaster.done so the UI can lock the section's
+   * accumulated text and hide the "writing..." indicator.
+   */
+  onSectionDone?: DraftSectionDoneCallback;
 }
 
 /**
@@ -168,7 +182,12 @@ export async function runWritingPipeline(input: PipelineInput): Promise<void> {
     };
 
     // 6. Generate draft (all sections + budget)
-    const { sections, budget } = await generateDraft(input.draft_id, context);
+    const { sections, budget } = await generateDraft(
+      input.draft_id,
+      context,
+      input.onSectionDelta,
+      input.onSectionDone
+    );
 
     // 7. Coherence check
     const _coherence = await checkCoherence({
