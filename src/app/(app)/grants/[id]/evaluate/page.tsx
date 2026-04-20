@@ -34,7 +34,11 @@ export default async function EvaluateGrantPage({ params }: Props) {
 
   if (!user) notFound();
 
-  const { data: membership } = await supabase
+  // Admin-client bypass for RLS chicken-and-egg on org_members
+  // (user.id is JWT-verified above). Same pattern as commit 28425fd.
+  const adminDb = createAdminClient();
+
+  const { data: membership } = await adminDb
     .from("org_members")
     .select("org_id")
     .eq("user_id", user.id)
@@ -43,9 +47,6 @@ export default async function EvaluateGrantPage({ params }: Props) {
 
   if (!membership) notFound();
   const orgId = membership.org_id;
-
-  // Fetch subscription tier
-  const adminDb = createAdminClient();
   const { data: sub } = await adminDb
     .from("subscriptions")
     .select("tier")
