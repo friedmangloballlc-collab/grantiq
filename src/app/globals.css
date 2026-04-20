@@ -143,7 +143,11 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+      "Segoe UI", sans-serif;
+  }
+  body {
+    font-family: inherit;
   }
 }
 

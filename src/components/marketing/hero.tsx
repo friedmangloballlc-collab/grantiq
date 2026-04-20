@@ -29,18 +29,18 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
           <Button
             size="lg"
-            className="bg-brand-teal hover:bg-brand-teal-dark text-white !h-12 !px-7 text-base font-semibold shadow-sm"
+            className="bg-brand-teal hover:bg-brand-teal-dark text-white !h-14 !px-8 !py-4 text-base font-semibold shadow-sm gap-2"
             render={
               <Link href="/check">
-                Check My Eligibility — Free{" "}
-                <ArrowRight className="ml-2 h-4 w-4 inline" />
+                Check My Eligibility — Free
+                <ArrowRight className="h-4 w-4" />
               </Link>
             }
           />
           <Button
             size="lg"
             variant="outline"
-            className="!h-12 !px-7 text-base font-medium"
+            className="!h-14 !px-8 !py-4 text-base font-medium"
             render={<Link href="/signup">Create Free Account</Link>}
           />
         </div>
