@@ -3,6 +3,7 @@ import { GrantMarquee } from "@/components/marketing/grant-marquee";
 import { FindMyFunders } from "@/components/marketing/find-my-funders";
 import { DataSourcesCloud } from "@/components/marketing/data-sources-cloud";
 import { HowItWorks } from "@/components/marketing/how-it-works";
+import { GrantWriterQuestions } from "@/components/marketing/grant-writer-questions";
 import { CapabilitiesAccordion } from "@/components/marketing/capabilities-accordion";
 import { ProductWalkthrough } from "@/components/marketing/product-walkthrough";
 import { HowWeWork } from "@/components/marketing/how-we-work";
@@ -115,6 +116,7 @@ export default async function LandingPage() {
       <DataSourcesCloud />
 
       <HowItWorks />
+      <GrantWriterQuestions />
       <CapabilitiesAccordion />
       <ProductWalkthrough />
       <HowWeWork />
