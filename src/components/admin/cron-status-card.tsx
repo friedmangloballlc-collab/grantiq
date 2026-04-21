@@ -15,6 +15,18 @@ import {
 } from "@/components/ui/card";
 import { CronStatus } from "@/lib/cron/heartbeat";
 import { CheckCircle2, AlertTriangle, XCircle, Clock } from "lucide-react";
+import { CronTriggerButton } from "./cron-trigger-button";
+
+// Only these crons can be triggered manually — must match the
+// TRIGGERS whitelist in /api/admin/ingest-trigger/route.ts.
+const TRIGGERABLE = new Set([
+  "refresh-grants",
+  "crawl-sources",
+  "ingest-990",
+  "enrich-grants",
+  "validate-grants",
+  "generate-embeddings",
+]);
 
 function fmtAgo(date: Date | null): string {
   if (!date) return "never";
@@ -102,7 +114,8 @@ export function CronStatusCard({ statuses }: { statuses: CronStatus[] }) {
                 <th className="text-left font-medium py-2 pr-4">Status</th>
                 <th className="text-left font-medium py-2 pr-4">Last Run</th>
                 <th className="text-right font-medium py-2 pr-4">Duration</th>
-                <th className="text-right font-medium py-2">24h Runs</th>
+                <th className="text-right font-medium py-2 pr-4">24h Runs</th>
+                <th className="text-right font-medium py-2">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -131,8 +144,15 @@ export function CronStatusCard({ statuses }: { statuses: CronStatus[] }) {
                         : `${(s.lastDurationMs / 1000).toFixed(1)}s`
                       : "—"}
                   </td>
-                  <td className="py-2.5 text-right text-warm-600 dark:text-warm-400 tabular-nums">
+                  <td className="py-2.5 pr-4 text-right text-warm-600 dark:text-warm-400 tabular-nums">
                     {s.runsLast24h}
+                  </td>
+                  <td className="py-2.5 text-right">
+                    {TRIGGERABLE.has(s.cronName) ? (
+                      <CronTriggerButton cronName={s.cronName} />
+                    ) : (
+                      <span className="text-xs text-warm-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))}
