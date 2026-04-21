@@ -65,15 +65,17 @@ export async function GET(request: NextRequest) {
   try {
     // -----------------------------------------------------------------------
     // 1. Grab a batch of active grants that have a non-null URL.
-    //    Order by last_url_check (nulls first) so unchecked grants are
-    //    prioritized. If that column doesn't exist, fall back to created_at.
+    //    Order by last_verified (nulls first) so the least-recently-checked
+    //    URLs get priority. grant_sources does not have an updated_at
+    //    column — last_verified is the canonical "when did we last touch
+    //    this" timestamp and is set by the verifier pipeline.
     // -----------------------------------------------------------------------
     const { data: grants, error: fetchError } = await supabase
       .from("grant_sources")
       .select("id, url")
       .eq("is_active", true)
       .not("url", "is", null)
-      .order("updated_at", { ascending: true, nullsFirst: true })
+      .order("last_verified", { ascending: true, nullsFirst: true })
       .limit(BATCH_SIZE);
 
     if (fetchError) {
