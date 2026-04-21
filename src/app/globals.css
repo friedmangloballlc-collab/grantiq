@@ -218,3 +218,20 @@
     animation: none;
   }
 }
+
+/* ─── Infinite slider (shadcn-style) — CSS-only, framer-motion-free ──── */
+@keyframes infinite-slider-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-50% - var(--marquee-gap, 16px) / 2)); }
+}
+.infinite-slider-track {
+  animation: infinite-slider-scroll var(--marquee-duration, 25s) linear infinite;
+  animation-direction: var(--marquee-direction, normal);
+  will-change: transform;
+}
+.infinite-slider-track:hover {
+  animation-duration: var(--marquee-duration-hover, 25s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .infinite-slider-track { animation: none; }
+}
