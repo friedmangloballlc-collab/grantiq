@@ -5,8 +5,19 @@ import Image from "next/image";
 
 export function Hero() {
   return (
-    <section className="py-20 md:py-32 px-4">
-      <div className="max-w-4xl mx-auto text-center">
+    <section className="relative py-20 md:py-32 px-4 overflow-hidden">
+      {/* Soft radial glow — warm teal tint, provides depth without leaving
+          the light aesthetic. Sits behind content, pointer-events disabled.
+          Reference: Aixora hero glow, translated to our palette. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+      >
+        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[600px] w-[1100px] max-w-full rounded-full blur-3xl opacity-40 bg-[radial-gradient(closest-side,theme(colors.brand-teal/25),transparent_70%)]" />
+        <div className="absolute left-1/2 top-[200px] -translate-x-1/2 h-[500px] w-[800px] max-w-full rounded-full blur-3xl opacity-30 bg-[radial-gradient(closest-side,theme(colors.amber-200/40),transparent_70%)] dark:bg-[radial-gradient(closest-side,theme(colors.amber-900/20),transparent_70%)]" />
+      </div>
+
+      <div className="max-w-4xl mx-auto text-center relative">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-teal-dark text-white text-xs font-semibold tracking-wide mb-6">
           <Image
             src="/grantaq-icon.svg"

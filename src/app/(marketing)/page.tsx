@@ -54,26 +54,52 @@ export default async function LandingPage() {
       {/* Live grant marquee — proves data freshness in two seconds */}
       <GrantMarquee />
 
-      {/* Compact stats row — only real, verifiable numbers */}
-      <section className="py-8 px-4 border-b border-warm-200 dark:border-warm-800">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-6 text-center">
-          <div>
-            <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50 tabular-nums">
-              {formatGrantCount(grantCount)}
+      {/* Stats block — cards with real numbers. Inspired by Aixora's
+          metric block structure, translated to our warm/light palette. */}
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold text-brand-teal-text tracking-[0.2em] uppercase">
+              By the numbers
             </p>
-            <p className="text-xs text-warm-500 mt-1 uppercase tracking-wide">Active Grants</p>
+            <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight text-warm-900 dark:text-warm-50">
+              Real data, verified nightly
+            </h2>
           </div>
-          <div>
-            <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50">
-              Nightly
-            </p>
-            <p className="text-xs text-warm-500 mt-1 uppercase tracking-wide">Verification Cycle</p>
-          </div>
-          <div className="col-span-2 md:col-span-1">
-            <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50">
-              60 sec
-            </p>
-            <p className="text-xs text-warm-500 mt-1 uppercase tracking-wide">Eligibility Check</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-2xl border border-warm-200 dark:border-warm-800 bg-white dark:bg-warm-900 p-6 text-center">
+              <p className="text-4xl md:text-5xl font-bold text-brand-teal-text tabular-nums tracking-tight">
+                {formatGrantCount(grantCount)}
+              </p>
+              <p className="text-sm font-medium text-warm-900 dark:text-warm-50 mt-3">
+                Active grants
+              </p>
+              <p className="text-xs text-warm-500 mt-1">
+                federal, state, foundation & corporate
+              </p>
+            </div>
+            <div className="rounded-2xl border border-warm-200 dark:border-warm-800 bg-white dark:bg-warm-900 p-6 text-center">
+              <p className="text-4xl md:text-5xl font-bold text-brand-teal-text tracking-tight">
+                Nightly
+              </p>
+              <p className="text-sm font-medium text-warm-900 dark:text-warm-50 mt-3">
+                Verification cycle
+              </p>
+              <p className="text-xs text-warm-500 mt-1">
+                dead links and past deadlines pulled automatically
+              </p>
+            </div>
+            <div className="rounded-2xl border border-warm-200 dark:border-warm-800 bg-white dark:bg-warm-900 p-6 text-center">
+              <p className="text-4xl md:text-5xl font-bold text-brand-teal-text tabular-nums tracking-tight">
+                60<span className="text-2xl md:text-3xl font-semibold ml-0.5">sec</span>
+              </p>
+              <p className="text-sm font-medium text-warm-900 dark:text-warm-50 mt-3">
+                Eligibility check
+              </p>
+              <p className="text-xs text-warm-500 mt-1">
+                no signup, no credit card
+              </p>
+            </div>
           </div>
         </div>
       </section>
