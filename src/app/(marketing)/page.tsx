@@ -10,6 +10,7 @@ import { HowWeWork } from "@/components/marketing/how-we-work";
 import { GrantServices } from "@/components/marketing/grant-services";
 import { PricingTable } from "@/components/marketing/pricing-table";
 import { FAQ } from "@/components/marketing/faq";
+import { NewsletterCapture } from "@/components/marketing/newsletter-capture";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
@@ -237,6 +238,11 @@ export default async function LandingPage() {
 
       <PricingTable />
       <FAQ />
+
+      {/* Weekly grant roundup — lead-magnet capture. Placed late so
+          the page has already demonstrated product value; visitors who
+          bounced on pricing get one more conversion path before exit. */}
+      <NewsletterCapture source="home_newsletter" />
 
       {/* Bottom CTA */}
       <section className="py-24 px-4 text-center bg-warm-50 dark:bg-warm-800/30">

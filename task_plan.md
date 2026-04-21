@@ -18,11 +18,11 @@ Phase 1 — Stripe activation.
 ## Phases
 
 ### Phase 1: Stripe activation (P0 — blocks revenue)
-- [ ] Set `STRIPE_SECRET_KEY` (live, not test) in Vercel
-- [ ] Set `STRIPE_PUBLISHABLE_KEY` in Vercel
-- [ ] Create Stripe webhook → `https://grantaq.com/api/webhooks/stripe`
-- [ ] Set `STRIPE_WEBHOOK_SECRET` in Vercel
-- [ ] Verify `/api/webhooks/stripe` exists and handles invoice.payment_succeeded + customer.subscription.deleted
+- [x] Set `STRIPE_SECRET_KEY` (live, not test) in Vercel
+- [x] Set `STRIPE_PUBLISHABLE_KEY` in Vercel
+- [x] Create Stripe webhook → `https://grantaq.com/api/webhooks/stripe`
+- [x] Set `STRIPE_WEBHOOK_SECRET` in Vercel
+- [x] Verified `/api/webhooks/stripe` handles checkout.session.completed + customer.subscription.updated + customer.subscription.deleted + invoice.payment_failed
 - [ ] Test purchase: Tier 1 AI-only ($249) with a real card — full flow
 - [ ] Refund self — verify webhook processes refund cleanly
 - [ ] Confirm `subscriptions` + `grant_drafts` rows updated correctly
