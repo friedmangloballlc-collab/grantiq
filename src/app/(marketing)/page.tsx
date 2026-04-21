@@ -1,4 +1,5 @@
 import { Hero } from "@/components/marketing/hero";
+import { GrantMarquee } from "@/components/marketing/grant-marquee";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { Features } from "@/components/marketing/features";
 import { HowWeWork } from "@/components/marketing/how-we-work";
@@ -50,20 +51,30 @@ export default async function LandingPage() {
     <>
       <Hero />
 
-      {/* Stats bar */}
-      <section className="py-10 px-4 bg-brand-teal/5 dark:bg-brand-teal/10 border-y border-brand-teal/10">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {[
-            { value: formatGrantCount(grantCount), label: "Active Grants" },
-            { value: "$2.4B+", label: "Tracked Funding" },
-            { value: "94%", label: "Match Accuracy" },
-            { value: "3 min", label: "Avg. Onboarding" },
-          ].map((stat) => (
-            <div key={stat.label}>
-              <p className="text-2xl md:text-3xl font-bold text-brand-teal">{stat.value}</p>
-              <p className="text-sm text-warm-500 mt-1">{stat.label}</p>
-            </div>
-          ))}
+      {/* Live grant marquee — proves data freshness in two seconds */}
+      <GrantMarquee />
+
+      {/* Compact stats row — only real, verifiable numbers */}
+      <section className="py-8 px-4 border-b border-warm-200 dark:border-warm-800">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-6 text-center">
+          <div>
+            <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50 tabular-nums">
+              {formatGrantCount(grantCount)}
+            </p>
+            <p className="text-xs text-warm-500 mt-1 uppercase tracking-wide">Active Grants</p>
+          </div>
+          <div>
+            <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50">
+              Nightly
+            </p>
+            <p className="text-xs text-warm-500 mt-1 uppercase tracking-wide">Verification Cycle</p>
+          </div>
+          <div className="col-span-2 md:col-span-1">
+            <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50">
+              60 sec
+            </p>
+            <p className="text-xs text-warm-500 mt-1 uppercase tracking-wide">Eligibility Check</p>
+          </div>
         </div>
       </section>
 

@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/check", label: "Free Eligibility Check" },
+  { href: "/ai-grant-writing", label: "AI Grant Writing" },
   { href: "/grant-services", label: "Services" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/blog", label: "Blog" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/tools", label: "Free Tools" },
-  { href: "/signup/nonprofit", label: "Start a Nonprofit" },
 ];
 
 export function MarketingNav() {
