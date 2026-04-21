@@ -1,14 +1,15 @@
 import { Hero } from "@/components/marketing/hero";
 import { GrantMarquee } from "@/components/marketing/grant-marquee";
 import { HowItWorks } from "@/components/marketing/how-it-works";
-import { Features } from "@/components/marketing/features";
+import { CapabilitiesAccordion } from "@/components/marketing/capabilities-accordion";
+import { ProductPreview } from "@/components/marketing/product-preview";
 import { HowWeWork } from "@/components/marketing/how-we-work";
 import { GrantServices } from "@/components/marketing/grant-services";
 import { PricingTable } from "@/components/marketing/pricing-table";
 import { FAQ } from "@/components/marketing/faq";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -105,7 +106,8 @@ export default async function LandingPage() {
       </section>
 
       <HowItWorks />
-      <Features />
+      <CapabilitiesAccordion />
+      <ProductPreview />
       <HowWeWork />
       <GrantServices />
 
@@ -227,26 +229,30 @@ export default async function LandingPage() {
 
       {/* Bottom CTA */}
       <section className="py-24 px-4 text-center bg-warm-50 dark:bg-warm-800/30">
-        <h2 className="text-3xl font-bold text-warm-900 dark:text-warm-50">
-          Ready to find grants you&apos;re missing?
+        <h2 className="text-4xl md:text-5xl font-bold tracking-[-0.02em] text-warm-900 dark:text-warm-50 leading-[1.05]">
+          Ready to find grants
+          <br className="hidden sm:inline" /> you&apos;re missing?
         </h2>
-        <p className="text-warm-500 mt-2 max-w-xl mx-auto">
-          Join organizations already using GrantAQ to discover funding, build strategy, and write winning applications faster.
+        <p className="text-warm-600 dark:text-warm-400 mt-5 max-w-xl mx-auto">
+          Start with a free readiness score. Upgrade when you&apos;re writing
+          applications, not before.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
           <Button
             size="lg"
-            className="bg-brand-teal hover:bg-brand-teal-dark text-white px-8"
+            className="!bg-warm-900 !text-white hover:!bg-warm-800 dark:!bg-warm-50 dark:!text-warm-900 dark:hover:!bg-warm-100 !h-14 !px-8 !py-4 text-base font-semibold rounded-full gap-2 group/cta"
             render={
               <Link href="/signup">
-                Get Started Free <ArrowRight className="ml-2 h-4 w-4 inline" />
+                Get Started Free
+                <ArrowUpRight className="h-4 w-4 transition-transform group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5" />
               </Link>
             }
           />
           <Button
             size="lg"
             variant="outline"
-            render={<Link href="/check">Check Your Eligibility — Free</Link>}
+            className="!h-14 !px-8 !py-4 text-base font-medium rounded-full border-warm-300 dark:border-warm-700"
+            render={<Link href="/check">Check Your Eligibility</Link>}
           />
         </div>
       </section>

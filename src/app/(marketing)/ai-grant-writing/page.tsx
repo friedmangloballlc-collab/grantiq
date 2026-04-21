@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowRight,
+  ArrowUpRight,
   Clock,
   ShieldCheck,
   FileCheck,
@@ -123,18 +123,18 @@ export default function AIGrantWritingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
             <Button
               size="lg"
-              className="bg-brand-teal hover:bg-brand-teal-dark text-white !h-14 !px-8 !py-4 text-base font-semibold gap-2"
+              className="!bg-warm-900 !text-white hover:!bg-warm-800 dark:!bg-warm-50 dark:!text-warm-900 dark:hover:!bg-warm-100 !h-14 !px-8 !py-4 text-base font-semibold rounded-full gap-2 group/cta"
               render={
                 <Link href="/signup?plan=growth">
                   Start a draft — from $249
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowUpRight className="h-4 w-4" />
                 </Link>
               }
             />
             <Button
               size="lg"
               variant="outline"
-              className="!h-14 !px-8 !py-4 text-base font-medium"
+              className="!h-14 !px-8 !py-4 text-base font-medium rounded-full border-warm-300 dark:border-warm-700"
               render={<Link href="#how-it-works">How it works</Link>}
             />
           </div>
@@ -317,11 +317,11 @@ export default function AIGrantWritingPage() {
           <div className="mt-8">
             <Button
               size="lg"
-              className="bg-brand-teal hover:bg-brand-teal-dark text-white !h-14 !px-8 !py-4 text-base font-semibold gap-2"
+              className="!bg-warm-900 !text-white hover:!bg-warm-800 dark:!bg-warm-50 dark:!text-warm-900 dark:hover:!bg-warm-100 !h-14 !px-8 !py-4 text-base font-semibold rounded-full gap-2 group/cta"
               render={
                 <Link href="/signup?plan=growth">
                   Start a draft
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowUpRight className="h-4 w-4" />
                 </Link>
               }
             />
