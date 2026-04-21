@@ -7,8 +7,47 @@ import { cn } from "@/lib/utils";
 
 // Novatus-style accordion list: dense, scannable, editorial.
 // Replaces "another grid of 4 feature cards" with something more grown-up.
+//
+// Each item cycles through 3 accent palettes — the Novatus cards-slider
+// pattern translated from their full-background cards to our accent-bar
+// + icon color approach. Subtle visual rhythm without breaking brand.
 
 type Tab = "find" | "write" | "manage";
+
+interface Palette {
+  bgActive: string;
+  borderActive: string;
+  accentBar: string;
+  iconActive: string;
+  link: string;
+}
+
+const PALETTES: Palette[] = [
+  // Teal (brand default)
+  {
+    bgActive: "bg-brand-teal/5 dark:bg-brand-teal/10",
+    borderActive: "border-brand-teal/30",
+    accentBar: "bg-brand-teal",
+    iconActive: "text-brand-teal-text",
+    link: "text-brand-teal-text",
+  },
+  // Moss (warm-green-tinted neutral)
+  {
+    bgActive: "bg-emerald-50/50 dark:bg-emerald-950/20",
+    borderActive: "border-emerald-700/20 dark:border-emerald-600/20",
+    accentBar: "bg-emerald-700 dark:bg-emerald-500",
+    iconActive: "text-emerald-700 dark:text-emerald-400",
+    link: "text-emerald-800 dark:text-emerald-300",
+  },
+  // Tan (warm amber-tinted neutral)
+  {
+    bgActive: "bg-amber-50/60 dark:bg-amber-950/20",
+    borderActive: "border-amber-700/20 dark:border-amber-600/20",
+    accentBar: "bg-amber-700 dark:bg-amber-500",
+    iconActive: "text-amber-800 dark:text-amber-400",
+    link: "text-amber-900 dark:text-amber-300",
+  },
+];
 
 const CAPABILITIES: Record<Tab, {
   label: string;
@@ -139,48 +178,68 @@ export function CapabilitiesAccordion() {
           ))}
         </div>
 
-        {/* Accordion list */}
+        {/* Accordion list — each item cycles through 3 accent palettes
+            (warm-teal / moss / amber) so the list has visual rhythm
+            without breaking brand. Novatus pattern translated. */}
         <div>
           {activeSet.items.map((item, i) => {
             const open = openIndex === i;
+            const palette = PALETTES[i % PALETTES.length];
             return (
               <div
                 key={`${activeTab}-${i}`}
                 className={cn(
-                  "border-b border-warm-200 dark:border-warm-800 transition-colors",
-                  open && "border-warm-900/10 dark:border-warm-50/10"
+                  "border-b transition-[background-color,border-color] duration-200",
+                  open
+                    ? `${palette.borderActive} ${palette.bgActive}`
+                    : "border-warm-200 dark:border-warm-800"
                 )}
               >
                 <button
                   onClick={() => setOpenIndex(open ? null : i)}
-                  className="w-full py-6 flex items-start justify-between gap-6 text-left group/row"
+                  className="w-full py-6 px-4 md:px-6 flex items-start justify-between gap-6 text-left group/row"
                   aria-expanded={open}
                 >
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl md:text-2xl font-semibold tracking-tight text-warm-900 dark:text-warm-50">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1 text-sm md:text-base text-warm-600 dark:text-warm-400">
-                      {item.summary}
-                    </p>
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    {/* Accent bar — left-side color chip that gets prominent when open */}
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "mt-2 h-6 w-1 rounded-full shrink-0 transition-[background-color,height] duration-200",
+                        open ? `${palette.accentBar} h-10` : "bg-warm-300 dark:bg-warm-700"
+                      )}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl md:text-2xl font-semibold tracking-tight text-warm-900 dark:text-warm-50">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1 text-sm md:text-base text-warm-600 dark:text-warm-400">
+                        {item.summary}
+                      </p>
+                    </div>
                   </div>
                   <Plus
                     className={cn(
-                      "h-5 w-5 text-warm-400 shrink-0 mt-1 transition-transform duration-200",
-                      open && "rotate-45 text-brand-teal"
+                      "h-5 w-5 shrink-0 mt-1 transition-transform duration-200",
+                      open
+                        ? `rotate-45 ${palette.iconActive}`
+                        : "text-warm-400"
                     )}
                     aria-hidden="true"
                   />
                 </button>
                 {open && (
-                  <div className="pb-6 pr-12 -mt-2">
+                  <div className="pb-6 pr-12 pl-9 md:pl-11 -mt-2">
                     <p className="text-sm md:text-base text-warm-700 dark:text-warm-300 leading-relaxed max-w-3xl">
                       {item.body}
                     </p>
                     {item.href && (
                       <Link
                         href={item.href}
-                        className="inline-flex items-center gap-1 mt-4 text-sm font-medium text-brand-teal-text hover:underline"
+                        className={cn(
+                          "inline-flex items-center gap-1 mt-4 text-sm font-medium hover:underline",
+                          palette.link
+                        )}
                       >
                         Learn more →
                       </Link>

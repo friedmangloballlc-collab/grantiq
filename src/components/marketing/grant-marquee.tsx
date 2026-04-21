@@ -81,7 +81,7 @@ function GrantCard({ grant }: { grant: MarqueeGrant }) {
   return (
     <Link
       href={`/grant/${grant.id}`}
-      className="shrink-0 w-72 rounded-xl overflow-hidden border border-warm-200 dark:border-warm-800 bg-white dark:bg-warm-900 mx-3 hover:border-brand-teal/40 hover:shadow-md transition-[border-color,box-shadow] duration-200 group/card"
+      className="relative shrink-0 w-72 rounded-xl overflow-hidden border border-warm-200 dark:border-warm-800 bg-white dark:bg-warm-900 mx-3 hover:border-brand-teal/40 hover:shadow-md transition-[border-color,box-shadow] duration-200 group/card"
     >
       {/* Image header */}
       <div className="relative h-36 w-full overflow-hidden bg-warm-100 dark:bg-warm-800">
@@ -123,6 +123,20 @@ function GrantCard({ grant }: { grant: MarqueeGrant }) {
             Apply now →
           </span>
         </div>
+      </div>
+
+      {/* Hover-reveal overlay — Novatus "info-button" pattern. Covers the
+          full card on hover with a centered dark-pill CTA, fades in over
+          150ms. Desktop-only (touch devices never trigger :hover reliably,
+          and the entire card is already a link for them). */}
+      <div
+        aria-hidden="true"
+        className="hidden md:flex absolute inset-0 items-center justify-center bg-warm-900/70 dark:bg-warm-950/70 backdrop-blur-[1px] opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 pointer-events-none"
+      >
+        <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-warm-900 font-semibold text-sm shadow-md">
+          View grant
+          <span aria-hidden="true" className="text-brand-teal-text">→</span>
+        </span>
       </div>
     </Link>
   );
