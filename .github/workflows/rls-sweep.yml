@@ -7,6 +7,10 @@ name: RLS Sweep
 #
 # Tonight's session caught 30+ routes with this bug. This agent
 # exists to prevent the 31st.
+#
+# Event-triggered only (PR + master push) — does NOT run on a
+# schedule. Cron observability is handled by the cron_heartbeats
+# table and /admin/agents, not here.
 
 on:
   pull_request:

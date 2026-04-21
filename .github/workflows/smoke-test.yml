@@ -5,7 +5,7 @@ name: Smoke Test
 # grant detail, optional RFP upload, cleanup). Fails if any step breaks.
 #
 # Manual trigger also supported for testing against preview URLs:
-#   gh workflow run smoke-test.yml -f base_url=https://preview.grantiq.com
+#   gh workflow run smoke-test.yml -f base_url=https://preview.grantaq.com
 
 on:
   # Post-deploy trigger — run after master push (Vercel deploy is triggered
@@ -17,10 +17,10 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: "Target base URL (default: https://www.grantiq.com)"
+        description: "Target base URL (default: https://www.grantaq.com)"
         required: false
         type: string
-        default: "https://www.grantiq.com"
+        default: "https://www.grantaq.com"
       skip_rfp:
         description: "Skip RFP upload step (useful when Anthropic is down)"
         required: false
@@ -53,7 +53,7 @@ jobs:
 
       - name: Run smoke test
         env:
-          SMOKE_TEST_BASE_URL: ${{ inputs.base_url || 'https://www.grantiq.com' }}
+          SMOKE_TEST_BASE_URL: ${{ inputs.base_url || 'https://www.grantaq.com' }}
           SMOKE_TEST_EMAIL: ${{ secrets.SMOKE_TEST_EMAIL }}
           SMOKE_TEST_PASSWORD: ${{ secrets.SMOKE_TEST_PASSWORD }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
