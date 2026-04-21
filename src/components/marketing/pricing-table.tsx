@@ -15,6 +15,10 @@ interface Tier {
   annual: number; // per-month price when billed annually
   summary: string;
   features: string[];
+  // Success fee percentage on awarded grant funds where GrantAQ
+  // materially assisted. See /terms §5 for full definition. Stored
+  // as a whole number (5 = 5%). Higher-tier customers pay less.
+  successFee: number;
   cta: string;
   href: string;
   highlighted?: boolean;
@@ -36,6 +40,7 @@ const TIERS: Tier[] = [
     ],
     cta: "Start Free",
     href: "/signup",
+    successFee: 5,
   },
   {
     name: "Starter",
@@ -52,6 +57,7 @@ const TIERS: Tier[] = [
     ],
     cta: "Get Started",
     href: "/signup?plan=starter",
+    successFee: 5,
   },
   {
     name: "Pro",
@@ -70,6 +76,7 @@ const TIERS: Tier[] = [
     cta: "Get Started",
     href: "/signup?plan=pro",
     highlighted: true,
+    successFee: 5,
   },
   {
     name: "Growth",
@@ -88,6 +95,7 @@ const TIERS: Tier[] = [
     ],
     cta: "Get Started",
     href: "/signup?plan=growth",
+    successFee: 4,
   },
   {
     name: "Enterprise",
@@ -106,6 +114,7 @@ const TIERS: Tier[] = [
     cta: "Talk to Sales",
     href: "mailto:hello@grantaq.com?subject=GrantAQ%20Enterprise",
     contactOnly: true,
+    successFee: 3,
   },
 ];
 
@@ -264,6 +273,21 @@ export function PricingTable() {
                 {tier.monthly === 0 && (
                   <p className="text-xs text-warm-500 mb-4">forever free</p>
                 )}
+                {/* Success fee disclosure — every tier pays a percentage
+                    of awarded grant funds where GrantAQ materially
+                    assisted. See /terms #success-fees for the full
+                    rate table. This transparency is non-optional;
+                    hiding it would be misleading. */}
+                <p className="text-xs text-warm-600 dark:text-warm-400 mb-5 p-2 rounded bg-warm-50 dark:bg-warm-800/40">
+                  <span className="font-semibold">+ {tier.successFee}% success fee</span>{" "}
+                  on awarded grant funds.{" "}
+                  <Link
+                    href="/terms#success-fees"
+                    className="text-brand-teal-text hover:underline"
+                  >
+                    Details
+                  </Link>
+                </p>
                 <p className="text-sm text-warm-600 dark:text-warm-400 mb-5">
                   {tier.summary}
                 </p>

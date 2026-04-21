@@ -200,7 +200,17 @@ export default function SignupPage() {
                   >
                     Terms of Service
                   </Link>{" "}
-                  and{" "}
+                  (including the{" "}
+                  <Link
+                    href="/terms#success-fees"
+                    className="font-medium underline underline-offset-2"
+                    style={{ color: "var(--color-brand-teal)" }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    3–5% success fee
+                  </Link>{" "}
+                  on awarded grant funds and the non-refundable payment policy) and the{" "}
                   <Link
                     href="/privacy"
                     className="font-medium underline underline-offset-2"

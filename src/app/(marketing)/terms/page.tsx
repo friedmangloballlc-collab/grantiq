@@ -9,7 +9,7 @@ export default function TermsOfServicePage() {
   return (
     <main className="max-w-3xl mx-auto px-4 py-16 text-warm-800 dark:text-warm-200">
       <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50 mb-2">Terms of Service</h1>
-      <p className="text-sm text-warm-500 mb-10">Last updated: March 2026 &mdash; Effective upon account creation</p>
+      <p className="text-sm text-warm-500 mb-10">Last updated: April 2026 &mdash; Effective upon account creation</p>
 
       <p className="text-sm mb-8 text-warm-600 dark:text-warm-400">
         These Terms of Service (&quot;Terms&quot;) govern your access to and use of GrantAQ, operated by Friedman Global LLC
@@ -73,34 +73,114 @@ export default function TermsOfServicePage() {
         </div>
       </Section>
 
-      <Section title="5. Success Fees">
-        <p>
-          Certain GrantAQ plans include a success fee model in addition to or in lieu of subscription pricing. The
-          following terms apply:
+      <Section title="5. Success Fees" id="success-fees">
+        <div className="p-4 rounded-lg bg-brand-teal/5 border border-brand-teal/20 mb-4">
+          <p className="font-semibold text-warm-900 dark:text-warm-50 mb-2">
+            All GrantAQ accounts include a success fee on awarded grant funding.
+          </p>
+          <p>
+            Success fees are charged in addition to subscription fees. The fee is a percentage of any grant funding
+            awarded on an application that GrantAQ materially assisted with (drafted, edited, matched, or reviewed).
+            Rates scale inversely with your tier — higher tiers pay lower success fees.
+          </p>
+        </div>
+
+        <p className="font-semibold text-warm-900 dark:text-warm-50 mt-6 mb-3">Current rates by tier:</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border border-warm-200 dark:border-warm-800 rounded-lg">
+            <thead>
+              <tr className="bg-warm-50 dark:bg-warm-900/50 text-xs uppercase tracking-wider text-warm-600 dark:text-warm-400">
+                <th className="text-left font-semibold py-2 px-3 border-b border-warm-200 dark:border-warm-800">
+                  Tier
+                </th>
+                <th className="text-left font-semibold py-2 px-3 border-b border-warm-200 dark:border-warm-800">
+                  Subscription
+                </th>
+                <th className="text-right font-semibold py-2 px-3 border-b border-warm-200 dark:border-warm-800">
+                  Success fee
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50">Free</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-warm-500">$0</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-right tabular-nums font-semibold">
+                  5%
+                </td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50">Starter</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-warm-500">$79/mo</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-right tabular-nums font-semibold">
+                  5%
+                </td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50">Pro</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-warm-500">$149/mo</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-right tabular-nums font-semibold">
+                  5%
+                </td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50">Growth</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-warm-500">$249/mo</td>
+                <td className="py-2 px-3 border-b border-warm-100 dark:border-warm-800/50 text-right tabular-nums font-semibold">
+                  4%
+                </td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3">Enterprise</td>
+                <td className="py-2 px-3 text-warm-500">$499/mo</td>
+                <td className="py-2 px-3 text-right tabular-nums font-semibold text-brand-teal-text">3%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p className="font-semibold text-warm-900 dark:text-warm-50 mt-6 mb-3">
+          How success fees work:
         </p>
-        <ul className="list-disc pl-5 space-y-2 mt-3">
+        <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>Fee range:</strong> Success fees range from 4% to 10% of awarded grant funds, as specified in your
-            plan or service agreement.
+            <strong>When they apply:</strong> A success fee is owed whenever a grant application that GrantAQ assisted
+            with is awarded, regardless of whether your subscription is still active at the time of the award.
           </li>
           <li>
-            <strong>Minimum fee:</strong> A minimum success fee applies per award as specified at the time of enrollment
-            or in your service agreement.
+            <strong>Example (Growth tier, 4%):</strong> you win a $50,000 grant drafted on GrantAQ → success fee is
+            $2,000 ($50,000 × 4%).
           </li>
           <li>
             <strong>Reporting obligation:</strong> You agree to notify GrantAQ within 14 days of receiving notice of a
-            grant award for any application initiated through the platform.
+            grant award for any application initiated, drafted, edited, matched, or materially assisted by the platform.
+            Failure to report does not void the fee — we may audit your grant pipeline for awards.
           </li>
           <li>
-            <strong>Payment timing:</strong> Success fees are due within 30 days of receiving awarded funds.
+            <strong>Payment timing:</strong> Success fees are due within 30 days of your organization receiving the
+            awarded funds.
           </li>
           <li>
             <strong>Invoicing:</strong> GrantAQ will issue an invoice via Stripe upon notification of an award. Invoices
-            not paid within 30 days accrue interest at 1.5% per month.
+            not paid within 30 days accrue interest at 1.5% per month on the outstanding balance.
           </li>
           <li>
             <strong>Scope:</strong> Success fees apply only to grants where GrantAQ&apos;s platform was used to initiate,
-            draft, or materially assist with the application.
+            draft, match, edit, or materially assist with the application. Grants you applied to entirely outside the
+            platform are not subject to success fees.
+          </li>
+          <li>
+            <strong>Partial awards:</strong> If a grant is awarded for a lower amount than requested, the success fee is
+            calculated on the actual awarded amount, not the requested amount.
+          </li>
+          <li>
+            <strong>Multi-year grants:</strong> The success fee applies to the full total awarded value across the grant
+            period, not annualized.
+          </li>
+          <li>
+            <strong>Rate changes:</strong> Your success fee rate is locked to the tier you held at the time the grant
+            application was drafted. Upgrading does not retroactively lower fees on prior drafts; downgrading does not
+            retroactively raise them.
           </li>
         </ul>
       </Section>
@@ -127,13 +207,21 @@ export default function TermsOfServicePage() {
             Subscriptions automatically renew unless canceled at least 24 hours before the renewal date.
           </li>
           <li>
-            <strong>Refunds:</strong> Monthly subscriptions are non-refundable. Annual subscriptions may receive a
-            prorated refund within 30 days of initial purchase if requested and no AI-generated applications have been
-            submitted to funders. Contact{" "}
+            <strong>Refunds — all sales final:</strong> All subscription fees, one-time purchases, and add-on charges
+            are non-refundable. This includes cases where you did not use the platform, changed your mind, or were not
+            awarded funding. Because AI generation consumes non-recoverable compute costs on our end the moment a draft
+            is initiated, we cannot offer refunds once generation has started. You may cancel recurring subscriptions
+            at any time to avoid future charges (see Cancellation, below), but no refund of already-paid fees will be
+            issued. If you believe you were charged in error, contact{" "}
             <a href="mailto:support@grantaq.com" className="text-brand-teal hover:underline">
               support@grantaq.com
             </a>{" "}
-            to request a refund.
+            within 7 days of the charge.
+          </li>
+          <li>
+            <strong>Chargebacks:</strong> Initiating a chargeback without first contacting us to resolve the issue is a
+            violation of these Terms and may result in immediate account termination plus collection of any outstanding
+            success fees.
           </li>
           <li>
             <strong>Plan changes:</strong> Upgrades take effect immediately; downgrades take effect at the next billing
