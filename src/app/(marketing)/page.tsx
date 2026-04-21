@@ -1,8 +1,9 @@
 import { Hero } from "@/components/marketing/hero";
 import { GrantMarquee } from "@/components/marketing/grant-marquee";
+import { FindMyFunders } from "@/components/marketing/find-my-funders";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { CapabilitiesAccordion } from "@/components/marketing/capabilities-accordion";
-import { ProductPreview } from "@/components/marketing/product-preview";
+import { ProductWalkthrough } from "@/components/marketing/product-walkthrough";
 import { HowWeWork } from "@/components/marketing/how-we-work";
 import { GrantServices } from "@/components/marketing/grant-services";
 import { PricingTable } from "@/components/marketing/pricing-table";
@@ -54,6 +55,10 @@ export default async function LandingPage() {
 
       {/* Live grant marquee — proves data freshness in two seconds */}
       <GrantMarquee />
+
+      {/* Lead capture — Grantable-style "Find My Funders" form.
+          Placed early so warm visitors can convert without signup. */}
+      <FindMyFunders />
 
       {/* Stats block — cards with real numbers. Inspired by Aixora's
           metric block structure, translated to our warm/light palette. */}
@@ -107,7 +112,7 @@ export default async function LandingPage() {
 
       <HowItWorks />
       <CapabilitiesAccordion />
-      <ProductPreview />
+      <ProductWalkthrough />
       <HowWeWork />
       <GrantServices />
 
