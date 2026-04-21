@@ -133,6 +133,57 @@ export function PricingTable() {
   return (
     <section className="py-20 px-4" id="pricing">
       <div className="max-w-6xl mx-auto">
+        {/* Risk-reversal bar — premium pricing ($249 minimum) requires
+            visible trust signals. Four numeric proof points appear
+            before the tier cards so visitors evaluate value before
+            sticker shock hits. This is the single highest-leverage
+            addition we can make to the pricing page without a
+            testimonial roster. */}
+        <div className="mb-10 rounded-2xl border border-warm-200 dark:border-warm-800 bg-white dark:bg-warm-900 p-6 md:p-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4">
+            <div className="text-center md:text-left">
+              <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50 tabular-nums tracking-tight">
+                6,000+
+              </p>
+              <p className="text-xs font-medium text-warm-500 mt-1">
+                active grants
+                <br />
+                verified nightly
+              </p>
+            </div>
+            <div className="text-center md:text-left">
+              <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50 tabular-nums tracking-tight">
+                60s
+              </p>
+              <p className="text-xs font-medium text-warm-500 mt-1">
+                free eligibility check
+                <br />
+                no signup required
+              </p>
+            </div>
+            <div className="text-center md:text-left">
+              <p className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50 tabular-nums tracking-tight">
+                $0
+              </p>
+              <p className="text-xs font-medium text-warm-500 mt-1">
+                start free forever
+                <br />
+                upgrade only when you&apos;re drafting
+              </p>
+            </div>
+            <div className="text-center md:text-left">
+              <p className="text-2xl md:text-3xl font-bold text-brand-teal-text tabular-nums tracking-tight">
+                7-day
+              </p>
+              <p className="text-xs font-medium text-warm-500 mt-1">
+                money-back guarantee
+                <br />
+                on any paid tier
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Billing toggle */}
         <div className="flex justify-center mb-10">
           <div

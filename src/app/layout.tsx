@@ -28,11 +28,21 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+    siteName: "GrantAQ",
+    title: "GrantAQ — Find Grants You Actually Qualify For",
+    description:
+      "AI matches your organization to 6,000+ active federal, state, and foundation grants — verified nightly. Built for nonprofits and small businesses.",
+    // Note: the /og-image.png static file in /public is superseded by
+    // src/app/opengraph-image.tsx which generates a proper 1200×630
+    // link-preview card at build time. Leave these image URLs out so
+    // Next.js picks up the dynamic file conventions.
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/twitter-image.png"],
+    title: "GrantAQ — Find Grants You Actually Qualify For",
+    description:
+      "AI matches your organization to 6,000+ active grants — verified nightly.",
   },
 };
 
