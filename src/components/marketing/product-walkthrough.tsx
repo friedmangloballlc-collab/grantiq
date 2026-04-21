@@ -46,7 +46,7 @@ const CONTENT: Record<
     eyebrow: "Step 1",
     headline: "Find funders that fit.",
     lede:
-      "Not a keyword search — a match. GrantIQ analyzes funder profiles against your programs, priorities, and eligibility to surface the grants actually worth pursuing.",
+      "Not a keyword search — a match. GrantAQ analyzes funder profiles against your programs, priorities, and eligibility to surface the grants actually worth pursuing.",
     bullets: [
       {
         label: "AI-powered match",
@@ -109,7 +109,7 @@ const CONTENT: Record<
     eyebrow: "Step 4",
     headline: "Win rate goes up over time.",
     lede:
-      "When you mark a grant awarded or declined, GrantIQ extracts learnings from the application and the funder's feedback. Next time you write for the same funder, those lessons show up in your draft.",
+      "When you mark a grant awarded or declined, GrantAQ extracts learnings from the application and the funder's feedback. Next time you write for the same funder, those lessons show up in your draft.",
     bullets: [
       {
         label: "Outcome learning",
@@ -366,7 +366,7 @@ export function ProductWalkthrough() {
             One platform, four jobs.
           </h2>
           <p className="mt-4 text-warm-600 dark:text-warm-400 leading-relaxed">
-            Most tools stop at one of these. GrantIQ handles the whole arc — from
+            Most tools stop at one of these. GrantAQ handles the whole arc — from
             finding the right grant to learning from the outcome.
           </p>
         </div>

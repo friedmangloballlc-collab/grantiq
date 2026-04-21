@@ -140,7 +140,7 @@ export function CapabilitiesAccordion() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-10">
           <p className="text-xs font-semibold text-brand-teal-text tracking-[0.2em] uppercase">
-            What GrantIQ does
+            What GrantAQ does
           </p>
           <div className="mt-3 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <h2 className="text-4xl md:text-5xl font-bold tracking-[-0.02em] text-warm-900 dark:text-warm-50 leading-[1.05]">

@@ -1,6 +1,6 @@
 // src/components/marketing/data-sources-cloud.tsx
 //
-// Trust strip: "Verified against" — real data sources GrantIQ pulls
+// Trust strip: "Verified against" — real data sources GrantAQ pulls
 // from nightly. Reinforces the "fresher than Candid" differentiator
 // that our stats block and marquee already make.
 //

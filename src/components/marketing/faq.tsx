@@ -7,16 +7,16 @@ import { cn } from "@/lib/utils";
 
 const FAQS = [
   {
-    q: "What types of organizations can use GrantIQ?",
-    a: "GrantIQ works for 501(c)(3) nonprofits, small businesses (LLC, S-Corp, C-Corp), sole proprietorships, and government agencies. Our database includes federal, state, foundation, and corporate grants across all entity types.",
+    q: "What types of organizations can use GrantAQ?",
+    a: "GrantAQ works for 501(c)(3) nonprofits, small businesses (LLC, S-Corp, C-Corp), sole proprietorships, and government agencies. Our database includes federal, state, foundation, and corporate grants across all entity types.",
   },
   {
     q: "Do I need a 501(c)(3) to find grants?",
-    a: "No. While many foundation grants require 501(c)(3) status, there are thousands of grants available to small businesses, LLCs, and other entity types. GrantIQ matches you based on your actual eligibility — not just your tax status.",
+    a: "No. While many foundation grants require 501(c)(3) status, there are thousands of grants available to small businesses, LLCs, and other entity types. GrantAQ matches you based on your actual eligibility — not just your tax status.",
   },
   {
     q: "How does the AI matching work?",
-    a: "GrantIQ analyzes your organization's profile — mission, industry, location, budget, and programs — and scores every grant in our database against your eligibility criteria. You get a personalized match score (0-100) for each grant, ranked by fit.",
+    a: "GrantAQ analyzes your organization's profile — mission, industry, location, budget, and programs — and scores every grant in our database against your eligibility criteria. You get a personalized match score (0-100) for each grant, ranked by fit.",
   },
   {
     q: "Is my data safe?",
@@ -31,7 +31,7 @@ const FAQS = [
     a: "Yes. All paid plans are month-to-month with no long-term commitment. Cancel anytime from your Settings page. Annual plans offer a 20% discount and can be canceled before renewal.",
   },
   {
-    q: "Does GrantIQ write my grant application?",
+    q: "Does GrantAQ write my grant application?",
     a: "Yes. Our AI Writing Engine generates full grant drafts, letters of intent, budget narratives, and compliance checks. Every AI-generated claim is fact-checked against the source RFP and your org profile. Tier 2 adds coherence and compliance review; Tier 3 adds a senior grant writer's review before you submit.",
   },
   {
@@ -39,8 +39,8 @@ const FAQS = [
     a: "No. AI handles drafting, matching, scoring, and fact-checking. On Tier 2 and Tier 3, experienced grant writers review the output. Think of it as your grant team: AI does the heavy lifting, humans ensure quality.",
   },
   {
-    q: "How is GrantIQ different from Candid or free grant databases?",
-    a: "Free databases (including Candid's Foundation Directory) give you a list — and Candid's data is typically about 2 years out of date. GrantIQ gives you a strategy. We verify grants nightly, score every one against your specific profile, track deadlines, auto-build a compliance calendar when you win, and learn from every outcome to improve your next draft.",
+    q: "How is GrantAQ different from Candid or free grant databases?",
+    a: "Free databases (including Candid's Foundation Directory) give you a list — and Candid's data is typically about 2 years out of date. GrantAQ gives you a strategy. We verify grants nightly, score every one against your specific profile, track deadlines, auto-build a compliance calendar when you win, and learn from every outcome to improve your next draft.",
   },
 ];
 

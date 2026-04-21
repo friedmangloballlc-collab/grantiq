@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Grant Writing — GrantIQ",
+  title: "AI Grant Writing — GrantAQ",
   description:
     "We write your grant application. You approve it. AI drafts the narrative, our auditor flags every ungrounded claim, and the quality scorer measures it against the funder's rubric before you submit.",
   alternates: {

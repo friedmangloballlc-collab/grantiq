@@ -15,7 +15,7 @@ import type { FunderCheckResult } from './types';
 
 const IRS_API_BASE = 'https://apps.irs.gov/app/eos';
 const TIMEOUT_MS = 8_000;
-const USER_AGENT = 'GrantIQ/1.0 (grant-discovery-platform; verify@grantiq.com)';
+const USER_AGENT = 'GrantAQ/1.0 (grant-discovery-platform; verify@grantaq.com)';
 
 // Normalized EIN shape: 9 digits, no dashes. IRS's endpoints accept
 // either "12-3456789" or "123456789"; we send the raw digits.

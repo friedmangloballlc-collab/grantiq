@@ -104,7 +104,7 @@ const TIERS: Tier[] = [
       "Dedicated customer success manager",
     ],
     cta: "Talk to Sales",
-    href: "mailto:hello@grantaq.com?subject=GrantIQ%20Enterprise",
+    href: "mailto:hello@grantaq.com?subject=GrantAQ%20Enterprise",
     contactOnly: true,
   },
 ];
@@ -318,7 +318,7 @@ export function PricingTable() {
                 <tr className="border-b border-warm-200 dark:border-warm-800">
                   <th className="py-3 text-left font-medium text-warm-500 uppercase tracking-wide text-xs"></th>
                   <th className="py-3 text-center font-semibold text-warm-900 dark:text-warm-50">
-                    GrantIQ
+                    GrantAQ
                   </th>
                   <th className="py-3 text-center font-medium text-warm-500">
                     Candid / FDO

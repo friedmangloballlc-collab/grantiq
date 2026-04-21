@@ -1,4 +1,4 @@
-// Unified admin surface for all GrantIQ agents.
+// Unified admin surface for all GrantAQ agents.
 //
 // Add a new agent section here instead of creating a new admin page —
 // keeps navigation clean as more agents ship.

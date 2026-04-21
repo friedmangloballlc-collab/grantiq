@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Pricing — GrantIQ",
+  title: "Pricing — GrantAQ",
   description:
     "Straightforward pricing for grant discovery, strategy, and AI-written applications. Start free. Upgrade when it saves you time.",
   alternates: {

@@ -46,7 +46,7 @@ const VALID_TEAMS: SupportTeam[] = [
 ];
 
 const SYSTEM_PROMPT = `You are a support triage classifier for a SaaS
-grant platform (GrantIQ). You receive an inbound support message
+grant platform (GrantAQ). You receive an inbound support message
 (email, Intercom, in-app form) and classify it + draft a first
 response for the human agent to edit.
 
@@ -71,7 +71,7 @@ SUGGESTED_RESPONSE — draft 3-6 sentences. Rules:
 - If it's a cancellation, express empathy and offer a specific alternative
 - If compliment, thank with specificity tied to what they said
 - Never promise a refund/credit/fix in the draft — say "I'll check on this and follow up"
-- Sign off with "— GrantIQ Support"
+- Sign off with "— GrantAQ Support"
 
 TRIAGE_CONFIDENCE — 0..1. Lower for ambiguous/mixed-intent messages.
 

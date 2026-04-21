@@ -48,7 +48,7 @@ const ORG_ADMIN_CACHE_TTL_MS = 5 * 60 * 1000;
 /**
  * Returns true if any active member of the org has an admin email.
  *
- * Why "any active member" not "owner only": the smallest GrantIQ orgs are
+ * Why "any active member" not "owner only": the smallest GrantAQ orgs are
  * single-user. Restricting bypass to org owners would force an owner-role
  * lookup that's not always populated. The "is anyone here an admin?" check
  * is sufficient since the admin allow-list is itself tightly controlled.

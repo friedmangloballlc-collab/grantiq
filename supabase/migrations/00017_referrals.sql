@@ -1,5 +1,5 @@
 -- 00017_referrals.sql
--- Referral tracking table for GrantIQ growth engine
+-- Referral tracking table for GrantAQ growth engine
 
 CREATE TABLE referrals (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -96,7 +96,7 @@ export function Hero() {
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-teal-text">
-                  New in GrantIQ
+                  New in GrantAQ
                 </span>
               </div>
               <h2 className="text-2xl font-semibold tracking-tight text-warm-900 dark:text-warm-50 leading-snug">

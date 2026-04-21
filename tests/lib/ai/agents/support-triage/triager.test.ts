@@ -87,7 +87,7 @@ describe("triageSupportMessage", () => {
           sentiment: "frustrated",
           assignee_team: "billing",
           suggested_response:
-            "I see you were charged twice for Pro in April. I will check on this and follow up shortly. — GrantIQ Support",
+            "I see you were charged twice for Pro in April. I will check on this and follow up shortly. — GrantAQ Support",
           triage_confidence: 0.9,
         })
       )

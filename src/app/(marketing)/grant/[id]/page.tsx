@@ -125,12 +125,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .eq("id", id)
     .maybeSingle();
 
-  if (!data) return { title: "Grant not found — GrantIQ" };
+  if (!data) return { title: "Grant not found — GrantAQ" };
 
-  const title = `${data.name} — GrantIQ`;
+  const title = `${data.name} — GrantAQ`;
   const description =
     (data.description as string | null)?.slice(0, 155) ??
-    `Apply for ${data.name} via ${data.funder_name}. Track eligibility, deadlines, and write your application with GrantIQ.`;
+    `Apply for ${data.name} via ${data.funder_name}. Track eligibility, deadlines, and write your application with GrantAQ.`;
 
   return {
     title,

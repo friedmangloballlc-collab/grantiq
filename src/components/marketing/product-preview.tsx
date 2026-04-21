@@ -1,4 +1,4 @@
-// Product preview section — inline SVG/HTML mockups of real GrantIQ
+// Product preview section — inline SVG/HTML mockups of real GrantAQ
 // surfaces. This is Novatus's "here's the dashboard" move, done without
 // requiring us to ship real photo-quality screenshots.
 //
@@ -175,7 +175,7 @@ export function ProductPreview() {
               a pitch deck.
             </h2>
             <p className="mt-5 text-warm-600 dark:text-warm-400 leading-relaxed max-w-md">
-              Every screenshot below is a real surface you use inside GrantIQ.
+              Every screenshot below is a real surface you use inside GrantAQ.
               No mocked-up marketing shots — this is exactly what you get after
               signup.
             </p>

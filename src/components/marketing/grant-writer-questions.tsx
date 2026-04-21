@@ -41,7 +41,7 @@ export function GrantWriterQuestions() {
           </h2>
           <p className="mt-4 text-warm-600 dark:text-warm-400 leading-relaxed">
             We pulled these from real conversations with nonprofit directors.
-            Every one of them has an answer inside GrantIQ — usually delivered
+            Every one of them has an answer inside GrantAQ — usually delivered
             without you having to ask.
           </p>
         </div>

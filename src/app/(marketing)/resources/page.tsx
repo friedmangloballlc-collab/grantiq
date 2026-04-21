@@ -1,6 +1,6 @@
 // /resources — the "learn + verify + community" hub.
 //
-// Positions GrantIQ inside the nonprofit ecosystem rather than as a
+// Positions GrantAQ inside the nonprofit ecosystem rather than as a
 // replacement for it. SEO-friendly: low competition for phrases like
 // "nonprofit grant resources" + outbound links to authoritative
 // domains help our own authority.

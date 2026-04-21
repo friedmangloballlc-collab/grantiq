@@ -1,5 +1,5 @@
 -- 00018_service_engagements.sql
--- 12-step consulting service delivery tracker for GrantIQ
+-- 12-step consulting service delivery tracker for GrantAQ
 
 CREATE TABLE service_engagements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

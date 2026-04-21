@@ -7,7 +7,7 @@
 import type { UrlCheckResult } from './types';
 
 const TIMEOUT_MS = 10_000;
-const USER_AGENT = 'GrantIQ/1.0 (grant-discovery-platform; verify@grantiq.com)';
+const USER_AGENT = 'GrantAQ/1.0 (grant-discovery-platform; verify@grantaq.com)';
 
 // Heuristic strings used to detect login/paywall pages when a URL
 // responds 2xx but actually gates the content. Checked only when the
