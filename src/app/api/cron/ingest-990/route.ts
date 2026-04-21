@@ -28,9 +28,14 @@ function isAuthorized(request: NextRequest): boolean {
 }
 
 const BATCH_SIZE = 25; // ProPublica returns 25 per page
-const MAX_PAGES_PER_RUN = 20; // 500 foundations per run max
+// Bumped 20 → 40 (2026-04-21). 1000 foundations/run × 1 state/day =
+// full country coverage in ~50 days at current rate. Still fits in
+// 5-min window because ProPublica detail fetches are fast (~50ms each).
+const MAX_PAGES_PER_RUN = 40;
 const DETAIL_BATCH = 5; // Fetch 5 foundation details at a time (be polite to API)
-const DELAY_MS = 300; // Delay between API calls
+// Bumped 300 → 100ms. ProPublica API has no documented rate limit
+// and returns cached JSON, so sub-100ms is safe. 3x throughput gain.
+const DELAY_MS = 100;
 
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {

@@ -47,7 +47,16 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
   const started = Date.now();
-  const BATCH_SIZE = 10;
+  // Bumped from 10 → 30 (2026-04-21). With 525 never-crawled sources
+  // in grant_source_directory, 10/day meant a 52-day catch-up window;
+  // 30/day cuts that to ~17 days. Still fits in the 5-min cron window
+  // because per-source crawl is I/O-bound (fetch + GPT extract ≈ 5-8s).
+  // 30 × 8s = 240s worst case.
+  const BATCH_SIZE = 30;
+  // Polite inter-source delay. Was 2000ms (1 minute of pure sleep
+  // per 30-source run). 500ms is still polite for most sites and
+  // buys back 45s of cron budget.
+  const INTER_SOURCE_DELAY_MS = 500;
 
   let crawled = 0;
   let grantsFound = 0;
@@ -227,7 +236,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Polite delay between sources
-      await new Promise((r) => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, INTER_SOURCE_DELAY_MS));
     }
 
     // ── Generate embeddings for new grants ────────────────────────────
