@@ -173,12 +173,12 @@ export function PricingTable() {
             </div>
             <div className="text-center md:text-left">
               <p className="text-2xl md:text-3xl font-bold text-brand-teal-text tabular-nums tracking-tight">
-                7-day
+                Any time
               </p>
               <p className="text-xs font-medium text-warm-500 mt-1">
-                money-back guarantee
+                cancel any subscription
                 <br />
-                on any paid tier
+                no long-term contracts
               </p>
             </div>
           </div>
