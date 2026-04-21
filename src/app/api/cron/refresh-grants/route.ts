@@ -121,18 +121,26 @@ export async function GET(request: NextRequest) {
       const newRows = rows.filter((r) => !existingSet.has(r.external_id));
       const updateRows = rows.filter((r) => existingSet.has(r.external_id));
 
-      // Insert new grants
+      // Insert new grants. We use upsert with onConflict on the
+      // (name, funder_name) unique index because Grants.gov
+      // occasionally re-assigns external_id to a previously-posted
+      // opportunity — same program, new opportunity number. Without
+      // onConflict the unique index rejects the whole batch and we
+      // lose all new grants, not just the duplicate.
       if (newRows.length > 0) {
-        const { error: insertError } = await supabase
+        const { error: insertError, count } = await supabase
           .from("grant_sources")
-          .insert(newRows);
+          .upsert(newRows, {
+            onConflict: "name,funder_name",
+            ignoreDuplicates: false,
+          });
 
         if (insertError) {
-          logger.error("Failed to insert new grants", {
+          logger.error("Failed to upsert new grants", {
             error: insertError.message,
           });
         } else {
-          added = newRows.length;
+          added = count ?? newRows.length;
         }
       }
 

@@ -72,9 +72,15 @@ export async function GET(request: NextRequest) {
       const { foundations, numPages } = await searchFoundations(state, currentPage);
 
       if (foundations.length === 0 || currentPage >= numPages) {
-        // Done with this state — move to next
+        // Done with this state (or ProPublica returned 400 for an
+        // over-paginated request) — move to next state. Reset BOTH
+        // currentPage AND pageIndex to 0, otherwise the saved progress
+        // row keeps the stale page value from the DB and we retry the
+        // same bad page on every run (which is how DE got stuck at
+        // page 400 for days).
         stateIndex++;
         currentPage = 0;
+        pageIndex = 0;
         break;
       }
 
