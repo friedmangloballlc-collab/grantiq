@@ -116,7 +116,7 @@ export async function GET(_request: NextRequest) {
       scorecards: scorecardsResult.data ?? [],
     };
 
-    const filename = `grantiq-data-export-${new Date().toISOString().split("T")[0]}.json`;
+    const filename = `grantaq-data-export-${new Date().toISOString().split("T")[0]}.json`;
 
     return new NextResponse(JSON.stringify(exportPayload, null, 2), {
       status: 200,

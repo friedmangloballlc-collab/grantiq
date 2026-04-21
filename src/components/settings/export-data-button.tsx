@@ -32,7 +32,7 @@ export function ExportDataButton() {
         res.headers
           .get("Content-Disposition")
           ?.match(/filename="([^"]+)"/)?.[1] ??
-        `grantiq-data-export-${new Date().toISOString().split("T")[0]}.json`;
+        `grantaq-data-export-${new Date().toISOString().split("T")[0]}.json`;
 
       const anchor = document.createElement("a");
       anchor.href = url;
