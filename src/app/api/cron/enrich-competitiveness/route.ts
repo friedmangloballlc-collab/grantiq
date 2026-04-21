@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSpendingByProgram, computeCompetitivenessScore } from "@/lib/ingestion/usaspending-client";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 /**
  * GET /api/cron/enrich-competitiveness
@@ -13,16 +14,8 @@ import { getSpendingByProgram, computeCompetitivenessScore } from "@/lib/ingesti
 
 export const maxDuration = 120;
 
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-  return false;
-}
-
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

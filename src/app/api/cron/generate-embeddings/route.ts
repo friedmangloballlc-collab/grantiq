@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import OpenAI from "openai";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 // ---------------------------------------------------------------------------
 // POST /api/cron/generate-embeddings
@@ -9,18 +10,10 @@ import OpenAI from "openai";
 // but no embeddings yet. Processes in batches of 50 to stay within limits.
 // ---------------------------------------------------------------------------
 
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-  return false;
-}
-
 export const maxDuration = 300; // 5 minutes — embedding ~4000 grants takes time
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

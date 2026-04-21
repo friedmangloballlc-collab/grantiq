@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/validate-grants  (Vercel Cron daily at 07:00 UTC)
 // Data-quality pipeline that fixes common grant_sources inconsistencies.
 // ---------------------------------------------------------------------------
-
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-
-  return false;
-}
 
 /** Returns true if a funder_name looks invalid. */
 function isInvalidFunderName(name: string | null | undefined): boolean {
@@ -28,7 +19,7 @@ function isInvalidFunderName(name: string | null | undefined): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

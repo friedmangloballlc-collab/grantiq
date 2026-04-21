@@ -11,6 +11,7 @@ import {
   US_STATES,
 } from "@/lib/ingestion/propublica-990";
 import { recordHeartbeat } from "@/lib/cron/heartbeat";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/ingest-990
@@ -19,14 +20,6 @@ import { recordHeartbeat } from "@/lib/cron/heartbeat";
 // ---------------------------------------------------------------------------
 
 export const maxDuration = 300; // 5 minutes
-
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-  return false;
-}
 
 const BATCH_SIZE = 25; // ProPublica returns 25 per page
 // Bumped 20 → 40 (2026-04-21). 1000 foundations/run × 1 state/day =
@@ -39,7 +32,7 @@ const DETAIL_BATCH = 5; // Fetch 5 foundation details at a time (be polite to AP
 const DELAY_MS = 100;
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

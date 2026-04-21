@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAndClean, extractGrantsFromText, type CrawledGrant } from "@/lib/ingestion/web-crawler";
 import OpenAI from "openai";
 import { recordHeartbeat } from "@/lib/cron/heartbeat";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/crawl-sources (Vercel Cron daily at 10:00 UTC)
@@ -12,14 +13,6 @@ import { recordHeartbeat } from "@/lib/cron/heartbeat";
 // ---------------------------------------------------------------------------
 
 export const maxDuration = 300; // 5 minutes
-
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-  return false;
-}
 
 const CATEGORY_TO_SOURCE_TYPE: Record<string, "federal" | "state" | "foundation" | "corporate"> = {
   federal_agency: "federal",
@@ -38,7 +31,7 @@ const CATEGORY_TO_SOURCE_TYPE: Record<string, "federal" | "state" | "foundation"
 };
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import OpenAI from "openai";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/enrich-grants
@@ -11,14 +12,6 @@ import OpenAI from "openai";
 // ---------------------------------------------------------------------------
 
 export const maxDuration = 300;
-
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-  return false;
-}
 
 const ENRICHMENT_PROMPT = `You are classifying grant opportunities. For each grant, determine:
 
@@ -62,7 +55,7 @@ const ENRICHMENT_PROMPT = `You are classifying grant opportunities. For each gra
 Return a JSON array: { id, eligible_org_types, sector, for_profit_eligible, nonprofit_only, target_beneficiaries, project_keywords }`;
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

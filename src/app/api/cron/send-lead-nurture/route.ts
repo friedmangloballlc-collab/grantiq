@@ -13,21 +13,14 @@ import { ReportLowConfidence } from "@/emails/report-low-confidence";
 import { PostEngagementUpsell } from "@/emails/engagement-emails";
 import { AnnualReDiagnostic } from "@/emails/engagement-emails";
 import { ReEngagement90 } from "@/emails/engagement-emails";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? "GrantAQ <noreply@grantaq.com>";
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://grantaq.com";
 const CALENDAR_URL = process.env.CALENDLY_URL ?? `${APP_BASE_URL}/contact`;
 
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-  return false;
-}
-
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

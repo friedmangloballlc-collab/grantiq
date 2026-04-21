@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/check-urls  (Vercel Cron weekly on Monday at 08:00 UTC)
@@ -10,16 +11,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const BATCH_SIZE = 50;
 const REQUEST_TIMEOUT_MS = 2_000;
-
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-
-  return false;
-}
 
 interface UrlCheckResult {
   id: string;
@@ -64,7 +55,7 @@ async function checkUrl(
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

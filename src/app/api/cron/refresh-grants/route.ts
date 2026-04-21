@@ -6,6 +6,7 @@ import {
   type GrantsGovOpportunity,
 } from "@/lib/ingestion/grants-gov-client";
 import { recordHeartbeat } from "@/lib/cron/heartbeat";
+import { isCronAuthorized } from "@/lib/cron/auth";
 
 // Cron ceiling on Vercel Pro. Default would be 10-15s which is too
 // short for 750 updates even when chunked. 300 is the Vercel Pro max.
@@ -21,18 +22,6 @@ const UPDATE_CHUNK_SIZE = 20;
 // Pulls the latest 100 grants from Grants.gov, upserts new/updated records,
 // and closes grants whose deadline has passed.
 // ---------------------------------------------------------------------------
-
-function isAuthorized(request: NextRequest): boolean {
-  // Vercel Cron sends this header automatically in production
-  const cronSecret = request.headers.get("x-vercel-cron-secret");
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) return true;
-
-  // Manual / external scheduler auth via Bearer token
-  const auth = request.headers.get("authorization");
-  if (auth === `Bearer ${process.env.ADMIN_SECRET}`) return true;
-
-  return false;
-}
 
 /** Convert a Grants.gov opportunity into a grant_sources row for upsert. */
 function toGrantSourceRow(opp: GrantsGovOpportunity) {
@@ -69,7 +58,7 @@ function toGrantSourceRow(opp: GrantsGovOpportunity) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
