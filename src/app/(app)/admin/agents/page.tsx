@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/card";
 import { AlertsTable } from "@/components/admin/alerts-table";
 import { VerifierReviewQueue } from "@/components/admin/verifier-review-queue";
+import { CronStatusCard } from "@/components/admin/cron-status-card";
+import { getCronStatuses } from "@/lib/cron/heartbeat";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +61,10 @@ export default async function AgentsAdminPage() {
   const admin = createAdminClient();
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
+  // Cron heartbeat — read outside the main Promise.all batch so
+  // the getCronStatuses helper can batch its own two queries.
+  const cronStatuses = await getCronStatuses();
 
   // ── All queries in parallel ────────────────────────────────────────────
   const [
@@ -289,6 +295,14 @@ export default async function AgentsAdminPage() {
           Health + review surfaces for every automated agent in the platform.
         </p>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION: CRON HEALTH
+          Top of page so stale crons are the first thing admins see.
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section>
+        <CronStatusCard statuses={cronStatuses} />
+      </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION: COST WATCHDOG

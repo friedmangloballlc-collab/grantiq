@@ -10,6 +10,7 @@ import {
   isActiveFunder,
   US_STATES,
 } from "@/lib/ingestion/propublica-990";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/ingest-990
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
 
   const db = createAdminClient();
   const started = Date.now();
+  const startedAt = new Date(started);
 
   // Track progress: which state + page to process next
   const { data: progress } = await db
@@ -213,10 +215,23 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info("990-PF ingestion complete", summary);
+    await recordHeartbeat({
+      cronName: "ingest-990",
+      startedAt,
+      outcome: errors > 0 && fundersCreated > 0 ? "partial" : errors > 0 ? "error" : "ok",
+      summary,
+      errorMessage: errors > 0 ? `${errors} per-foundation errors` : null,
+    });
     return NextResponse.json(summary);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("990-PF ingestion failed", { error: message });
+    await recordHeartbeat({
+      cronName: "ingest-990",
+      startedAt,
+      outcome: "error",
+      errorMessage: message,
+    });
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import {
   searchGrantsGov,
   type GrantsGovOpportunity,
 } from "@/lib/ingestion/grants-gov-client";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 // Cron ceiling on Vercel Pro. Default would be 10-15s which is too
 // short for 750 updates even when chunked. 300 is the Vercel Pro max.
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
   }
 
   const started = Date.now();
+  const startedAt = new Date(started);
   const supabase = createAdminClient();
   let added = 0;
   let updated = 0;
@@ -215,10 +217,22 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info("Grant refresh complete", summary);
+    await recordHeartbeat({
+      cronName: "refresh-grants",
+      startedAt,
+      outcome: "ok",
+      summary,
+    });
     return NextResponse.json(summary);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("Grant refresh failed", { error: message });
+    await recordHeartbeat({
+      cronName: "refresh-grants",
+      startedAt,
+      outcome: "error",
+      errorMessage: message,
+    });
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }

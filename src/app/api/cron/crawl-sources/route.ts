@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAndClean, extractGrantsFromText, type CrawledGrant } from "@/lib/ingestion/web-crawler";
 import OpenAI from "openai";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/crawl-sources (Vercel Cron daily at 10:00 UTC)
@@ -47,6 +48,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
   const started = Date.now();
+  const startedAt = new Date(started);
   // Bumped from 10 → 30 (2026-04-21). With 525 never-crawled sources
   // in grant_source_directory, 10/day meant a 52-day catch-up window;
   // 30/day cuts that to ~17 days. Still fits in the 5-min cron window
@@ -288,9 +290,22 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info("Source crawl complete", summary);
+    await recordHeartbeat({
+      cronName: "crawl-sources",
+      startedAt,
+      outcome: errors > 0 && crawled > 0 ? "partial" : errors > 0 ? "error" : "ok",
+      summary,
+      errorMessage: errors > 0 ? `${errors} per-source errors` : null,
+    });
     return NextResponse.json(summary);
   } catch (err) {
     logger.error("Crawl-sources failed", { err: String(err) });
+    await recordHeartbeat({
+      cronName: "crawl-sources",
+      startedAt,
+      outcome: "error",
+      errorMessage: String(err),
+    });
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
   }
 }
