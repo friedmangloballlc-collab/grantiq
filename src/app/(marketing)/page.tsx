@@ -17,6 +17,13 @@ import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// Revalidate the homepage every hour so the grant count stays fresh.
+// Without this the page is statically prerendered at build time — the
+// daily ingest crons add grants but the marketing count sits frozen
+// until the next deploy. 3600 seconds = hourly ISR refresh. Cheap
+// (one DB count per hour on cache miss) and keeps the number honest.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "GrantAQ — AI-Powered Grant Discovery, Strategy & Writing",
   description:
@@ -40,8 +47,10 @@ export const metadata: Metadata = {
 
 function formatGrantCount(count: number | null): string {
   if (!count) return "5,000+";
-  // Round down to nearest hundred and append "+"
-  const rounded = Math.floor(count / 100) * 100;
+  // Round down to nearest 50 so gains of ~25 grants/day become
+  // visible within a day or two instead of being hidden under a
+  // 100-wide floor.
+  const rounded = Math.floor(count / 50) * 50;
   return `${rounded.toLocaleString()}+`;
 }
 

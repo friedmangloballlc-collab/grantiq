@@ -6,6 +6,15 @@ import {
   type GrantsGovOpportunity,
 } from "@/lib/ingestion/grants-gov-client";
 
+// Cron ceiling on Vercel Pro. Default would be 10-15s which is too
+// short for 750 updates even when chunked. 300 is the Vercel Pro max.
+export const maxDuration = 300;
+
+// Parallel write chunk size. Supabase PgBouncer pool handles ~20
+// concurrent writes comfortably; higher risks pool exhaustion under
+// load from other routes running simultaneously.
+const UPDATE_CHUNK_SIZE = 20;
+
 // ---------------------------------------------------------------------------
 // POST /api/cron/refresh-grants  (Vercel Cron daily at 06:00 UTC)
 // Pulls the latest 100 grants from Grants.gov, upserts new/updated records,
@@ -71,11 +80,23 @@ export async function GET(request: NextRequest) {
 
   try {
     // -----------------------------------------------------------------------
-    // 1. Fetch latest 100 posted + 50 forecasted opportunities from Grants.gov
+    // 1. Fetch latest posted + forecasted opportunities from Grants.gov
+    //
+    // Ceiling math: Grants.gov allows up to 1000 rows per request; at 500
+    // posted + 250 forecasted we cover roughly the newest ~3 weeks of
+    // federal postings, which is more than enough to catch everything the
+    // ingest crons would otherwise miss between runs. The upsert step
+    // below dedupes on external_id, so re-fetching grants we already
+    // have is cheap — it just refreshes deadline/amount/status fields.
+    //
+    // Cost profile: one Grants.gov API call (free), ~750 Supabase
+    // selects, ~750 updates or inserts. Runs in 30-60s on Vercel Pro.
+    // Stays well under the 5-minute cron timeout and doesn't touch
+    // the user-facing request path.
     // -----------------------------------------------------------------------
     const [postedResult, forecastedResult] = await Promise.all([
-      searchGrantsGov({ oppStatus: "posted", rows: 100, startRecordNum: 0 }),
-      searchGrantsGov({ oppStatus: "forecasted", rows: 50, startRecordNum: 0 }),
+      searchGrantsGov({ oppStatus: "posted", rows: 500, startRecordNum: 0 }),
+      searchGrantsGov({ oppStatus: "forecasted", rows: 250, startRecordNum: 0 }),
     ]);
 
     const allOpportunities = [
@@ -124,34 +145,41 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Update existing grants (refresh deadline, amounts, status)
-      for (const row of updateRows) {
-        const { error: updateError } = await supabase
-          .from("grant_sources")
-          .update({
-            deadline: row.deadline,
-            amount_min: row.amount_min,
-            amount_max: row.amount_max,
-            award_ceiling: row.award_ceiling,
-            award_floor: row.award_floor,
-            status: row.status,
-            is_active: row.is_active,
-            description: row.description,
-            url: row.url,
-            opportunity_number: row.opportunity_number,
-            open_date: row.open_date,
-            archive_date: row.archive_date,
-            estimated_funding: row.estimated_funding,
-            estimated_awards_count: row.estimated_awards_count,
-            cost_sharing_required: row.cost_sharing_required,
-            applicant_eligibility_types: row.applicant_eligibility_types,
-            funding_activity_category: row.funding_activity_category,
-            cfda_numbers: row.cfda_numbers,
-            raw_text: row.raw_text,
-          })
-          .eq("external_id", row.external_id);
-
-        if (!updateError) updated++;
+      // Update existing grants (refresh deadline, amounts, status) in
+      // parallel chunks. Sequential loop would take ~75s for 750 rows;
+      // chunked Promise.all brings that to ~4-6s while staying under
+      // the PgBouncer pool limit.
+      for (let i = 0; i < updateRows.length; i += UPDATE_CHUNK_SIZE) {
+        const chunk = updateRows.slice(i, i + UPDATE_CHUNK_SIZE);
+        const results = await Promise.all(
+          chunk.map((row) =>
+            supabase
+              .from("grant_sources")
+              .update({
+                deadline: row.deadline,
+                amount_min: row.amount_min,
+                amount_max: row.amount_max,
+                award_ceiling: row.award_ceiling,
+                award_floor: row.award_floor,
+                status: row.status,
+                is_active: row.is_active,
+                description: row.description,
+                url: row.url,
+                opportunity_number: row.opportunity_number,
+                open_date: row.open_date,
+                archive_date: row.archive_date,
+                estimated_funding: row.estimated_funding,
+                estimated_awards_count: row.estimated_awards_count,
+                cost_sharing_required: row.cost_sharing_required,
+                applicant_eligibility_types: row.applicant_eligibility_types,
+                funding_activity_category: row.funding_activity_category,
+                cfda_numbers: row.cfda_numbers,
+                raw_text: row.raw_text,
+              })
+              .eq("external_id", row.external_id)
+          )
+        );
+        updated += results.filter((r) => !r.error).length;
       }
     }
 
