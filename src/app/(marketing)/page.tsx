@@ -184,21 +184,24 @@ export default async function LandingPage() {
               <ul className="space-y-2 text-sm text-warm-600 dark:text-warm-400 mb-6">
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  Determine the right nonprofit structure
+                  Process checklist for choosing a nonprofit structure
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  Draft articles of incorporation &amp; bylaws
+                  Links to your state&apos;s official incorporation templates
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  Apply for your EIN &amp; state registration
+                  EIN application walkthrough + state filing checklist
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  Get matched with startup grants immediately
+                  Get matched with startup grants after formation
                 </li>
               </ul>
+              <p className="text-xs text-warm-500 mb-4 italic">
+                GrantAQ is not a law firm. Consult a licensed attorney before filing.
+              </p>
               <Button
                 className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white"
                 render={<Link href="/signup/nonprofit">Start Your Nonprofit</Link>}
@@ -221,21 +224,24 @@ export default async function LandingPage() {
               <ul className="space-y-2 text-sm text-warm-600 dark:text-warm-400 mb-6">
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  Eligibility assessment for 501(c)(3)
+                  IRS eligibility worksheet walkthrough (you self-determine)
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  IRS Form 1023 / 1023-EZ preparation
+                  Form 1023 / 1023-EZ preparation checklist
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  State charitable registration guidance
+                  State charitable registration process checklist
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-brand-teal mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  Unlock foundation &amp; federal grant eligibility
+                  Unlock foundation &amp; federal grant eligibility once approved
                 </li>
               </ul>
+              <p className="text-xs text-warm-500 mb-4 italic">
+                GrantAQ is not a law firm. Consult a licensed attorney before filing.
+              </p>
               <Button
                 className="w-full bg-brand-teal hover:bg-brand-teal-dark text-white"
                 render={<Link href="/signup">Register Your Nonprofit</Link>}

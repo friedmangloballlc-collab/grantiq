@@ -114,9 +114,10 @@ const MISSION_OPTIONS: SelectOption[] = [
   },
   {
     value: "unsure",
-    label: "I'm not sure — help me decide",
-    description: "Our team will assess your mission and recommend the right structure.",
-    badge: "We'll advise",
+    label: "I'm not sure yet",
+    description:
+      "We'll explain the common nonprofit structures and point you to the IRS's own entity-type guidance. For a recommendation on which structure applies to your situation, consult a licensed attorney.",
+    badge: "Process info",
   },
 ];
 
@@ -178,29 +179,29 @@ const REVENUE_OPTIONS: SelectOption[] = [
 const PACKAGES: PackageOption[] = [
   {
     value: "formation",
-    label: "Nonprofit Formation",
+    label: "Nonprofit Formation Filing Assistant",
     price: 499,
     priceDisplay: "$499",
     features: [
-      "State incorporation + Articles of Incorporation",
-      "EIN application",
-      "Bylaws drafting",
-      "Conflict of Interest Policy",
-      "Organizational meeting minutes template",
+      "State incorporation process checklist",
+      "EIN application walkthrough",
+      "Links to your state's official Articles of Incorporation template",
+      "Starter policy templates (attorney review required before adoption)",
+      "Organizational meeting minutes checklist",
     ],
   },
   {
     value: "formation_501c3",
-    label: "Formation + 501(c)(3)",
+    label: "Formation + 501(c)(3) Filing Assistant",
     price: 1499,
     priceDisplay: "$1,499",
     highlight: true,
     features: [
       "Everything in Formation package",
-      "IRS Form 1023 or 1023-EZ preparation",
-      "Financial projections preparation",
-      "Narrative description writing",
-      "IRS submission and tracking",
+      "IRS Form 1023 / 1023-EZ preparation checklist (we do not select the form for you)",
+      "Financial projections spreadsheet template",
+      "Narrative description writing prompts",
+      "IRS submission tracking + status monitoring",
     ],
   },
   {
@@ -540,6 +541,23 @@ export function FormationWizard() {
             <span>{progressPct}% complete</span>
           </div>
           <Progress value={progressPct} className="h-1.5" />
+        </div>
+
+        {/* UPL safe harbor — persistent disclosure on every wizard
+            screen. Texas-style safe harbor language, prominent but
+            non-blocking. Required to keep the service on the
+            scrivener side of the Brumbaugh line. Do NOT remove. */}
+        <div className="px-6 pt-6 max-w-2xl w-full mx-auto">
+          <div className="rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3 text-xs text-amber-900 dark:text-amber-100 leading-relaxed">
+            <strong>This is self-help software.</strong> GrantAQ is not a
+            law firm, does not provide legal advice, and is not a substitute
+            for an attorney. We compile publicly-available government
+            information and link you to official state and IRS forms.{" "}
+            <strong>
+              Consult a licensed attorney before filing any formation
+              document or adopting any policy.
+            </strong>
+          </div>
         </div>
 
         {/* Step content */}
