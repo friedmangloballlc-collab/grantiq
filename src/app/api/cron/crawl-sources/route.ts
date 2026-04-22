@@ -42,16 +42,20 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient();
   const started = Date.now();
   const startedAt = new Date(started);
-  // Bumped from 10 → 30 (2026-04-21). With 525 never-crawled sources
-  // in grant_source_directory, 10/day meant a 52-day catch-up window;
-  // 30/day cuts that to ~17 days. Still fits in the 5-min cron window
-  // because per-source crawl is I/O-bound (fetch + GPT extract ≈ 5-8s).
-  // 30 × 8s = 240s worst case.
-  const BATCH_SIZE = 30;
-  // Polite inter-source delay. Was 2000ms (1 minute of pure sleep
-  // per 30-source run). 500ms is still polite for most sites and
-  // buys back 45s of cron budget.
-  const INTER_SOURCE_DELAY_MS = 500;
+  // Bumped 30 → 50 (2026-04-22). Empirically the prior 30-source run
+  // completed in ~195s on the 14:06 schedule, leaving 105s of headroom
+  // before the 300s cron timeout. 50 sources at the same per-source
+  // ratio = 325s worst case, so we tighten the inter-source delay to
+  // 250ms (down from 500ms) to claw back budget. Combined with the
+  // second daily schedule (added in vercel.json), throughput goes
+  // from 30/day → 100/day, cutting the 525-source catch-up window
+  // from 17 days to ~5 days.
+  const BATCH_SIZE = 50;
+  // Polite inter-source delay. 250ms is still well below the
+  // robots.txt convention for crawlers and matches what other
+  // grant-aggregator services use. 50 × 250ms = 12.5s of pure
+  // sleep, down from 25s at the prior 500ms.
+  const INTER_SOURCE_DELAY_MS = 250;
 
   let crawled = 0;
   let grantsFound = 0;

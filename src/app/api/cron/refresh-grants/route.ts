@@ -85,9 +85,17 @@ export async function GET(request: NextRequest) {
     // Stays well under the 5-minute cron timeout and doesn't touch
     // the user-facing request path.
     // -----------------------------------------------------------------------
+    // Bumped 500/250 → 1000/500 (2026-04-22). Grants.gov caps a single
+    // request at 1000 rows (validated against their 2025 API docs).
+    // We were hitting the upper end for posted at 500 — bumping to
+    // 1000 catches the tail of slower-rotating opportunities. The
+    // dedupe step downstream means re-fetching known grants is
+    // free; only the wire bandwidth grows. Total runtime stays under
+    // the 300s cron budget because the parallel update chunk size
+    // already absorbs the 2x payload.
     const [postedResult, forecastedResult] = await Promise.all([
-      searchGrantsGov({ oppStatus: "posted", rows: 500, startRecordNum: 0 }),
-      searchGrantsGov({ oppStatus: "forecasted", rows: 250, startRecordNum: 0 }),
+      searchGrantsGov({ oppStatus: "posted", rows: 1000, startRecordNum: 0 }),
+      searchGrantsGov({ oppStatus: "forecasted", rows: 500, startRecordNum: 0 }),
     ]);
 
     const allOpportunities = [
