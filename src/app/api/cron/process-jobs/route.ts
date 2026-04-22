@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import { isCronAuthorized } from "@/lib/cron/auth";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 /**
  * GET /api/cron/process-jobs
@@ -15,6 +16,8 @@ export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const startedAt = new Date();
 
   const db = createAdminClient();
   let processed = 0;
@@ -32,7 +35,9 @@ export async function GET(request: NextRequest) {
       .limit(50);
 
     if (!jobs || jobs.length === 0) {
-      return NextResponse.json({ success: true, processed: 0, message: "No pending jobs" });
+      const __summary = { success: true, processed: 0, message: "No pending jobs" };
+      await recordHeartbeat({ cronName: "process-jobs", startedAt, outcome: "ok", summary: __summary });
+      return NextResponse.json(__summary);
     }
 
     for (const job of jobs) {
@@ -85,8 +90,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, processed, failed, total: jobs.length });
+    const __summary = { success: true, processed, failed, total: jobs.length };
+    await recordHeartbeat({ cronName: "process-jobs", startedAt, outcome: failed > 0 && processed > 0 ? "partial" : failed > 0 ? "error" : "ok", summary: __summary });
+    return NextResponse.json(__summary);
   } catch (err) {
-    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+    const __errMessage = String(err);
+    await recordHeartbeat({ cronName: "process-jobs", startedAt, outcome: "error", errorMessage: __errMessage });
+    return NextResponse.json({ success: false, error: __errMessage }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCronAuthorized } from "@/lib/cron/auth";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/validate-grants  (Vercel Cron daily at 07:00 UTC)
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   const started = Date.now();
+  const startedAt = new Date(started);
   const supabase = createAdminClient();
   const counts = {
     expired_closed: 0,
@@ -192,10 +194,12 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info("Grant validation complete", summary);
+    await recordHeartbeat({ cronName: "validate-grants", startedAt, outcome: "ok", summary });
     return NextResponse.json(summary);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("Grant validation failed", { error: message });
+    await recordHeartbeat({ cronName: "validate-grants", startedAt, outcome: "error", errorMessage: message });
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }

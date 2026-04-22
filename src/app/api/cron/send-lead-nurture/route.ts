@@ -14,6 +14,7 @@ import { PostEngagementUpsell } from "@/emails/engagement-emails";
 import { AnnualReDiagnostic } from "@/emails/engagement-emails";
 import { ReEngagement90 } from "@/emails/engagement-emails";
 import { isCronAuthorized } from "@/lib/cron/auth";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? "GrantAQ <noreply@grantaq.com>";
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://grantaq.com";
@@ -23,6 +24,8 @@ export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const startedAt = new Date();
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -44,7 +47,9 @@ export async function GET(request: NextRequest) {
       .not("nurture_sequence", "is", null);
 
     if (!leads || leads.length === 0) {
-      return NextResponse.json({ success: true, sent: 0, message: "No pending emails" });
+      const __summary = { success: true, sent: 0, message: "No pending emails" };
+      await recordHeartbeat({ cronName: "send-lead-nurture", startedAt, outcome: "ok", summary: __summary });
+      return NextResponse.json(__summary);
     }
 
     for (const lead of leads) {
@@ -107,10 +112,13 @@ export async function GET(request: NextRequest) {
         .eq("id", lead.id);
     }
 
-    return NextResponse.json({ success: true, sent, errors, leadsProcessed: leads.length });
+    const __summary = { success: true, sent, errors, leadsProcessed: leads.length };
+    await recordHeartbeat({ cronName: "send-lead-nurture", startedAt, outcome: errors > 0 && sent > 0 ? "partial" : errors > 0 ? "error" : "ok", summary: __summary });
+    return NextResponse.json(__summary);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("Lead nurture cron failed", { error: message });
+    await recordHeartbeat({ cronName: "send-lead-nurture", startedAt, outcome: "error", errorMessage: message });
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

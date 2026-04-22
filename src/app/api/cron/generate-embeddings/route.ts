@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import OpenAI from "openai";
 import { isCronAuthorized } from "@/lib/cron/auth";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 // ---------------------------------------------------------------------------
 // POST /api/cron/generate-embeddings
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest) {
   const openai = new OpenAI({ apiKey });
   const supabase = createAdminClient();
   const started = Date.now();
+  const startedAt = new Date(started);
   let totalProcessed = 0;
   let totalErrors = 0;
   const BATCH_SIZE = 50;
@@ -218,10 +220,12 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info("Embedding generation complete", summary);
+    await recordHeartbeat({ cronName: "generate-embeddings", startedAt, outcome: "ok", summary });
     return NextResponse.json(summary);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("Embedding generation failed", { error: message });
+    await recordHeartbeat({ cronName: "generate-embeddings", startedAt, outcome: "error", errorMessage: message });
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSpendingByProgram, computeCompetitivenessScore } from "@/lib/ingestion/usaspending-client";
 import { isCronAuthorized } from "@/lib/cron/auth";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 /**
  * GET /api/cron/enrich-competitiveness
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
   const started = Date.now();
+  const startedAt = new Date(started);
   let enriched = 0;
   let errors = 0;
 
@@ -37,7 +39,9 @@ export async function GET(request: NextRequest) {
       .limit(50);
 
     if (!grants?.length) {
-      return NextResponse.json({ success: true, message: "No grants to enrich", duration_ms: Date.now() - started });
+      const __summary = { success: true, message: "No grants to enrich", duration_ms: Date.now() - started };
+      await recordHeartbeat({ cronName: "enrich-competitiveness", startedAt, outcome: "ok", summary: __summary });
+      return NextResponse.json(__summary);
     }
 
     logger.info("Competitiveness enrichment started", { count: grants.length });
@@ -80,9 +84,12 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info("Competitiveness enrichment complete", summary);
+    await recordHeartbeat({ cronName: "enrich-competitiveness", startedAt, outcome: "ok", summary });
     return NextResponse.json(summary);
   } catch (err) {
     logger.error("Competitiveness enrichment failed", { err: String(err) });
-    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+    const __errMessage = String(err);
+    await recordHeartbeat({ cronName: "enrich-competitiveness", startedAt, outcome: "error", errorMessage: __errMessage });
+    return NextResponse.json({ success: false, error: __errMessage }, { status: 500 });
   }
 }

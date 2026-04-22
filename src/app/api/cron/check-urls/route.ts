@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCronAuthorized } from "@/lib/cron/auth";
+import { recordHeartbeat } from "@/lib/cron/heartbeat";
 
 // ---------------------------------------------------------------------------
 // GET /api/cron/check-urls  (Vercel Cron weekly on Monday at 08:00 UTC)
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
   }
 
   const started = Date.now();
+  const startedAt = new Date(started);
   const supabase = createAdminClient();
 
   try {
@@ -82,6 +84,7 @@ export async function GET(request: NextRequest) {
       logger.error("check-urls: fetch batch failed", {
         error: fetchError.message,
       });
+      await recordHeartbeat({ cronName: "check-urls", startedAt, outcome: "error", errorMessage: fetchError.message });
       return NextResponse.json(
         { success: false, error: fetchError.message },
         { status: 500 }
@@ -159,10 +162,12 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info("URL check complete", summary);
+    await recordHeartbeat({ cronName: "check-urls", startedAt, outcome: "ok", summary });
     return NextResponse.json(summary);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("URL check failed", { error: message });
+    await recordHeartbeat({ cronName: "check-urls", startedAt, outcome: "error", errorMessage: message });
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }
