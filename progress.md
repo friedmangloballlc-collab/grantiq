@@ -60,14 +60,56 @@ Verified live: both tables return one row from `information_schema.tables`.
 
 Test suite still: 523 passing / 49 files. `next build` clean. TypeScript 0 errors.
 
+## 2026-04-22 (legal hardening + revenue surfaces)
+
+### Pricing + revenue surfaces
+- `164d06b` Dynamic OG image via `src/app/opengraph-image.tsx` (replaced the 1200×1200 app-icon PNG that LinkedIn/Slack were cropping). Twitter image re-uses same component. Layout metadata cleaned up with openGraph.title + description.
+- `164d06b` Pricing trust strip: 4-column risk-reversal block above billing toggle (6,000+ grants · 60s check · $0 start · 7-day guarantee).
+- `3c5b78b` Dropped 7-day money-back guarantee (chargeback abuse risk: user consumes AI tokens then refunds). Replaced with "Cancel anytime · no long-term contracts."
+- `3a8ff01` Per-tier success fee disclosure row on every pricing card: "+ N% success fee on awarded grant funds" with link to `/terms#success-fees`.
+
+### Success-fee tracking infrastructure
+- `f0d01cd` Migration 00068 extends success_fee_invoices (from migration 00007) with awarded_at, funds_received_at, due_at, stripe_invoice_id, funder_name, notes (append-only log), reported_by_admin, updated_at + trigger. New fee_tier CHECK aligned to free/starter/pro/growth/enterprise/custom.
+- `f0d01cd` `src/lib/billing/success-fee.ts` — rate table (5/5/5/4/3), computeSuccessFee, computeDueDate (30 days from funds receipt).
+- `f0d01cd` POST `/api/admin/success-fees` (log new award) + PATCH `/api/admin/success-fees/[id]` (lifecycle updates with append-only note history).
+- `f0d01cd` `/admin/success-fees` dashboard: outstanding/collected/overdue tiles, full table with status badges, Stripe invoice deep-links.
+
+### Legal hardening — comprehensive audit + fixes
+- `734ed90` `docs/legal-liability-audit.md` (614 lines) — senior SaaS attorney-style risk memo. 3 P0 / 8 P1 / 9 P2 exposure surfaces with case law citations (Medlin v LegalZoom, UPLC v Parsons Tech, Florida Bar v Brumbaugh, Gil v Winn-Dixie, Robles v Dominos). Counsel engagement menu with budget estimates.
+- `734ed90` CAN-SPAM fix: `src/emails/shared-layout.tsx` now includes physical postal address (via NEXT_PUBLIC_MAILING_ADDRESS env var), unsubscribe link, "why receiving" line, privacy link. $53,088/violation exposure closed the moment the env var is set.
+- `734ed90` `/accessibility` page — WCAG 2.1 AA statement. Deters ADA surf-by demand letters (~$3-10K settlements). No federal safe harbor exists for digital a11y; published statements + documented remediation are the best practical defense.
+- `a13a449` **Fortress-grade Terms of Service rewrite** (1000+ lines, 23 sections): conspicuous opening 5-point callout (reasonable notice per Meyer v Uber), E-SIGN consent, AI disclosure + assumption of risk, no-guarantee-of-funding stated FIVE places, non-refundable with rationale, chargeback pre-contact requirement, evidence-submission consent, success-fee acceleration on chargeback, rate-lock-at-draft-time, scrivener framing for formation, disclaimer of warranties, $100-or-12-month liability cap, indemnification FROM user, mandatory AAA arbitration, class waiver, mass arbitration defense (batch procedures, stayed filing fees), 1-year statute of limitations, no-reliance clause (defeats fraud claims outside 4 corners), force majeure covering Stripe/Supabase/OpenAI/Anthropic outages, 30-day change notice.
+- `a13a449` Migration 00069: terms_version + terms_accepted_ip + terms_accepted_user_agent on org_members. New terms_acceptance_log audit table for re-acceptances after material changes.
+- `a13a449` `src/lib/legal/terms-version.ts`: `CURRENT_TERMS_VERSION = "2026-04-22-v2"`. Signup API writes version + IP + UA at moment of acceptance. Clickwrap triangle (Meyer v Uber): reasonable notice + opportunity to review + unambiguous manifestation of assent — all three now captured as admissible evidence.
+
+### UPL fix — biggest ongoing legal risk closed
+- `2cee12e` `nonprofit_formation` AI prompt rewritten from "articles/bylaws customized to state + recommend which form" → process checklist + links to state's OFFICIAL templates + neutral IRS form overview (user self-determines using IRS eligibility worksheet) + mandatory attorney-recommendation section. No AI-drafted legal documents. No form selection advice.
+- `2cee12e` `policy_drafting` AI prompt rewritten from "complete policy text ready for board adoption" → "starter templates labeled [REVIEW WITH ATTORNEY BEFORE ADOPTION]".
+- `2cee12e` Formation wizard UI shows persistent Texas-style safe harbor banner on every screen: "This is self-help software. GrantAQ is not a law firm... consult a licensed attorney before filing."
+- `2cee12e` SKU renamed: "Nonprofit Formation" → "Nonprofit Formation Filing Assistant". Feature bullets de-risked. Homepage marketing copy rewritten.
+- Effect: cuts UPL exposure from "clear UPL in NC/TX/FL/CA" to "arguable software safe harbor under Tex. Gov't Code §81.101(c) pattern" (same insulation LegalZoom + Rocket Lawyer use). Can operate in all 50 states without partnering with Harbor Compliance or building an attorney network.
+
+### Migrations applied via Supabase dashboard (2026-04-22)
+- 00068_success_fees_extend.sql — verified: awarded_at, funds_received_at, due_at, stripe_invoice_id all present
+- 00069_terms_version_tracking.sql — verified: terms_acceptance_log table + 3 new columns on org_members
+
+### Still open (operational, user must do)
+- Set `NEXT_PUBLIC_MAILING_ADDRESS` in Vercel env vars (critical for CAN-SPAM)
+- Rotate `ADMIN_SECRET` (flagged "Need to Rotate" by Vercel)
+- Create 4 mailbox addresses: legal@, billing@, dmca@, security@
+- Engage SaaS attorney for 30-min Terms review (~$1,500)
+- Run the $249 Stripe test
+
 ## Session notes
 - Held on Onboarding Coach (#6) per roadmap — post-PMF.
 - User preference: strictly premium pricing ($249 / $497 / $997 / FC).
 - User preference: cost-conscious — avoid speculative API spend; let real user signups drive volume.
 - User preference: evaluate every pasted component before building — decorative-only additions get rejected.
 - User preference: no terminal if avoidable — built UI button paths instead.
+- User preference: no money-back guarantees (refund abuse risk with non-recoverable AI token cost).
+- User preference: fortress-grade legal posture (full no-guarantee-of-funding language, strong chargeback defenses, explicit success-fee survival after cancellation).
 
 ## Next session pickup
-**Phase 1 is still the blocker.** Run the $249 Stripe live test purchase. Once that succeeds, verify the refund flow, then proceed to Phase 2 (launch checklist dry-run).
+**Phase 1 $249 Stripe test still blocks revenue.** Five operational items open (mailing address, rotate ADMIN_SECRET, 4 mailboxes, attorney review). Code-side Phase 3 work in progress: draft viewer badges, compliance calendar, funder feedback capture, AI review-before-export gate.
 
 Also check `/admin/agents` tomorrow morning — the Cron Status card should show all 10 crons with fresh green heartbeats from overnight runs. If anything's stale, click "Run now" to catch up, then diagnose via Vercel Logs.

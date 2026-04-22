@@ -89,9 +89,33 @@ Phase 1 — Stripe activation (still blocking revenue).
 - [x] Fix smoke-test.yml pointing at wrong domain (grantiq → grantaq)
 - [x] Fix downloaded data export filename (grantiq → grantaq)
 
+### Phase 8 (completed 2026-04-22): Legal hardening + revenue surfaces
+- [x] Stripe trust strip on pricing (cancel-anytime, not money-back)
+- [x] Pricing tier success-fee disclosure (5/5/5/4/3% by tier)
+- [x] Dynamic OG/Twitter image (1200×630 generated from JSX)
+- [x] Success-fee tracking infrastructure: migration 00068, lib/billing/success-fee.ts, /api/admin/success-fees, /admin/success-fees dashboard page
+- [x] Comprehensive legal liability audit (`docs/legal-liability-audit.md`)
+- [x] Legal review questionnaire for attorney handoff (`docs/legal-review-questionnaire.md`)
+- [x] CAN-SPAM compliant email footer: physical address, unsubscribe link, "why receiving" line
+- [x] `/accessibility` statement page (WCAG 2.1 AA target — deters ADA surf-by lawsuits)
+- [x] Fortress-grade Terms of Service rewrite (23 sections, 1000+ lines): no-guarantee-of-funding stated 5x, mandatory binding arbitration, class action waiver, mass arbitration defense, 1-year statute of limitations, chargeback pre-contact requirement, evidence-submission consent, success-fee acceleration on chargeback, no-reliance clause, E-SIGN consent, indemnification from user
+- [x] Migration 00069: ToS version tracking on org_members (terms_version, terms_accepted_ip, terms_accepted_user_agent) + terms_acceptance_log audit table
+- [x] src/lib/legal/terms-version.ts constant (CURRENT_TERMS_VERSION = "2026-04-22-v2")
+- [x] Signup API records terms version + IP + UA at moment of acceptance (clickwrap enforceability triangle per Meyer v Uber)
+- [x] **UPL fix on nonprofit formation** — scrivener-only AI prompts (no AI-drafted articles/bylaws, no IRS form recommendations), persistent Texas-style safe harbor banner on every wizard screen, SKU renamed "Filing Assistant", marketing copy de-risked
+
 ## Migrations to apply (if not already)
-- [x] 00066_newsletter_subscribers.sql — applied via Supabase dashboard
-- [x] 00067_cron_heartbeats.sql — applied via Supabase dashboard
+- [x] 00066_newsletter_subscribers.sql — applied
+- [x] 00067_cron_heartbeats.sql — applied
+- [x] 00068_success_fees_extend.sql — applied 2026-04-22
+- [x] 00069_terms_version_tracking.sql — applied 2026-04-22
+
+## Open operational items (user to do, not code)
+- [ ] Set `NEXT_PUBLIC_MAILING_ADDRESS` in Vercel (CAN-SPAM $53K/email exposure until done)
+- [ ] Rotate `ADMIN_SECRET` in Vercel (flagged "Need to Rotate")
+- [ ] Create 4 mailboxes: legal@, billing@, dmca@, security@ (referenced in new ToS)
+- [ ] Engage SaaS attorney for 30-min Terms review using `docs/legal-review-questionnaire.md` (~$1,500)
+- [ ] Run the $249 Stripe test (Phase 1 exit criteria)
 
 ## Error Log
 | Timestamp | Error | Attempt | Resolution |
@@ -104,11 +128,11 @@ Phase 1 — Stripe activation (still blocking revenue).
 ## 5-Question Reboot Check
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 1 — Stripe $249 test still blocks revenue. Ingest pipeline fully unblocked (Phase 7 done 2026-04-21). |
-| Where am I going? | Phase 1 → real $249 purchase works. Phase 2 → golden path smoke passes. Phase 3 → agent outputs visible in UI. Phase 4 → Sentry + Support triage wired. Phase 6 → first external paying customer. |
+| Where am I? | Phase 1 — Stripe $249 test still the revenue blocker. Phases 7 (ingest pipeline) + 8 (legal hardening) shipped. Phase 3 (agent output UI) is next code work. |
+| Where am I going? | Phase 1 → $249 test. Phase 2 → launch checklist dry-run. Phase 3 → draft viewer badges + compliance calendar + funder feedback (in progress). Phase 4 → Sentry + Support webhook wiring. Phase 6 → first external paying customer. |
 | What's the goal? | First paying customer through the full funnel: signup → readiness → matches → pipeline → Tier 1 draft → compliance calendar. |
-| What have I learned? | Cron 401s are invisible without heartbeat tracking. `x-vercel-cron-secret` is NOT what Vercel sends — docs say Authorization: Bearer CRON_SECRET. Homepage static prerender silently froze the grant counter until we added revalidate. |
-| What have I done? | Phase 7 shipped (ingest pipeline + observability + 4 real bug fixes + marketing site additions). Phases 1-4 still pending. |
+| What have I learned? | Cron 401s invisible without heartbeat tracking. UPL exposure on AI-drafted bylaws is real and was the #1 legal liability — closed by scrivener-only prompts. Clickwrap enforceability requires version + IP + UA capture at moment of assent. CAN-SPAM physical address is $53K/email if missing. |
+| What have I done? | Phase 7 (ingest pipeline + observability) done 04-21. Phase 8 (legal hardening — fortress ToS, UPL fix, OG image, accessibility, CAN-SPAM, success-fee tracking, ADMIN_SECRET rotation guide) done 04-22. Migrations 00066-00069 applied. Phases 1-4 of original plan still pending. |
 
 ---
 *Update after completing each phase or encountering errors*

@@ -19,6 +19,7 @@ import {
   Target,
 } from "lucide-react";
 import { CopyButton } from "@/components/writing/copy-button";
+import { ReviewGateButton } from "@/components/writing/review-gate-button";
 import { LiveDraftProgress } from "@/components/writing/live-draft-progress";
 import { LiveDraftStream } from "@/components/writing/live-draft-stream";
 
@@ -373,7 +374,14 @@ export default async function DraftViewerPage({
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Draft Sections</h2>
-            {allText && <CopyButton text={allText} label="Copy All" />}
+            {allText && (
+              <ReviewGateButton
+                text={allText}
+                draftId={d.id}
+                label="Copy All"
+                action="copy_all"
+              />
+            )}
           </div>
           {d.sections.map((section, idx) => {
             const audit = auditBySection.get(
