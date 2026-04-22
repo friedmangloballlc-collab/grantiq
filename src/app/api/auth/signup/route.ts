@@ -60,13 +60,46 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Create org membership (owner) — admin client bypasses RLS
+  //
+  // Record terms acceptance with the exact version hash + IP + UA.
+  // These four fields are what we produce if a customer later
+  // disputes that they agreed to the current Terms. Under clickwrap
+  // case law this is the evidence that wins: "Here is the version
+  // they accepted, the timestamp, their IP at the moment of
+  // acceptance, and their browser string."
+  const { CURRENT_TERMS_VERSION } = await import("@/lib/legal/terms-version");
+  const acceptIp =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    null;
+  const acceptUa = request.headers.get("user-agent")?.slice(0, 500) ?? null;
+  const acceptedAt = new Date().toISOString();
+
   const { error: memberError } = await supabase.from("org_members").insert({
     org_id: org.id,
     user_id: userId,
     role: "owner",
     status: "active",
-    joined_at: new Date().toISOString(),
-    terms_accepted_at: new Date().toISOString(),
+    joined_at: acceptedAt,
+    terms_accepted_at: acceptedAt,
+    terms_version: CURRENT_TERMS_VERSION,
+    terms_accepted_ip: acceptIp,
+    terms_accepted_user_agent: acceptUa,
+  });
+
+  // Append a row to terms_acceptance_log for auditability. The
+  // insert below duplicates the info on org_members but gives us
+  // an append-only history once we start requiring re-acceptance
+  // on material Terms updates. Fail-soft: if the log insert fails,
+  // signup still succeeds (the org_members row is the primary
+  // record).
+  await supabase.from("terms_acceptance_log").insert({
+    user_id: userId,
+    terms_version: CURRENT_TERMS_VERSION,
+    accepted_at: acceptedAt,
+    accepted_ip: acceptIp,
+    accepted_user_agent: acceptUa,
+    source: "signup",
   });
 
   if (memberError) {
