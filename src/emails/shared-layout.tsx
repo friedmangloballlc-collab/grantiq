@@ -22,9 +22,33 @@ export interface EmailLayoutProps {
   headerSubtitle?: string;
   children: React.ReactNode;
   footerText?: string;
+  // Reason the recipient is getting this email (CAN-SPAM transparency +
+  // FTC best practice). Defaults to the generic newsletter-context line.
+  whyReceiving?: string;
+  // Unsubscribe URL — pass per-email-type. Newsletter emails should
+  // use /api/newsletter/unsubscribe?token=..., transactional emails
+  // should point at /settings/notifications.
+  unsubscribeUrl?: string;
 }
 
-export function EmailLayout({ preview, headerTitle = "GrantAQ", headerSubtitle, children, footerText }: EmailLayoutProps) {
+// Physical postal address required by CAN-SPAM (15 U.S.C. §7704(a)(5)).
+// Missing this line = up to $53,088 per email violation (FTC 2024
+// adjusted penalty). The env var lets ops update without a redeploy;
+// fallback is the LLC's registered-agent default, which must remain
+// a real postal address at all times.
+const MAILING_ADDRESS =
+  process.env.NEXT_PUBLIC_MAILING_ADDRESS ??
+  "Friedman Global LLC · P.O. Box [SET NEXT_PUBLIC_MAILING_ADDRESS] · Atlanta, GA";
+
+export function EmailLayout({
+  preview,
+  headerTitle = "GrantAQ",
+  headerSubtitle,
+  children,
+  footerText,
+  whyReceiving,
+  unsubscribeUrl = "https://grantaq.com/unsubscribe",
+}: EmailLayoutProps) {
   return (
     <Html lang="en">
       <Head />
@@ -49,8 +73,26 @@ export function EmailLayout({ preview, headerTitle = "GrantAQ", headerSubtitle, 
             <Text style={{ fontSize: 11, color: WARM_500, margin: 0, textAlign: "center" as const }}>
               {footerText ?? "GrantAQ · AI-Powered Grant Discovery & Strategy"}
             </Text>
+            {whyReceiving && (
+              <Text style={{ fontSize: 11, color: WARM_500, margin: "4px 0 0", textAlign: "center" as const }}>
+                {whyReceiving}
+              </Text>
+            )}
+            <Text style={{ fontSize: 11, color: WARM_500, margin: "8px 0 0", textAlign: "center" as const }}>
+              <Link href={unsubscribeUrl} style={{ color: WARM_500, textDecoration: "underline" }}>
+                Unsubscribe
+              </Link>
+              {" · "}
+              <Link href="https://grantaq.com/privacy" style={{ color: WARM_500 }}>
+                Privacy
+              </Link>
+              {" · "}
+              <Link href="https://grantaq.com" style={{ color: WARM_500 }}>
+                grantaq.com
+              </Link>
+            </Text>
             <Text style={{ fontSize: 11, color: WARM_500, margin: "4px 0 0", textAlign: "center" as const }}>
-              <Link href="https://grantaq.com" style={{ color: WARM_500 }}>grantaq.com</Link>
+              {MAILING_ADDRESS}
             </Text>
           </Section>
         </Container>
